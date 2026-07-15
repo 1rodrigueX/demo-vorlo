@@ -6,6 +6,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { Card } from "@/components/ui/Card";
 import { ContactForm } from "@/components/contacts/ContactForm";
 import { ContactAttachments } from "@/components/contacts/ContactAttachments";
+import { ContactTagPicker } from "@/components/contacts/ContactTagPicker";
 import { ContactTimeline, type TimelineEntry } from "@/components/contacts/ContactTimeline";
 import { ContactRealtimeListener } from "@/components/contacts/ContactRealtimeListener";
 import { ActivityComposer } from "@/components/contacts/ActivityComposer";
@@ -36,6 +37,8 @@ export default async function ContactDetailPage({
     { data: activities },
     { data: whatsappMessages },
     { data: attachmentRows },
+    { data: allTags },
+    { data: contactTagRows },
   ] = await Promise.all([
     supabase.from("contacts").select("*").eq("id", id).single(),
     supabase.from("companies").select("id, name").order("name"),
@@ -63,6 +66,8 @@ export default async function ContactDetailPage({
       .select("id, file_name, storage_path, size_bytes, created_at")
       .eq("contact_id", id)
       .order("created_at", { ascending: false }),
+    supabase.from("tags").select("*").order("name"),
+    supabase.from("contact_tags").select("tag_id").eq("contact_id", id),
   ]);
 
   if (!contact) notFound();
@@ -102,6 +107,14 @@ export default async function ContactDetailPage({
           <Card className="p-5">
             <h2 className="mb-4 text-sm font-semibold text-gray-900">Dados do contato</h2>
             <ContactForm contact={contact} companies={companies ?? []} />
+            <div className="mt-4 border-t border-gray-100 pt-4">
+              <h3 className="mb-2 text-xs font-semibold text-gray-500">Tags</h3>
+              <ContactTagPicker
+                contactId={contact.id}
+                allTags={allTags ?? []}
+                selectedTagIds={(contactTagRows ?? []).map((t) => t.tag_id)}
+              />
+            </div>
             <div className="mt-4 border-t border-gray-100 pt-4">
               <ContactAttachments contactId={contact.id} attachments={attachments} />
             </div>

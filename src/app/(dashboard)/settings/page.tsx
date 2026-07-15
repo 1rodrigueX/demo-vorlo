@@ -5,9 +5,10 @@ import { Card } from "@/components/ui/Card";
 import { TenantBrandingForm } from "@/components/settings/TenantBrandingForm";
 import { NewTeamMemberButton } from "@/components/settings/NewTeamMemberButton";
 import { WhatsAppSettingsForm } from "@/components/settings/WhatsAppSettingsForm";
-import { BlingSettingsCard } from "@/components/settings/BlingSettingsCard";
+import { BlingConnectionsCard } from "@/components/settings/BlingConnectionsCard";
 import { AnthropicSettingsCard } from "@/components/settings/AnthropicSettingsCard";
 import { EmailIntegrationsCard } from "@/components/settings/EmailIntegrationsCard";
+import { TagsSettingsCard } from "@/components/settings/TagsSettingsCard";
 import { ROLE_LABEL } from "@/lib/utils/roles";
 
 function maskApiKey(apiKey: string): string {
@@ -62,9 +63,10 @@ export default async function SettingsPage({
     { data: tenant },
     { data: members },
     { data: whatsappConnection },
-    { data: blingConnection },
+    { data: blingConnections },
     { data: anthropicIntegration },
     { data: emailIntegrations },
+    { data: tags },
   ] = await Promise.all([
     supabase.from("tenants").select("*").eq("id", current.profile.tenant_id).single(),
     supabase
@@ -81,7 +83,7 @@ export default async function SettingsPage({
       .from("bling_connections")
       .select("*")
       .eq("tenant_id", current.profile.tenant_id)
-      .maybeSingle(),
+      .order("is_default", { ascending: false }),
     supabase
       .from("tenant_integrations")
       .select("status, credentials, last_error, last_tested_at")
@@ -93,6 +95,7 @@ export default async function SettingsPage({
       .select("provider, name, access_token")
       .eq("tenant_id", current.profile.tenant_id)
       .in("provider", ["gmail", "outlook"]),
+    supabase.from("tags").select("*").eq("tenant_id", current.profile.tenant_id).order("name"),
   ]);
 
   if (!tenant) redirect("/dashboard");
@@ -168,10 +171,16 @@ export default async function SettingsPage({
             {blingStatusMessage.text}
           </p>
         )}
-        <BlingSettingsCard
-          connection={blingConnection ?? null}
+        <BlingConnectionsCard
+          connections={blingConnections ?? []}
+          tags={tags ?? []}
           siteUrl={process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}
         />
+      </Card>
+
+      <Card className="p-6">
+        <h2 className="mb-4 text-sm font-semibold text-gray-900">Tags</h2>
+        <TagsSettingsCard tags={tags ?? []} />
       </Card>
 
       <Card className="p-6">

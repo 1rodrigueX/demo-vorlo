@@ -10,10 +10,14 @@ export async function GET(request: Request) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { origin } = new URL(request.url);
+  const { origin, searchParams } = new URL(request.url);
+  const connectionId = searchParams.get("connectionId");
 
   if (!user) {
     return NextResponse.redirect(`${origin}/login`);
+  }
+  if (!connectionId) {
+    return NextResponse.redirect(`${origin}/settings?bling=error`);
   }
 
   const tenantId = await requireTenantId(supabase, user.id);
@@ -21,17 +25,35 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${origin}/settings?bling=error`);
   }
 
+  // Confere, com o client comum (RLS), que essa conexão é mesmo deste tenant.
+  const { data: connection } = await supabase
+    .from("bling_connections")
+    .select("id")
+    .eq("id", connectionId)
+    .eq("tenant_id", tenantId)
+    .maybeSingle();
+
+  if (!connection) {
+    return NextResponse.redirect(`${origin}/settings?bling=error`);
+  }
+
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? origin;
   const redirectUri = `${siteUrl}/api/bling/callback`;
   const state = randomBytes(16).toString("hex");
 
-  const authorizeUrl = await getBlingAuthorizeUrl(tenantId, state, redirectUri);
+  const authorizeUrl = await getBlingAuthorizeUrl(connectionId, state, redirectUri);
   if (!authorizeUrl) {
     return NextResponse.redirect(`${origin}/settings?bling=not_configured`);
   }
 
   const response = NextResponse.redirect(authorizeUrl);
   response.cookies.set("bling_oauth_state", state, {
+    httpOnly: true,
+    maxAge: 600,
+    path: "/",
+    sameSite: "lax",
+  });
+  response.cookies.set("bling_oauth_connection_id", connectionId, {
     httpOnly: true,
     maxAge: 600,
     path: "/",

@@ -1,5 +1,6 @@
 import "server-only";
 import { blingFetch } from "@/lib/bling/client";
+import { resolveBlingConnectionId } from "@/lib/bling/resolveConnection";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 type BlingApiResponse = { data?: { id?: number | string } };
@@ -52,6 +53,11 @@ export async function syncContactToBling(
   },
 ): Promise<BlingSyncResult> {
   try {
+    const connectionId = await resolveBlingConnectionId(tenantId, contact.id);
+    if (!connectionId) {
+      return { success: false, error: "Nenhuma conexão com o Bling configurada pra este contato" };
+    }
+
     const documentDigits = contact.cpfCnpj?.replace(/\D/g, "") || null;
     const address = contact.address;
     const hasAddress = !!(
@@ -84,7 +90,7 @@ export async function syncContactToBling(
         : {}),
     };
 
-    const result = (await blingFetch(tenantId, "/contatos", {
+    const result = (await blingFetch(connectionId, "/contatos", {
       method: "POST",
       body: JSON.stringify(body),
     })) as BlingApiResponse;
@@ -110,10 +116,15 @@ export async function syncContactToBling(
  */
 export async function createBlingOrderForDeal(
   tenantId: string,
-  deal: { id: string; title: string; value: number },
+  deal: { id: string; title: string; value: number; contactId: string },
   contactBlingId: string,
 ): Promise<BlingSyncResult> {
   try {
+    const connectionId = await resolveBlingConnectionId(tenantId, deal.contactId);
+    if (!connectionId) {
+      return { success: false, error: "Nenhuma conexão com o Bling configurada pra este contato" };
+    }
+
     const body = {
       contato: { id: Number(contactBlingId) },
       itens: [
@@ -125,7 +136,7 @@ export async function createBlingOrderForDeal(
       ],
     };
 
-    const result = (await blingFetch(tenantId, "/pedidos/vendas", {
+    const result = (await blingFetch(connectionId, "/pedidos/vendas", {
       method: "POST",
       body: JSON.stringify(body),
     })) as BlingApiResponse;

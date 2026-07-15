@@ -106,7 +106,11 @@ export interface Database {
       };
       bling_connections: {
         Row: {
+          id: string;
           tenant_id: string;
+          name: string;
+          is_default: boolean;
+          tag_id: string | null;
           client_id: string | null;
           client_secret: string | null;
           access_token: string | null;
@@ -116,7 +120,11 @@ export interface Database {
           updated_at: string;
         };
         Insert: {
+          id?: string;
           tenant_id: string;
+          name?: string;
+          is_default?: boolean;
+          tag_id?: string | null;
           client_id?: string | null;
           client_secret?: string | null;
           access_token?: string | null;
@@ -126,7 +134,11 @@ export interface Database {
           updated_at?: string;
         };
         Update: {
+          id?: string;
           tenant_id?: string;
+          name?: string;
+          is_default?: boolean;
+          tag_id?: string | null;
           client_id?: string | null;
           client_secret?: string | null;
           access_token?: string | null;
@@ -139,7 +151,89 @@ export interface Database {
           {
             foreignKeyName: "bling_connections_tenant_id_fkey";
             columns: ["tenant_id"];
-            isOneToOne: true;
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "bling_connections_tag_id_fkey";
+            columns: ["tag_id"];
+            isOneToOne: false;
+            referencedRelation: "tags";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      tags: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          name: string;
+          color: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          name: string;
+          color?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          name?: string;
+          color?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "tags_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      contact_tags: {
+        Row: {
+          contact_id: string;
+          tag_id: string;
+          tenant_id: string;
+          created_at: string;
+        };
+        Insert: {
+          contact_id: string;
+          tag_id: string;
+          tenant_id: string;
+          created_at?: string;
+        };
+        Update: {
+          contact_id?: string;
+          tag_id?: string;
+          tenant_id?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "contact_tags_contact_id_fkey";
+            columns: ["contact_id"];
+            isOneToOne: false;
+            referencedRelation: "contacts";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "contact_tags_tag_id_fkey";
+            columns: ["tag_id"];
+            isOneToOne: false;
+            referencedRelation: "tags";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "contact_tags_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
             referencedRelation: "tenants";
             referencedColumns: ["id"];
           },

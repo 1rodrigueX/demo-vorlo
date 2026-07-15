@@ -229,7 +229,7 @@ export async function markProposalSent(dealId: string) {
   if (deal.contact?.bling_contact_id) {
     void createBlingOrderForDeal(
       deal.tenant_id,
-      { id: dealId, title: deal.title, value: Number(deal.value) },
+      { id: dealId, title: deal.title, value: Number(deal.value), contactId: deal.contact_id },
       deal.contact.bling_contact_id,
     );
   }

@@ -7,12 +7,12 @@ const BLING_API_BASE = "https://www.bling.com.br/Api/v3";
 
 type BlingCredentials = { clientId: string; clientSecret: string };
 
-async function getBlingCredentials(tenantId: string): Promise<BlingCredentials | null> {
+async function getBlingCredentials(connectionId: string): Promise<BlingCredentials | null> {
   const admin = createAdminClient();
   const { data } = await admin
     .from("bling_connections")
     .select("client_id, client_secret")
-    .eq("tenant_id", tenantId)
+    .eq("id", connectionId)
     .maybeSingle();
 
   if (!data?.client_id || !data.client_secret) return null;
@@ -20,11 +20,11 @@ async function getBlingCredentials(tenantId: string): Promise<BlingCredentials |
 }
 
 export async function getBlingAuthorizeUrl(
-  tenantId: string,
+  connectionId: string,
   state: string,
   redirectUri: string,
 ): Promise<string | null> {
-  const credentials = await getBlingCredentials(tenantId);
+  const credentials = await getBlingCredentials(connectionId);
   if (!credentials) return null;
 
   const url = new URL(BLING_AUTHORIZE_URL);
@@ -69,21 +69,21 @@ async function requestBlingToken(
 }
 
 export async function exchangeBlingCode(
-  tenantId: string,
+  connectionId: string,
   code: string,
 ): Promise<BlingTokenResponse> {
-  const credentials = await getBlingCredentials(tenantId);
-  if (!credentials) throw new Error("Client ID/Secret do Bling não configurados pra este CRM");
+  const credentials = await getBlingCredentials(connectionId);
+  if (!credentials) throw new Error("Client ID/Secret do Bling não configurados pra esta conexão");
   return requestBlingToken(credentials, { grant_type: "authorization_code", code });
 }
 
-/** Retorna um access_token válido pro tenant, renovando via refresh_token se estiver expirado. */
-export async function getValidBlingAccessToken(tenantId: string): Promise<string | null> {
+/** Retorna um access_token válido pra essa conexão específica, renovando via refresh_token se estiver expirado. */
+export async function getValidBlingAccessToken(connectionId: string): Promise<string | null> {
   const admin = createAdminClient();
   const { data: connection } = await admin
     .from("bling_connections")
     .select("client_id, client_secret, access_token, refresh_token, expires_at")
-    .eq("tenant_id", tenantId)
+    .eq("id", connectionId)
     .maybeSingle();
 
   if (!connection?.access_token || !connection.refresh_token) return null;
@@ -106,16 +106,16 @@ export async function getValidBlingAccessToken(tenantId: string): Promise<string
       expires_at: expiresAt,
       updated_at: new Date().toISOString(),
     })
-    .eq("tenant_id", tenantId);
+    .eq("id", connectionId);
 
   return refreshed.access_token;
 }
 
-/** Fetch autenticado na API do Bling em nome de um tenant específico. */
-export async function blingFetch(tenantId: string, path: string, init: RequestInit = {}) {
-  const accessToken = await getValidBlingAccessToken(tenantId);
+/** Fetch autenticado na API do Bling em nome de uma conexão (conta/filial) específica. */
+export async function blingFetch(connectionId: string, path: string, init: RequestInit = {}) {
+  const accessToken = await getValidBlingAccessToken(connectionId);
   if (!accessToken) {
-    throw new Error("Este CRM não está conectado ao Bling");
+    throw new Error("Esta conexão não está autenticada com o Bling");
   }
 
   const res = await fetch(`${BLING_API_BASE}${path}`, {
