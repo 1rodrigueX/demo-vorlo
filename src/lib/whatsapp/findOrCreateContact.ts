@@ -14,7 +14,7 @@ export async function findOrCreateContact(
   tenantId: string,
   phone: string,
   name?: string | null,
-): Promise<{ id: string } | null> {
+): Promise<{ id: string; isNew: boolean } | null> {
   const { data: existing } = await supabase
     .from("contacts")
     .select("id")
@@ -22,11 +22,13 @@ export async function findOrCreateContact(
     .eq("phone", phone)
     .maybeSingle();
 
-  if (existing) return existing;
+  if (existing) return { id: existing.id, isNew: false };
 
   const ownerId = await pickLeastLoadedMember(supabase, tenantId);
   if (!ownerId) return null;
 
+  // needs_registration=true: sinaliza pro SDR de IA que este contato ainda
+  // precisa ter os dados de cadastro coletados (ver runSdrLeadTurn).
   const { data: created } = await supabase
     .from("contacts")
     .insert({
@@ -35,11 +37,12 @@ export async function findOrCreateContact(
       phone,
       lead_source: "WhatsApp",
       created_by: ownerId,
+      needs_registration: true,
     })
     .select("id")
     .single();
 
-  return created;
+  return created ? { id: created.id, isNew: true } : null;
 }
 
 /**

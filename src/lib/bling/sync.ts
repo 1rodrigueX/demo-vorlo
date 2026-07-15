@@ -111,6 +111,28 @@ export async function syncContactToBling(
 }
 
 /**
+ * Atualiza o vendedor do contato dentro do Bling (best-effort — se não
+ * houver mapeamento vendedor-do-CRM -> vendedor-no-Bling configurado em
+ * Configurações > Bling, o chamador simplesmente não invoca esta função).
+ */
+export async function updateBlingContactVendedor(
+  connectionId: string,
+  blingContactId: string,
+  blingVendedorId: string,
+): Promise<BlingSyncResult> {
+  try {
+    await blingFetch(connectionId, `/contatos/${blingContactId}`, {
+      method: "PATCH",
+      body: JSON.stringify({ vendedor: { id: Number(blingVendedorId) } }),
+    });
+    return { success: true, blingId: blingContactId };
+  } catch (err) {
+    console.error(`Bling: falha ao atualizar vendedor do contato ${blingContactId}`, err);
+    return { success: false, error: err instanceof Error ? err.message : "erro desconhecido" };
+  }
+}
+
+/**
  * Cria um pedido de venda no Bling representando a proposta enviada.
  * Exige que o contato já tenha sido sincronizado antes (contact.bling_contact_id).
  */

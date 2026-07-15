@@ -128,6 +128,37 @@ export async function disconnectBlingConnection(connectionId: string): Promise<A
   return null;
 }
 
+export async function setBlingConnectionSeller(
+  connectionId: string,
+  profileId: string,
+  blingVendedorId: string,
+  blingVendedorName: string,
+) {
+  const supabase = await createClient();
+
+  if (!blingVendedorId) {
+    const { error } = await supabase
+      .from("bling_connection_sellers")
+      .delete()
+      .eq("bling_connection_id", connectionId)
+      .eq("profile_id", profileId);
+    return { error: error?.message };
+  }
+
+  const { error } = await supabase.from("bling_connection_sellers").upsert(
+    {
+      bling_connection_id: connectionId,
+      profile_id: profileId,
+      bling_vendedor_id: blingVendedorId,
+      bling_vendedor_name: blingVendedorName,
+    },
+    { onConflict: "bling_connection_id,profile_id" },
+  );
+
+  revalidatePath("/settings");
+  return { error: error?.message };
+}
+
 export async function deleteBlingConnection(connectionId: string): Promise<ActionState> {
   const supabase = await createClient();
   const { error } = await supabase.from("bling_connections").delete().eq("id", connectionId);

@@ -1,6 +1,7 @@
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { findOrCreateContact } from "@/lib/whatsapp/findOrCreateContact";
+import { runSdrLeadTurn } from "@/lib/ai-agents/runSdrLeadTurn";
 import type { Json } from "@/types/database.types";
 
 /**
@@ -49,4 +50,9 @@ export async function recordInboundMessage(input: {
     body: input.body,
     whatsapp_message_id: waMessage?.id ?? null,
   });
+
+  // Se o tenant tiver um SDR de IA ativo e este contato ainda precisar de
+  // cadastro, o SDR responde automaticamente (não faz nada caso contrário —
+  // ver runSdrLeadTurn). Aguarda a resposta antes de responder o webhook.
+  await runSdrLeadTurn(input.tenantId, contact.id);
 }

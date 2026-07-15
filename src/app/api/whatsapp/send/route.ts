@@ -140,6 +140,10 @@ export async function POST(request: Request) {
       whatsapp_message_id: waMessage.id,
     });
 
+    // Um vendedor de verdade acabou de escrever pra esse contato — o SDR de
+    // IA para de responder automaticamente (o humano assumiu a conversa).
+    await supabase.from("contacts").update({ needs_registration: false }).eq("id", contactId).eq("needs_registration", true);
+
     return NextResponse.json({ ok: true, message: waMessage });
   } catch (err) {
     const errMessage = err instanceof Error ? err.message : "Erro desconhecido ao enviar";

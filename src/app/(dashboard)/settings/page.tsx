@@ -67,6 +67,7 @@ export default async function SettingsPage({
     { data: anthropicIntegration },
     { data: emailIntegrations },
     { data: tags },
+    { data: sellerMappings },
   ] = await Promise.all([
     supabase.from("tenants").select("*").eq("id", current.profile.tenant_id).single(),
     supabase
@@ -96,6 +97,10 @@ export default async function SettingsPage({
       .eq("tenant_id", current.profile.tenant_id)
       .in("provider", ["gmail", "outlook"]),
     supabase.from("tags").select("*").eq("tenant_id", current.profile.tenant_id).order("name"),
+    supabase
+      .from("bling_connection_sellers")
+      .select("bling_connection_id, profile_id, bling_vendedor_id, bling_vendedor_name, bling_connection:bling_connections!inner(tenant_id)")
+      .eq("bling_connection.tenant_id", current.profile.tenant_id),
   ]);
 
   if (!tenant) redirect("/dashboard");
@@ -174,6 +179,8 @@ export default async function SettingsPage({
         <BlingConnectionsCard
           connections={blingConnections ?? []}
           tags={tags ?? []}
+          members={members ?? []}
+          sellerMappings={sellerMappings ?? []}
           siteUrl={process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}
         />
       </Card>
