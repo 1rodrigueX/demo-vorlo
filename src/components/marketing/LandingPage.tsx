@@ -87,7 +87,7 @@ export function LandingPage({ plan }: { plan: BillingPlan | null }) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="border-b border-gray-200 bg-white">
+      <header className="border-b border-gray-200 bg-panel">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
           <div className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-sm font-bold text-white">
@@ -113,7 +113,7 @@ export function LandingPage({ plan }: { plan: BillingPlan | null }) {
 
       <section className="mx-auto grid max-w-5xl grid-cols-1 gap-6 px-4 pb-16 sm:grid-cols-2 lg:grid-cols-4">
         {FEATURES.map((f) => (
-          <div key={f.title} className="rounded-xl border border-gray-200 bg-white p-5">
+          <div key={f.title} className="rounded-xl border border-gray-200 bg-panel p-5">
             <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
               <f.icon size={20} />
             </div>
@@ -124,7 +124,7 @@ export function LandingPage({ plan }: { plan: BillingPlan | null }) {
       </section>
 
       <section id="checkout" className="mx-auto max-w-3xl px-4 pb-24">
-        <div className="rounded-2xl border border-gray-200 bg-white p-6 sm:p-8">
+        <div className="rounded-2xl border border-gray-200 bg-panel p-6 sm:p-8">
           <h2 className="text-xl font-semibold text-gray-900">Monte seu plano</h2>
           {!plan ? (
             <p className="mt-4 text-sm text-red-600">

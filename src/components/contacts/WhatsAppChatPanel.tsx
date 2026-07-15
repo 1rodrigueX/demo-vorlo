@@ -174,12 +174,12 @@ export function WhatsAppChatPanel({
   return (
     <div
       className={cn(
-        "flex flex-col overflow-hidden rounded-lg border border-gray-200 bg-[#e5ded8]",
+        "flex flex-col overflow-hidden rounded-lg border border-gray-200 bg-[#0b141a]",
         fillHeight ? "h-full" : "h-[600px]",
       )}
     >
       {showHeader && (
-        <div className="border-b border-gray-200 bg-white px-4 py-3">
+        <div className="border-b border-gray-200 bg-panel px-4 py-3">
           <h2 className="text-sm font-semibold text-gray-900">WhatsApp</h2>
         </div>
       )}
@@ -199,7 +199,7 @@ export function WhatsAppChatPanel({
               <div key={msg.id}>
                 {showDivider && (
                   <div className="my-3 flex justify-center">
-                    <span className="rounded-full bg-white/80 px-3 py-1 text-xs font-medium text-gray-600 shadow-sm">
+                    <span className="rounded-full bg-panel/80 px-3 py-1 text-xs font-medium text-gray-600 shadow-sm">
                       {formatDayDivider(msg.created_at)}
                     </span>
                   </div>
@@ -208,7 +208,7 @@ export function WhatsAppChatPanel({
                   <div
                     className={cn(
                       "max-w-[75%] rounded-lg px-3 py-2 shadow-sm",
-                      isOutbound ? "bg-[#d9fdd3] text-gray-900" : "bg-white text-gray-900",
+                      isOutbound ? "bg-[#005c4b] text-white" : "bg-panel text-gray-900",
                     )}
                   >
                     {msg.media_storage_path && (
@@ -239,7 +239,7 @@ export function WhatsAppChatPanel({
         <div ref={bottomRef} />
       </div>
 
-      <div className="border-t border-gray-200 bg-white p-3">
+      <div className="border-t border-gray-200 bg-panel p-3">
         {!hasPhone ? (
           <p className="rounded-md bg-amber-50 px-3 py-2 text-xs text-amber-700">
             Adicione um telefone (formato internacional) ao contato para enviar WhatsApp.
@@ -273,7 +273,7 @@ export function WhatsAppChatPanel({
               }}
               placeholder="Escreva uma mensagem..."
               rows={1}
-              className="max-h-32 flex-1 resize-none rounded-full border border-gray-300 bg-white px-4 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="max-h-32 flex-1 resize-none rounded-full border border-gray-300 bg-panel px-4 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
             <button
               type="button"

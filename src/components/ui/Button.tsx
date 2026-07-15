@@ -10,7 +10,7 @@ type Size = "sm" | "md";
 const variantClasses: Record<Variant, string> = {
   primary: "text-white shadow-sm hover:brightness-110 disabled:opacity-50 disabled:shadow-none",
   secondary:
-    "bg-white text-gray-700 border border-gray-300 shadow-sm hover:bg-gray-50 hover:border-gray-400 disabled:text-gray-400",
+    "bg-panel text-gray-700 border border-gray-300 shadow-sm hover:bg-gray-50 hover:border-gray-400 disabled:text-gray-400",
   ghost: "bg-transparent text-gray-600 hover:bg-gray-100 disabled:text-gray-300",
   danger:
     "bg-red-600 text-white shadow-sm shadow-red-600/20 hover:bg-red-500 disabled:bg-red-300 disabled:shadow-none",

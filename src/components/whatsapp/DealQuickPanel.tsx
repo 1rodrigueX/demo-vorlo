@@ -106,7 +106,7 @@ export function DealQuickPanel({
           value={value}
           onChange={(e) => setValue(e.target.value)}
           placeholder="Orçamento"
-          className="w-28 rounded-lg border border-gray-300 bg-white py-1.5 pl-8 pr-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="w-28 rounded-lg border border-gray-300 bg-panel py-1.5 pl-8 pr-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
         />
       </div>
       <Button type="submit" variant="secondary" size="sm" isLoading={isSaving}>

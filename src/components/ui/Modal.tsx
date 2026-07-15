@@ -35,7 +35,7 @@ export function Modal({ open, onClose, title, children, className }: ModalProps)
         aria-modal="true"
         aria-label={title}
         className={cn(
-          "relative z-10 w-full max-w-lg rounded-lg bg-white p-6 shadow-xl",
+          "relative z-10 w-full max-w-lg rounded-lg bg-panel p-6 shadow-xl",
           className,
         )}
       >

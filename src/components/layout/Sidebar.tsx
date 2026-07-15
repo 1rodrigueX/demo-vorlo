@@ -28,7 +28,7 @@ export function Sidebar({
     : baseLinks;
 
   return (
-    <aside className="hidden w-64 shrink-0 border-r border-gray-200 bg-white md:flex md:flex-col">
+    <aside className="hidden w-64 shrink-0 border-r border-gray-200 bg-panel md:flex md:flex-col">
       <div className="flex h-16 items-center gap-2.5 border-b border-gray-200 px-5">
         <div
           className="flex h-8 w-8 items-center justify-center rounded-lg text-sm font-bold text-white shadow-sm"

@@ -93,7 +93,7 @@ export function AgentChatPanel({
       {open && (
         <div
           className={cn(
-            "fixed bottom-24 z-40 flex h-[520px] w-[380px] max-w-[calc(100vw-2.5rem)] flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-2xl",
+            "fixed bottom-24 z-40 flex h-[520px] w-[380px] max-w-[calc(100vw-2.5rem)] flex-col overflow-hidden rounded-xl border border-gray-200 bg-panel shadow-2xl",
             sideClass,
           )}
         >
@@ -146,7 +146,7 @@ export function AgentChatPanel({
                 }
               }}
               placeholder="Digite sua pergunta..."
-              className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:outline-none"
+              className="flex-1 rounded-lg border border-gray-300 bg-panel px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:outline-none"
             />
             <button
               onClick={handleSend}

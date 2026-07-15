@@ -171,7 +171,7 @@ export function RichTextEditor({
   if (!editor) return null;
 
   return (
-    <div className={cn("overflow-hidden rounded-lg border border-gray-300 bg-white", className)}>
+    <div className={cn("overflow-hidden rounded-lg border border-gray-300 bg-panel", className)}>
       <Toolbar editor={editor} />
       <EditorContent editor={editor} />
     </div>

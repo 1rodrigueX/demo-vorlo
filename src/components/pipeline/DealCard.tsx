@@ -23,7 +23,7 @@ export function DealCard({ deal }: { deal: DealWithContact }) {
       {...listeners}
       {...attributes}
       className={cn(
-        "cursor-grab space-y-1.5 rounded-lg border border-gray-200 bg-white p-3.5 shadow-sm transition-shadow hover:shadow-md active:cursor-grabbing",
+        "cursor-grab space-y-1.5 rounded-lg border border-gray-200 bg-panel p-3.5 shadow-sm transition-shadow hover:shadow-md active:cursor-grabbing",
         isDragging && "opacity-50",
       )}
     >

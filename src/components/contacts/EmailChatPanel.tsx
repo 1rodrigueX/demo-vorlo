@@ -111,7 +111,7 @@ export function EmailChatPanel({
       )}
     >
       {showHeader && (
-        <div className="border-b border-gray-200 bg-white px-4 py-3">
+        <div className="border-b border-gray-200 bg-panel px-4 py-3">
           <h2 className="text-sm font-semibold text-gray-900">E-mail</h2>
         </div>
       )}
@@ -129,7 +129,7 @@ export function EmailChatPanel({
               <div key={msg.id} className={cn("flex", isOutbound ? "justify-end" : "justify-start")}>
                 <div
                   className={cn(
-                    "max-w-[80%] rounded-lg border bg-white px-3 py-2 shadow-sm",
+                    "max-w-[80%] rounded-lg border bg-panel px-3 py-2 shadow-sm",
                     isOutbound ? "border-indigo-200" : "border-gray-200",
                   )}
                 >
@@ -168,7 +168,7 @@ export function EmailChatPanel({
         <div ref={bottomRef} />
       </div>
 
-      <div className="border-t border-gray-200 bg-white p-3">
+      <div className="border-t border-gray-200 bg-panel p-3">
         {!hasEmail ? (
           <p className="rounded-md bg-amber-50 px-3 py-2 text-xs text-amber-700">
             Adicione um e-mail ao contato para enviar mensagens.
@@ -179,7 +179,7 @@ export function EmailChatPanel({
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
               placeholder="Assunto"
-              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:outline-none"
+              className="w-full rounded-lg border border-gray-300 bg-panel px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:outline-none"
             />
             {files.length > 0 && (
               <div className="flex flex-wrap gap-1.5">

@@ -38,7 +38,7 @@ export function TenantBrandingForm({ tenant }: { tenant: Tenant }) {
             type="color"
             value={color}
             onChange={(e) => setColor(e.target.value)}
-            className="h-10 w-14 shrink-0 cursor-pointer rounded-md border border-gray-300 bg-white"
+            className="h-10 w-14 shrink-0 cursor-pointer rounded-md border border-gray-300 bg-panel"
             aria-label="Selecionar cor"
           />
           <Input

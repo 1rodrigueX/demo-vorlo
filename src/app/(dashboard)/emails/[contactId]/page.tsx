@@ -26,7 +26,7 @@ export default async function EmailConversationPage({
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center justify-between gap-4 border-b border-gray-200 bg-white px-4 py-3">
+      <div className="flex items-center justify-between gap-4 border-b border-gray-200 bg-panel px-4 py-3">
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold text-gray-900">{contact.name}</p>
           {contact.email && <p className="text-xs text-gray-500">{contact.email}</p>}

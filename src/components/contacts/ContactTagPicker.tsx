@@ -52,7 +52,7 @@ export function ContactTagPicker({
             disabled={isPending}
             className={cn(
               "rounded-full border px-2.5 py-1 text-xs font-medium transition-colors",
-              isSelected ? "text-white" : "border-gray-300 bg-white text-gray-600 hover:bg-gray-50",
+              isSelected ? "text-white" : "border-gray-300 bg-panel text-gray-600 hover:bg-gray-50",
             )}
             style={isSelected ? { backgroundColor: tag.color, borderColor: tag.color } : undefined}
           >

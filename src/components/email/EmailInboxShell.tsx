@@ -38,7 +38,7 @@ export function EmailInboxShell({
   }
 
   return (
-    <div className="flex h-[calc(100vh-4rem-3rem)] overflow-hidden rounded-xl border border-gray-200/80 bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04),0_1px_3px_rgba(16,24,40,0.06)]">
+    <div className="flex h-[calc(100vh-4rem-3rem)] overflow-hidden rounded-xl border border-gray-200/80 bg-panel shadow-[0_1px_2px_rgba(16,24,40,0.04),0_1px_3px_rgba(16,24,40,0.06)]">
       <div className="flex w-80 shrink-0 flex-col border-r border-gray-200">
         <NewEmailButton />
         <button
