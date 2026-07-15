@@ -8,23 +8,22 @@ import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
-import { Select } from "@/components/ui/Select";
 
-type ContactOption = { id: string; name: string; email: string | null };
-
-export function NewEmailButton({ contacts }: { contacts: ContactOption[] }) {
+export function NewEmailButton() {
   const [open, setOpen] = useState(false);
-  const [contactId, setContactId] = useState("");
+  const [to, setTo] = useState("");
+  const [cc, setCc] = useState("");
+  const [showCc, setShowCc] = useState(false);
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
   const [files, setFiles] = useState<File[]>([]);
   const [isPending, setIsPending] = useState(false);
   const router = useRouter();
 
-  const emailableContacts = contacts.filter((c) => c.email);
-
   function reset() {
-    setContactId("");
+    setTo("");
+    setCc("");
+    setShowCc(false);
     setSubject("");
     setBody("");
     setFiles([]);
@@ -32,12 +31,13 @@ export function NewEmailButton({ contacts }: { contacts: ContactOption[] }) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!contactId || !subject.trim() || !body.trim()) return;
+    if (!to.trim() || !subject.trim() || !body.trim()) return;
 
     setIsPending(true);
     try {
       const formData = new FormData();
-      formData.set("contactId", contactId);
+      formData.set("to", to.trim());
+      if (cc.trim()) formData.set("cc", cc.trim());
       formData.set("subject", subject.trim());
       formData.set("message", body.trim());
       files.forEach((file) => formData.append("files", file));
@@ -52,9 +52,9 @@ export function NewEmailButton({ contacts }: { contacts: ContactOption[] }) {
 
       toast.success("E-mail enviado");
       setOpen(false);
-      const sentContactId = contactId;
+      const sentContactId = data.message?.contact_id as string | undefined;
       reset();
-      router.push(`/emails/${sentContactId}`);
+      if (sentContactId) router.push(`/emails/${sentContactId}`);
       router.refresh();
     } catch {
       toast.error("Falha ao enviar e-mail");
@@ -77,28 +77,39 @@ export function NewEmailButton({ contacts }: { contacts: ContactOption[] }) {
       <Modal open={open} onClose={() => setOpen(false)} title="Novo e-mail">
         <form onSubmit={handleSubmit} className="space-y-3">
           <div>
-            <Label htmlFor="new-email-contact">Para</Label>
-            <Select
-              id="new-email-contact"
-              value={contactId}
-              onChange={(e) => setContactId(e.target.value)}
+            <div className="flex items-center justify-between">
+              <Label htmlFor="new-email-to">Para</Label>
+              {!showCc && (
+                <button
+                  type="button"
+                  onClick={() => setShowCc(true)}
+                  className="text-xs font-medium text-indigo-600 hover:underline"
+                >
+                  Adicionar Cc
+                </button>
+              )}
+            </div>
+            <Input
+              id="new-email-to"
+              type="email"
+              placeholder="destinatario@exemplo.com"
+              value={to}
+              onChange={(e) => setTo(e.target.value)}
               required
-            >
-              <option value="" disabled>
-                Selecione um contato
-              </option>
-              {emailableContacts.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name} ({c.email})
-                </option>
-              ))}
-            </Select>
-            {!emailableContacts.length && (
-              <p className="mt-1 text-xs text-amber-600">
-                Nenhum contato com e-mail cadastrado ainda.
-              </p>
-            )}
+            />
           </div>
+
+          {showCc && (
+            <div>
+              <Label htmlFor="new-email-cc">Cc</Label>
+              <Input
+                id="new-email-cc"
+                placeholder="fulano@exemplo.com, ciclano@exemplo.com"
+                value={cc}
+                onChange={(e) => setCc(e.target.value)}
+              />
+            </div>
+          )}
 
           <div>
             <Label htmlFor="new-email-subject">Assunto</Label>
@@ -155,7 +166,7 @@ export function NewEmailButton({ contacts }: { contacts: ContactOption[] }) {
             </label>
           </div>
 
-          <Button type="submit" className="w-full" isLoading={isPending} disabled={!emailableContacts.length}>
+          <Button type="submit" className="w-full" isLoading={isPending}>
             Enviar
           </Button>
         </form>

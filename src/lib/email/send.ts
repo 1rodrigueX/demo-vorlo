@@ -25,7 +25,7 @@ export async function getConnectedEmailProviders(
 export async function sendEmailMessage(
   tenantId: string,
   provider: OAuthProviderKey,
-  params: { to: string; subject: string; body: string; attachments?: EmailAttachmentInput[] },
+  params: { to: string; cc?: string; subject: string; body: string; attachments?: EmailAttachmentInput[] },
 ): Promise<SendEmailResult> {
   const accessToken = await getValidOAuthAccessToken(provider, tenantId);
   if (!accessToken) {

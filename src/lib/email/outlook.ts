@@ -53,7 +53,7 @@ export async function listOutlookMessages(accessToken: string, top = 25): Promis
 /** O Graph não retorna o id da mensagem enviada em /sendMail — geramos um id local só pra ter uma chave única na tabela. */
 export async function sendOutlookMessage(
   accessToken: string,
-  params: { to: string; subject: string; body: string; attachments?: EmailAttachmentInput[] },
+  params: { to: string; cc?: string; subject: string; body: string; attachments?: EmailAttachmentInput[] },
 ): Promise<string> {
   const attachments = (params.attachments ?? []).map((att) => ({
     "@odata.type": "#microsoft.graph.fileAttachment",
@@ -61,6 +61,12 @@ export async function sendOutlookMessage(
     contentType: att.contentType,
     contentBytes: att.content.toString("base64"),
   }));
+
+  const ccRecipients = (params.cc ?? "")
+    .split(/[,;]/)
+    .map((addr) => addr.trim())
+    .filter(Boolean)
+    .map((address) => ({ emailAddress: { address } }));
 
   const res = await fetch(`${GRAPH_API_BASE}/me/sendMail`, {
     method: "POST",
@@ -70,6 +76,7 @@ export async function sendOutlookMessage(
         subject: params.subject,
         body: { contentType: "Text", content: params.body },
         toRecipients: [{ emailAddress: { address: params.to } }],
+        ...(ccRecipients.length ? { ccRecipients } : {}),
         ...(attachments.length ? { attachments } : {}),
       },
     }),

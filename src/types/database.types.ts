@@ -721,6 +721,7 @@ export interface Database {
           direction: "outbound" | "inbound";
           from_address: string;
           to_address: string;
+          cc_address: string | null;
           subject: string | null;
           body: string | null;
           status: "sent" | "failed" | "received";
@@ -740,6 +741,7 @@ export interface Database {
           direction: "outbound" | "inbound";
           from_address: string;
           to_address: string;
+          cc_address?: string | null;
           subject?: string | null;
           body?: string | null;
           status?: "sent" | "failed" | "received";
@@ -759,6 +761,7 @@ export interface Database {
           direction?: "outbound" | "inbound";
           from_address?: string;
           to_address?: string;
+          cc_address?: string | null;
           subject?: string | null;
           body?: string | null;
           status?: "sent" | "failed" | "received";

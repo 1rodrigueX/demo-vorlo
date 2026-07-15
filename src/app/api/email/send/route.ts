@@ -1,12 +1,15 @@
 import { NextResponse } from "next/server";
 import { randomUUID } from "node:crypto";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { requireTenantId } from "@/lib/auth/current-user";
 import { sendEmailMessage, getConnectedEmailProviders } from "@/lib/email/send";
-import { emailSendSchema } from "@/lib/validation/email";
+import { emailSendSchema, parseCcAddresses } from "@/lib/validation/email";
+import { findOrCreateContactByEmail } from "@/lib/email/findOrCreateContactByEmail";
 import { uploadMessageAttachment, MAX_ATTACHMENT_SIZE } from "@/lib/storage/messageAttachments";
 import type { OAuthProviderKey } from "@/lib/integrations/providers";
 import type { EmailAttachmentInput } from "@/lib/email/types";
+import type { EmailMessage } from "@/types/domain";
 
 export async function POST(request: Request) {
   const supabase = await createClient();
@@ -29,7 +32,9 @@ export async function POST(request: Request) {
   }
 
   const parsed = emailSendSchema.safeParse({
-    contactId: formData.get("contactId"),
+    contactId: formData.get("contactId") || undefined,
+    to: formData.get("to") || undefined,
+    cc: formData.get("cc") || undefined,
     subject: formData.get("subject"),
     message: formData.get("message"),
     provider: formData.get("provider") || undefined,
@@ -42,16 +47,37 @@ export async function POST(request: Request) {
     );
   }
 
+  let ccList: string[];
+  try {
+    ccList = parseCcAddresses(parsed.data.cc);
+  } catch (err) {
+    return NextResponse.json({ error: err instanceof Error ? err.message : "Cc inválido" }, { status: 400 });
+  }
+
   const files = formData.getAll("files").filter((f): f is File => f instanceof File && f.size > 0);
 
-  const { data: contact } = await supabase
-    .from("contacts")
-    .select("id, email")
-    .eq("id", parsed.data.contactId)
-    .single();
+  let contact: { id: string; email: string } | null = null;
 
-  if (!contact?.email) {
-    return NextResponse.json({ error: "Este contato não tem e-mail cadastrado" }, { status: 400 });
+  if (parsed.data.contactId) {
+    const { data } = await supabase.from("contacts").select("id, email").eq("id", parsed.data.contactId).single();
+    if (!data?.email) {
+      return NextResponse.json({ error: "Este contato não tem e-mail cadastrado" }, { status: 400 });
+    }
+    contact = { id: data.id, email: data.email };
+  } else if (parsed.data.to) {
+    // Destinatário digitado livremente (compose "Novo e-mail"): acha ou cria
+    // o contato correspondente — precisa do admin client porque o rodízio
+    // de leads pode atribuir a um vendedor diferente do usuário logado.
+    const admin = createAdminClient();
+    const created = await findOrCreateContactByEmail(admin, tenantId, parsed.data.to);
+    if (!created) {
+      return NextResponse.json({ error: "Não foi possível criar o contato pra esse e-mail" }, { status: 500 });
+    }
+    contact = { id: created.id, email: parsed.data.to };
+  }
+
+  if (!contact) {
+    return NextResponse.json({ error: "Informe o destinatário" }, { status: 400 });
   }
 
   let provider: OAuthProviderKey | undefined = parsed.data.provider;
@@ -83,36 +109,48 @@ export async function POST(request: Request) {
     attachmentsMeta.push({ fileName: file.name, storagePath: uploadResult.storagePath, sizeBytes: file.size, contentType });
   }
 
+  const ccAddress = ccList.length ? ccList.join(", ") : null;
+
   try {
     const result = await sendEmailMessage(tenantId, provider, {
       to: contact.email,
+      cc: ccAddress ?? undefined,
       subject: parsed.data.subject,
       body: parsed.data.message,
       attachments: attachmentsForSend,
     });
 
-    const { data: emailMessage, error: insertError } = await supabase
-      .from("email_messages")
-      .insert({
-        tenant_id: tenantId,
-        contact_id: contact.id,
-        provider: result.provider,
-        external_message_id: result.externalId,
-        direction: "outbound",
-        from_address: result.fromAddress,
-        to_address: contact.email,
-        subject: parsed.data.subject,
-        body: parsed.data.message,
-        status: "sent",
-        sent_by: user.id,
-        attachments: attachmentsMeta,
-      })
-      .select("*")
-      .single();
+    const emailMessage: EmailMessage = {
+      id: randomUUID(),
+      tenant_id: tenantId,
+      contact_id: contact.id,
+      provider: result.provider,
+      external_message_id: result.externalId,
+      thread_id: null,
+      direction: "outbound",
+      from_address: result.fromAddress,
+      to_address: contact.email,
+      cc_address: ccAddress,
+      subject: parsed.data.subject,
+      body: parsed.data.message,
+      status: "sent",
+      error_message: null,
+      raw_payload: null,
+      sent_by: user.id,
+      attachments: attachmentsMeta,
+      created_at: new Date().toISOString(),
+    };
 
-    if (insertError || !emailMessage) {
+    // Não faz .select() de volta: se o contato não for "do" usuário logado
+    // (ex: e-mail pra um contato de outro vendedor), o RLS de select bloqueia
+    // o retorno mesmo com o insert já tendo funcionado — por isso montamos o
+    // objeto de resposta a partir dos valores que já temos em mãos.
+    const { error: insertError } = await supabase.from("email_messages").insert(emailMessage);
+
+    if (insertError) {
+      console.error("email_messages insert failed:", insertError);
       return NextResponse.json(
-        { error: "E-mail enviado, mas não foi possível registrar no histórico" },
+        { error: `E-mail enviado, mas não foi possível registrar no histórico: ${insertError.message}` },
         { status: 500 },
       );
     }
@@ -133,6 +171,7 @@ export async function POST(request: Request) {
     console.error("sendEmailMessage failed:", err);
 
     await supabase.from("email_messages").insert({
+      id: randomUUID(),
       tenant_id: tenantId,
       contact_id: contact.id,
       provider,
@@ -140,6 +179,7 @@ export async function POST(request: Request) {
       direction: "outbound",
       from_address: "",
       to_address: contact.email,
+      cc_address: ccAddress,
       subject: parsed.data.subject,
       body: parsed.data.message,
       status: "failed",

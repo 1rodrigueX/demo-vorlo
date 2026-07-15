@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { randomUUID } from "node:crypto";
 import { createClient } from "@/lib/supabase/server";
 import { requireTenantId } from "@/lib/auth/current-user";
 import { sendWhatsAppMessage, type OutgoingMedia } from "@/lib/whatsapp/send";
@@ -8,6 +9,7 @@ import {
   MAX_ATTACHMENT_SIZE,
 } from "@/lib/storage/messageAttachments";
 import { convertToOggOpus } from "@/lib/audio/convertToOgg";
+import type { WhatsAppMessage } from "@/types/domain";
 
 export async function POST(request: Request) {
   const supabase = await createClient();
@@ -94,28 +96,36 @@ export async function POST(request: Request) {
 
     const result = await sendWhatsAppMessage(tenantId, contact.phone, message, media);
 
-    const { data: waMessage, error: insertError } = await supabase
-      .from("whatsapp_messages")
-      .insert({
-        tenant_id: tenantId,
-        contact_id: contact.id,
-        twilio_sid: result.externalId,
-        direction: "outbound",
-        from_number: result.from,
-        to_number: result.to,
-        body: message || null,
-        status: result.initialStatus,
-        sent_by: user.id,
-        media_storage_path: mediaMeta?.storagePath ?? null,
-        media_content_type: mediaMeta?.contentType ?? null,
-        media_file_name: mediaMeta?.fileName ?? null,
-      })
-      .select("*")
-      .single();
+    const waMessage: WhatsAppMessage = {
+      id: randomUUID(),
+      tenant_id: tenantId,
+      contact_id: contact.id,
+      twilio_sid: result.externalId,
+      direction: "outbound",
+      from_number: result.from,
+      to_number: result.to,
+      body: message || null,
+      status: result.initialStatus,
+      error_message: null,
+      raw_payload: null,
+      sent_by: user.id,
+      media_storage_path: mediaMeta?.storagePath ?? null,
+      media_content_type: mediaMeta?.contentType ?? null,
+      media_file_name: mediaMeta?.fileName ?? null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
 
-    if (insertError || !waMessage) {
+    // Não faz .select() de volta: se o contato não for "do" usuário logado,
+    // o RLS de select bloquearia o retorno mesmo com o insert já tendo
+    // funcionado — por isso montamos o objeto de resposta a partir dos
+    // valores que já temos em mãos.
+    const { error: insertError } = await supabase.from("whatsapp_messages").insert(waMessage);
+
+    if (insertError) {
+      console.error("whatsapp_messages insert failed:", insertError);
       return NextResponse.json(
-        { error: "Mensagem enviada, mas não foi possível registrar no histórico" },
+        { error: `Mensagem enviada, mas não foi possível registrar no histórico: ${insertError.message}` },
         { status: 500 },
       );
     }

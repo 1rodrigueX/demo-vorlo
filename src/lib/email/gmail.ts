@@ -79,25 +79,21 @@ export async function getGmailMessage(accessToken: string, id: string): Promise<
 
 function buildGmailRawMessage(params: {
   to: string;
+  cc?: string;
   subject: string;
   body: string;
   attachments?: EmailAttachmentInput[];
 }): string {
   const attachments = params.attachments ?? [];
+  const headerLines = [`To: ${params.to}`, ...(params.cc ? [`Cc: ${params.cc}`] : []), `Subject: ${params.subject}`];
+
   if (!attachments.length) {
-    return [
-      `To: ${params.to}`,
-      `Subject: ${params.subject}`,
-      `Content-Type: text/plain; charset="UTF-8"`,
-      "",
-      params.body,
-    ].join("\r\n");
+    return [...headerLines, `Content-Type: text/plain; charset="UTF-8"`, "", params.body].join("\r\n");
   }
 
   const boundary = `----=_Part_${Date.now()}`;
   const lines = [
-    `To: ${params.to}`,
-    `Subject: ${params.subject}`,
+    ...headerLines,
     `MIME-Version: 1.0`,
     `Content-Type: multipart/mixed; boundary="${boundary}"`,
     "",
@@ -125,7 +121,7 @@ function buildGmailRawMessage(params: {
 
 export async function sendGmailMessage(
   accessToken: string,
-  params: { to: string; subject: string; body: string; attachments?: EmailAttachmentInput[] },
+  params: { to: string; cc?: string; subject: string; body: string; attachments?: EmailAttachmentInput[] },
 ): Promise<string> {
   const raw = buildGmailRawMessage(params);
 
