@@ -610,13 +610,6 @@ export interface Database {
             referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "whatsapp_messages_sent_by_fkey";
-            columns: ["sent_by"];
-            isOneToOne: false;
-            referencedRelation: "profiles";
-            referencedColumns: ["id"];
-          },
-          {
             foreignKeyName: "whatsapp_messages_tenant_id_fkey";
             columns: ["tenant_id"];
             isOneToOne: false;
@@ -777,13 +770,6 @@ export interface Database {
             columns: ["contact_id"];
             isOneToOne: false;
             referencedRelation: "contacts";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "email_messages_sent_by_fkey";
-            columns: ["sent_by"];
-            isOneToOne: false;
-            referencedRelation: "profiles";
             referencedColumns: ["id"];
           },
           {
