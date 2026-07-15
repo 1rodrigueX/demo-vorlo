@@ -24,6 +24,9 @@ export interface Database {
           brand_color: string;
           brand_font: string;
           assistant_button_position: "bottom-left" | "bottom-right";
+          billing_plan_id: string | null;
+          stripe_customer_id: string | null;
+          stripe_subscription_id: string | null;
           created_at: string;
         };
         Insert: {
@@ -36,6 +39,9 @@ export interface Database {
           brand_color?: string;
           brand_font?: string;
           assistant_button_position?: "bottom-left" | "bottom-right";
+          billing_plan_id?: string | null;
+          stripe_customer_id?: string | null;
+          stripe_subscription_id?: string | null;
           created_at?: string;
         };
         Update: {
@@ -48,9 +54,20 @@ export interface Database {
           brand_color?: string;
           brand_font?: string;
           assistant_button_position?: "bottom-left" | "bottom-right";
+          billing_plan_id?: string | null;
+          stripe_customer_id?: string | null;
+          stripe_subscription_id?: string | null;
           created_at?: string;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "tenants_billing_plan_id_fkey";
+            columns: ["billing_plan_id"];
+            isOneToOne: false;
+            referencedRelation: "billing_plans";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       whatsapp_connections: {
         Row: {
@@ -540,6 +557,9 @@ export interface Database {
           error_message: string | null;
           raw_payload: Json | null;
           sent_by: string | null;
+          media_storage_path: string | null;
+          media_content_type: string | null;
+          media_file_name: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -556,6 +576,9 @@ export interface Database {
           error_message?: string | null;
           raw_payload?: Json | null;
           sent_by?: string | null;
+          media_storage_path?: string | null;
+          media_content_type?: string | null;
+          media_file_name?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -572,6 +595,9 @@ export interface Database {
           error_message?: string | null;
           raw_payload?: Json | null;
           sent_by?: string | null;
+          media_storage_path?: string | null;
+          media_content_type?: string | null;
+          media_file_name?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -605,11 +631,12 @@ export interface Database {
           tenant_id: string;
           contact_id: string;
           deal_id: string | null;
-          type: "note" | "call" | "whatsapp" | "follow_up" | "stage_change";
+          type: "note" | "call" | "whatsapp" | "email" | "follow_up" | "stage_change";
           body: string | null;
           direction: "outbound" | "inbound" | null;
           created_by: string | null;
           whatsapp_message_id: string | null;
+          email_message_id: string | null;
           created_at: string;
         };
         Insert: {
@@ -617,11 +644,12 @@ export interface Database {
           tenant_id: string;
           contact_id: string;
           deal_id?: string | null;
-          type: "note" | "call" | "whatsapp" | "follow_up" | "stage_change";
+          type: "note" | "call" | "whatsapp" | "email" | "follow_up" | "stage_change";
           body?: string | null;
           direction?: "outbound" | "inbound" | null;
           created_by?: string | null;
           whatsapp_message_id?: string | null;
+          email_message_id?: string | null;
           created_at?: string;
         };
         Update: {
@@ -629,11 +657,12 @@ export interface Database {
           tenant_id?: string;
           contact_id?: string;
           deal_id?: string | null;
-          type?: "note" | "call" | "whatsapp" | "follow_up" | "stage_change";
+          type?: "note" | "call" | "whatsapp" | "email" | "follow_up" | "stage_change";
           body?: string | null;
           direction?: "outbound" | "inbound" | null;
           created_by?: string | null;
           whatsapp_message_id?: string | null;
+          email_message_id?: string | null;
           created_at?: string;
         };
         Relationships: [
@@ -666,7 +695,457 @@ export interface Database {
             referencedColumns: ["id"];
           },
           {
+            foreignKeyName: "activities_email_message_id_fkey";
+            columns: ["email_message_id"];
+            isOneToOne: false;
+            referencedRelation: "email_messages";
+            referencedColumns: ["id"];
+          },
+          {
             foreignKeyName: "activities_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      email_messages: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          contact_id: string;
+          provider: "gmail" | "outlook";
+          external_message_id: string;
+          thread_id: string | null;
+          direction: "outbound" | "inbound";
+          from_address: string;
+          to_address: string;
+          subject: string | null;
+          body: string | null;
+          status: "sent" | "failed" | "received";
+          error_message: string | null;
+          raw_payload: Json | null;
+          sent_by: string | null;
+          attachments: Json;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          contact_id: string;
+          provider: "gmail" | "outlook";
+          external_message_id: string;
+          thread_id?: string | null;
+          direction: "outbound" | "inbound";
+          from_address: string;
+          to_address: string;
+          subject?: string | null;
+          body?: string | null;
+          status?: "sent" | "failed" | "received";
+          error_message?: string | null;
+          raw_payload?: Json | null;
+          sent_by?: string | null;
+          attachments?: Json;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          contact_id?: string;
+          provider?: "gmail" | "outlook";
+          external_message_id?: string;
+          thread_id?: string | null;
+          direction?: "outbound" | "inbound";
+          from_address?: string;
+          to_address?: string;
+          subject?: string | null;
+          body?: string | null;
+          status?: "sent" | "failed" | "received";
+          error_message?: string | null;
+          raw_payload?: Json | null;
+          sent_by?: string | null;
+          attachments?: Json;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "email_messages_contact_id_fkey";
+            columns: ["contact_id"];
+            isOneToOne: false;
+            referencedRelation: "contacts";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "email_messages_sent_by_fkey";
+            columns: ["sent_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "email_messages_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      tenant_integrations: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          provider: "anthropic" | "gmail" | "outlook" | "google_calendar" | "microsoft365" | "custom";
+          name: string;
+          status: "disconnected" | "connected" | "error";
+          credentials: Json;
+          access_token: string | null;
+          refresh_token: string | null;
+          expires_at: string | null;
+          connected_at: string | null;
+          last_tested_at: string | null;
+          last_error: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          provider: "anthropic" | "gmail" | "outlook" | "google_calendar" | "microsoft365" | "custom";
+          name?: string;
+          status?: "disconnected" | "connected" | "error";
+          credentials?: Json;
+          access_token?: string | null;
+          refresh_token?: string | null;
+          expires_at?: string | null;
+          connected_at?: string | null;
+          last_tested_at?: string | null;
+          last_error?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          provider?: "anthropic" | "gmail" | "outlook" | "google_calendar" | "microsoft365" | "custom";
+          name?: string;
+          status?: "disconnected" | "connected" | "error";
+          credentials?: Json;
+          access_token?: string | null;
+          refresh_token?: string | null;
+          expires_at?: string | null;
+          connected_at?: string | null;
+          last_tested_at?: string | null;
+          last_error?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "tenant_integrations_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      tenant_integration_logs: {
+        Row: {
+          id: string;
+          integration_id: string;
+          tenant_id: string;
+          event: string;
+          detail: Json;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          integration_id: string;
+          tenant_id: string;
+          event: string;
+          detail?: Json;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          integration_id?: string;
+          tenant_id?: string;
+          event?: string;
+          detail?: Json;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "tenant_integration_logs_integration_id_fkey";
+            columns: ["integration_id"];
+            isOneToOne: false;
+            referencedRelation: "tenant_integrations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "tenant_integration_logs_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      billing_plans: {
+        Row: {
+          id: string;
+          name: string;
+          is_default: boolean;
+          base_price_cents: number;
+          included_sellers: number;
+          included_managers: number;
+          included_agents: number;
+          price_per_extra_seller_cents: number;
+          price_per_extra_manager_cents: number;
+          price_per_agent_cents: number;
+          price_per_integration_cents: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          is_default?: boolean;
+          base_price_cents: number;
+          included_sellers?: number;
+          included_managers?: number;
+          included_agents?: number;
+          price_per_extra_seller_cents?: number;
+          price_per_extra_manager_cents?: number;
+          price_per_agent_cents?: number;
+          price_per_integration_cents?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          is_default?: boolean;
+          base_price_cents?: number;
+          included_sellers?: number;
+          included_managers?: number;
+          included_agents?: number;
+          price_per_extra_seller_cents?: number;
+          price_per_extra_manager_cents?: number;
+          price_per_agent_cents?: number;
+          price_per_integration_cents?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      stripe_webhook_events: {
+        Row: { id: string; created_at: string };
+        Insert: { id: string; created_at?: string };
+        Update: { id?: string; created_at?: string };
+        Relationships: [];
+      };
+      ai_agents: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          name: string;
+          type: "fala_ai" | "sdr" | "atendente" | "financeiro" | "cobranca" | "juridico" | "custom";
+          is_fala_ai: boolean;
+          objective: string;
+          system_prompt: string;
+          model: string;
+          temperature: number;
+          tools: string[];
+          status: "active" | "inactive";
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          name: string;
+          type: "fala_ai" | "sdr" | "atendente" | "financeiro" | "cobranca" | "juridico" | "custom";
+          is_fala_ai?: boolean;
+          objective?: string;
+          system_prompt: string;
+          model?: string;
+          temperature?: number;
+          tools?: string[];
+          status?: "active" | "inactive";
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          name?: string;
+          type?: "fala_ai" | "sdr" | "atendente" | "financeiro" | "cobranca" | "juridico" | "custom";
+          is_fala_ai?: boolean;
+          objective?: string;
+          system_prompt?: string;
+          model?: string;
+          temperature?: number;
+          tools?: string[];
+          status?: "active" | "inactive";
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "ai_agents_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      ai_agent_messages: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          agent_id: string;
+          user_id: string;
+          role: "user" | "assistant";
+          content: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          agent_id: string;
+          user_id: string;
+          role: "user" | "assistant";
+          content: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          agent_id?: string;
+          user_id?: string;
+          role?: "user" | "assistant";
+          content?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "ai_agent_messages_agent_id_fkey";
+            columns: ["agent_id"];
+            isOneToOne: false;
+            referencedRelation: "ai_agents";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "ai_agent_messages_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      ai_agent_memory: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          agent_id: string;
+          label: string;
+          content: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          agent_id: string;
+          label: string;
+          content: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          agent_id?: string;
+          label?: string;
+          content?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "ai_agent_memory_agent_id_fkey";
+            columns: ["agent_id"];
+            isOneToOne: false;
+            referencedRelation: "ai_agents";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "ai_agent_memory_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      ai_agent_logs: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          agent_id: string;
+          user_id: string | null;
+          event_type: "message" | "tool_call" | "error";
+          detail: Json;
+          model: string | null;
+          tokens_input: number;
+          tokens_output: number;
+          latency_ms: number | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          agent_id: string;
+          user_id?: string | null;
+          event_type: "message" | "tool_call" | "error";
+          detail?: Json;
+          model?: string | null;
+          tokens_input?: number;
+          tokens_output?: number;
+          latency_ms?: number | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          agent_id?: string;
+          user_id?: string | null;
+          event_type?: "message" | "tool_call" | "error";
+          detail?: Json;
+          model?: string | null;
+          tokens_input?: number;
+          tokens_output?: number;
+          latency_ms?: number | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "ai_agent_logs_agent_id_fkey";
+            columns: ["agent_id"];
+            isOneToOne: false;
+            referencedRelation: "ai_agents";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "ai_agent_logs_tenant_id_fkey";
             columns: ["tenant_id"];
             isOneToOne: false;
             referencedRelation: "tenants";

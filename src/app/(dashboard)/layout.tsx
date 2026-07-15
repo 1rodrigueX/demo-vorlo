@@ -22,11 +22,14 @@ export default async function DashboardLayout({ children }: { children: React.Re
   }
 
   const supabase = await createClient();
-  const { data: tenant } = await supabase
-    .from("tenants")
-    .select("name, brand_color, assistant_button_position")
-    .eq("id", current.profile.tenant_id)
-    .single();
+  const [{ data: tenant }, { data: falaAi }] = await Promise.all([
+    supabase
+      .from("tenants")
+      .select("name, brand_color, assistant_button_position")
+      .eq("id", current.profile.tenant_id)
+      .single(),
+    supabase.from("ai_agents").select("id").eq("tenant_id", current.profile.tenant_id).eq("is_fala_ai", true).maybeSingle(),
+  ]);
 
   const name = current.isDevViewing
     ? `Dev (${current.user.email})`
@@ -52,7 +55,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           />
           <main className="flex-1 bg-gray-50 p-4 md:p-6">{children}</main>
         </div>
-        <AssistantChatPanel position={buttonPosition} />
+        {falaAi && <AssistantChatPanel agentId={falaAi.id} position={buttonPosition} />}
       </div>
     </TenantThemeProvider>
   );

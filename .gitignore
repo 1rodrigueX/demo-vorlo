@@ -37,6 +37,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# supabase CLI local cache
+/supabase/.temp/
+
 # WhatsApp (Baileys) session — equivalent to an active, no-2FA login session
 /.baileys_auth
 

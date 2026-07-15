@@ -12,6 +12,15 @@ export type WhatsAppMessage = Database["public"]["Tables"]["whatsapp_messages"][
 export type WhatsAppConnection = Database["public"]["Tables"]["whatsapp_connections"]["Row"];
 export type BlingConnection = Database["public"]["Tables"]["bling_connections"]["Row"];
 export type Activity = Database["public"]["Tables"]["activities"]["Row"];
+export type EmailMessage = Database["public"]["Tables"]["email_messages"]["Row"];
+export type TenantIntegration = Database["public"]["Tables"]["tenant_integrations"]["Row"];
+export type TenantIntegrationLog = Database["public"]["Tables"]["tenant_integration_logs"]["Row"];
+export type AiAgent = Database["public"]["Tables"]["ai_agents"]["Row"];
+export type AiAgentMessage = Database["public"]["Tables"]["ai_agent_messages"]["Row"];
+export type AiAgentMemory = Database["public"]["Tables"]["ai_agent_memory"]["Row"];
+export type AiAgentLog = Database["public"]["Tables"]["ai_agent_logs"]["Row"];
+export type AgentType = AiAgent["type"];
+export type BillingPlan = Database["public"]["Tables"]["billing_plans"]["Row"];
 
 export type ContactWithCompany = Contact & {
   company: Pick<Company, "id" | "name"> | null;

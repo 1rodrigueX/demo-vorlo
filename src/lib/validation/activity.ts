@@ -7,10 +7,3 @@ export const activitySchema = z.object({
 });
 
 export type ActivityInput = z.infer<typeof activitySchema>;
-
-export const whatsappSendSchema = z.object({
-  contactId: z.uuid(),
-  message: z.string().trim().min(1, "Escreva uma mensagem"),
-});
-
-export type WhatsAppSendInput = z.infer<typeof whatsappSendSchema>;

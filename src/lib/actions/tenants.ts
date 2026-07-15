@@ -7,7 +7,7 @@ import { createTenantSchema } from "@/lib/validation/tenant";
 
 export type ActionState = { error?: string } | null;
 
-const DEFAULT_STAGES = [
+export const DEFAULT_STAGES = [
   { name: "Novo", position: 1, color: "#6366f1", is_won: false, is_lost: false },
   { name: "Contato", position: 2, color: "#0ea5e9", is_won: false, is_lost: false },
   { name: "Proposta", position: 3, color: "#f59e0b", is_won: false, is_lost: false },

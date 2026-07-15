@@ -49,7 +49,7 @@ export async function findOrCreateContact(
  * Owners/managers não entram na distribuição automática (mas continuam
  * vendo tudo e podem assumir qualquer conversa manualmente depois).
  */
-async function pickLeastLoadedMember(
+export async function pickLeastLoadedMember(
   supabase: ReturnType<typeof createAdminClient>,
   tenantId: string,
 ): Promise<string | null> {
