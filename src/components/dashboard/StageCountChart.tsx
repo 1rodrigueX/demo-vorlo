@@ -19,7 +19,7 @@ export function StageCountChart({ stages }: { stages: StageSummary[] }) {
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
           <KanbanSquare size={16} />
         </div>
-        <h2 className="text-sm font-semibold text-gray-900">Negócios abertos por estágio</h2>
+        <h2 className="text-sm font-semibold text-gray-900">Negócios por estágio</h2>
       </div>
       <div className="space-y-4">
         {stages.map((stage) => (

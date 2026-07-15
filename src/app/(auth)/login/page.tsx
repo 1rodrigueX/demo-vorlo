@@ -1,7 +1,6 @@
 "use client";
 
 import { useActionState } from "react";
-import Link from "next/link";
 import { login, type AuthActionState } from "@/lib/actions/auth";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -41,13 +40,6 @@ export default function LoginPage() {
             Entrar
           </Button>
         </form>
-
-        <p className="mt-6 text-center text-sm text-gray-500">
-          Ainda não tem conta?{" "}
-          <Link href="/signup" className="font-medium text-indigo-600 hover:underline">
-            Criar conta
-          </Link>
-        </p>
       </div>
     </div>
   );

@@ -2,8 +2,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Briefcase } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { Card } from "@/components/ui/Card";
 import { ContactForm } from "@/components/contacts/ContactForm";
+import { ContactAttachments } from "@/components/contacts/ContactAttachments";
 import { ContactTimeline, type TimelineEntry } from "@/components/contacts/ContactTimeline";
 import { ContactRealtimeListener } from "@/components/contacts/ContactRealtimeListener";
 import { ActivityComposer } from "@/components/contacts/ActivityComposer";
@@ -15,6 +17,8 @@ import { ConfirmDeleteButton } from "@/components/ui/ConfirmDeleteButton";
 import { deleteContact } from "@/lib/actions/contacts";
 import { formatCurrency } from "@/lib/utils/currency";
 import type { WhatsAppMessage } from "@/types/domain";
+
+const ATTACHMENTS_BUCKET = "contact-attachments";
 
 export default async function ContactDetailPage({
   params,
@@ -31,6 +35,7 @@ export default async function ContactDetailPage({
     { data: stages },
     { data: activities },
     { data: whatsappMessages },
+    { data: attachmentRows },
   ] = await Promise.all([
     supabase.from("contacts").select("*").eq("id", id).single(),
     supabase.from("companies").select("id, name").order("name"),
@@ -53,9 +58,33 @@ export default async function ContactDetailPage({
       .select("*")
       .eq("contact_id", id)
       .order("created_at", { ascending: true }),
+    supabase
+      .from("contact_attachments")
+      .select("id, file_name, storage_path, size_bytes, created_at")
+      .eq("contact_id", id)
+      .order("created_at", { ascending: false }),
   ]);
 
   if (!contact) notFound();
+
+  // Bucket é privado — gera URL assinada com o client de service role (o
+  // client comum não tem policy de storage.objects, só o RLS de metadados
+  // acima, que já garante que o usuário pode ver esses anexos).
+  const admin = createAdminClient();
+  const attachments = await Promise.all(
+    (attachmentRows ?? []).map(async (a) => {
+      const { data: signed } = await admin.storage
+        .from(ATTACHMENTS_BUCKET)
+        .createSignedUrl(a.storage_path, 60 * 60);
+      return {
+        id: a.id,
+        fileName: a.file_name,
+        sizeBytes: a.size_bytes,
+        createdAt: a.created_at,
+        url: signed?.signedUrl ?? null,
+      };
+    }),
+  );
 
   return (
     <div className="mx-auto max-w-6xl">
@@ -73,6 +102,9 @@ export default async function ContactDetailPage({
           <Card className="p-5">
             <h2 className="mb-4 text-sm font-semibold text-gray-900">Dados do contato</h2>
             <ContactForm contact={contact} companies={companies ?? []} />
+            <div className="mt-4 border-t border-gray-100 pt-4">
+              <ContactAttachments contactId={contact.id} attachments={attachments} />
+            </div>
             <div className="mt-4 border-t border-gray-100 pt-4">
               <ConfirmDeleteButton
                 action={deleteContact.bind(null, contact.id)}

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { requireTenantId } from "@/lib/auth/current-user";
 import { activitySchema } from "@/lib/validation/activity";
 
 export type ActionState = { error?: string } | null;
@@ -23,7 +24,11 @@ export async function logActivity(_prevState: ActionState, formData: FormData): 
   } = await supabase.auth.getUser();
   if (!user) return { error: "Sessão expirada, faça login novamente" };
 
+  const tenantId = await requireTenantId(supabase, user.id);
+  if (!tenantId) return { error: "Tenant não encontrado para este usuário" };
+
   const { error } = await supabase.from("activities").insert({
+    tenant_id: tenantId,
     contact_id: parsed.data.contactId,
     type: parsed.data.type,
     body: parsed.data.body,

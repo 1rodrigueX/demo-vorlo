@@ -3,10 +3,15 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { Sparkles, X, Send } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+import { useTenantTheme } from "@/lib/theme/TenantThemeContext";
 
 type ChatMessage = { role: "user" | "assistant"; content: string };
 
-export function AssistantChatPanel() {
+export function AssistantChatPanel({
+  position = "bottom-left",
+}: {
+  position?: "bottom-left" | "bottom-right";
+}) {
   const [open, setOpen] = useState(false);
   const [loadedHistory, setLoadedHistory] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -14,6 +19,8 @@ export function AssistantChatPanel() {
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const bottomRef = useRef<HTMLDivElement>(null);
+  const { brandColor } = useTenantTheme();
+  const sideClass = position === "bottom-right" ? "right-5" : "left-5";
 
   useEffect(() => {
     if (!open || loadedHistory) return;
@@ -61,19 +68,31 @@ export function AssistantChatPanel() {
     <>
       <button
         onClick={() => setOpen((v) => !v)}
-        className="fixed bottom-5 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-indigo-600 text-white shadow-lg shadow-indigo-600/30 transition-transform hover:scale-105 hover:bg-indigo-500"
+        style={{ backgroundColor: brandColor }}
+        className={cn(
+          "fixed bottom-5 z-40 flex h-14 w-14 items-center justify-center rounded-full text-white shadow-lg transition-transform hover:scale-105 hover:brightness-110",
+          sideClass,
+        )}
         aria-label="Assistente de IA"
       >
         {open ? <X size={22} /> : <Sparkles size={22} />}
       </button>
 
       {open && (
-        <div className="fixed bottom-24 right-5 z-40 flex h-[520px] w-[380px] max-w-[calc(100vw-2.5rem)] flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-2xl">
-          <div className="flex items-center gap-2 border-b border-gray-100 bg-indigo-600 px-4 py-3 text-white">
+        <div
+          className={cn(
+            "fixed bottom-24 z-40 flex h-[520px] w-[380px] max-w-[calc(100vw-2.5rem)] flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-2xl",
+            sideClass,
+          )}
+        >
+          <div
+            style={{ backgroundColor: brandColor }}
+            className="flex items-center gap-2 border-b border-gray-100 px-4 py-3 text-white"
+          >
             <Sparkles size={16} />
             <div>
               <p className="text-sm font-semibold leading-tight">Assistente de vendas</p>
-              <p className="text-[11px] text-indigo-100">Orçamentos, propostas e dúvidas</p>
+              <p className="text-[11px] text-white/80">Orçamentos, propostas e dúvidas</p>
             </div>
           </div>
 
@@ -91,11 +110,10 @@ export function AssistantChatPanel() {
                 className={cn("flex", m.role === "user" ? "justify-end" : "justify-start")}
               >
                 <div
+                  style={m.role === "user" ? { backgroundColor: brandColor } : undefined}
                   className={cn(
                     "max-w-[85%] whitespace-pre-wrap rounded-2xl px-3 py-2 text-sm",
-                    m.role === "user"
-                      ? "bg-indigo-600 text-white"
-                      : "bg-gray-100 text-gray-800",
+                    m.role === "user" ? "text-white" : "bg-gray-100 text-gray-800",
                   )}
                 >
                   {m.content}
@@ -129,7 +147,8 @@ export function AssistantChatPanel() {
             <button
               onClick={handleSend}
               disabled={isPending || !input.trim()}
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-indigo-600 text-white transition-colors hover:bg-indigo-500 disabled:bg-indigo-300"
+              style={{ backgroundColor: brandColor }}
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white transition-colors hover:brightness-110 disabled:opacity-50"
               aria-label="Enviar"
             >
               <Send size={16} />

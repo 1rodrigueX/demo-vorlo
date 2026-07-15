@@ -92,6 +92,73 @@ export function ContactForm({
         )}
       </div>
 
+      <details className="rounded-lg border border-gray-200 p-3">
+        <summary className="cursor-pointer text-sm font-medium text-gray-700">
+          Dados para o Bling (opcional)
+        </summary>
+        <div className="mt-3 space-y-3">
+          <div>
+            <Label htmlFor="cpfCnpj">CPF/CNPJ</Label>
+            <Input id="cpfCnpj" name="cpfCnpj" defaultValue={contact?.cpf_cnpj ?? ""} />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label htmlFor="addressZip">CEP</Label>
+              <Input id="addressZip" name="addressZip" defaultValue={contact?.address_zip ?? ""} />
+            </div>
+            <div>
+              <Label htmlFor="addressState">UF</Label>
+              <Input
+                id="addressState"
+                name="addressState"
+                maxLength={2}
+                defaultValue={contact?.address_state ?? ""}
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label htmlFor="addressCity">Cidade</Label>
+              <Input id="addressCity" name="addressCity" defaultValue={contact?.address_city ?? ""} />
+            </div>
+            <div>
+              <Label htmlFor="addressNeighborhood">Bairro</Label>
+              <Input
+                id="addressNeighborhood"
+                name="addressNeighborhood"
+                defaultValue={contact?.address_neighborhood ?? ""}
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-[1fr_120px] gap-3">
+            <div>
+              <Label htmlFor="addressStreet">Endereço</Label>
+              <Input
+                id="addressStreet"
+                name="addressStreet"
+                defaultValue={contact?.address_street ?? ""}
+              />
+            </div>
+            <div>
+              <Label htmlFor="addressNumber">Número</Label>
+              <Input
+                id="addressNumber"
+                name="addressNumber"
+                defaultValue={contact?.address_number ?? ""}
+              />
+            </div>
+          </div>
+          <div>
+            <Label htmlFor="addressComplement">Complemento</Label>
+            <Input
+              id="addressComplement"
+              name="addressComplement"
+              defaultValue={contact?.address_complement ?? ""}
+            />
+          </div>
+        </div>
+      </details>
+
       {state?.error && <p className="text-sm text-red-600">{state.error}</p>}
 
       <Button type="submit" isLoading={isPending} className="w-full">

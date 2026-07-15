@@ -30,45 +30,52 @@ interface BaileysState {
 }
 
 declare global {
-  var __baileysState: BaileysState | undefined;
+  var __baileysStates: Map<string, BaileysState> | undefined;
 }
 
-function getState(): BaileysState {
-  if (!globalThis.__baileysState) {
-    globalThis.__baileysState = {
-      status: "connecting",
-      qrDataUrl: null,
-      phoneNumber: null,
-      sock: null,
-      starting: false,
-    };
+function getStatesMap(): Map<string, BaileysState> {
+  if (!globalThis.__baileysStates) {
+    globalThis.__baileysStates = new Map();
   }
-  return globalThis.__baileysState;
+  return globalThis.__baileysStates;
 }
 
-export function getBaileysState() {
-  return getState();
+function getState(tenantId: string): BaileysState {
+  const states = getStatesMap();
+  let state = states.get(tenantId);
+  if (!state) {
+    state = { status: "connecting", qrDataUrl: null, phoneNumber: null, sock: null, starting: false };
+    states.set(tenantId, state);
+  }
+  return state;
 }
 
-export function getBaileysSocket() {
-  return getState().sock;
+export function getBaileysState(tenantId: string) {
+  return getState(tenantId);
 }
 
-const AUTH_FOLDER = path.join(process.cwd(), ".baileys_auth");
+export function getBaileysSocket(tenantId: string) {
+  return getState(tenantId).sock;
+}
+
+function authFolderFor(tenantId: string) {
+  return path.join(process.cwd(), ".baileys_auth", tenantId);
+}
+
 const logger = pino({ level: "silent" });
 
-// Serializa o processamento dos pedaços de messaging-history.set — o evento
-// pode disparar várias vezes em sequência, e processá-los em paralelo
-// poderia criar contatos duplicados pro mesmo número (contacts.phone não
-// tem constraint unique).
-let historyImportQueue: Promise<void> = Promise.resolve();
+// Serializa o processamento dos pedaços de messaging-history.set por tenant —
+// o evento pode disparar várias vezes em sequência, e processá-los em
+// paralelo poderia criar contatos duplicados pro mesmo número (contacts.phone
+// não tem constraint unique).
+const historyImportQueues = new Map<string, Promise<void>>();
 
-export async function startBaileysConnection() {
-  const state = getState();
+export async function startBaileysConnection(tenantId: string) {
+  const state = getState(tenantId);
   if (state.starting || state.sock) return;
   state.starting = true;
 
-  const { state: authState, saveCreds } = await loadMultiFileAuthState(AUTH_FOLDER);
+  const { state: authState, saveCreds } = await loadMultiFileAuthState(authFolderFor(tenantId));
   const { version } = await fetchLatestBaileysVersion();
 
   const sock = makeWASocket({
@@ -107,10 +114,12 @@ export async function startBaileysConnection() {
 
       if (loggedOut) {
         state.phoneNumber = null;
-        console.error("Baileys: sessão desconectada pelo celular — escaneie um novo QR code em /whatsapp");
+        console.error(
+          `Baileys (tenant ${tenantId}): sessão desconectada pelo celular — escaneie um novo QR code`,
+        );
       } else {
         setTimeout(() => {
-          void startBaileysConnection();
+          void startBaileysConnection(tenantId);
         }, 3000);
       }
     }
@@ -121,17 +130,21 @@ export async function startBaileysConnection() {
 
     for (const msg of messages) {
       try {
-        await handleInboundMessage(sock, msg, state.phoneNumber);
+        await handleInboundMessage(tenantId, sock, msg, state.phoneNumber);
       } catch (err) {
-        console.error("Baileys: falha ao registrar mensagem recebida", err);
+        console.error(`Baileys (tenant ${tenantId}): falha ao registrar mensagem recebida`, err);
       }
     }
   });
 
   sock.ev.on("messaging-history.set", (payload) => {
-    historyImportQueue = historyImportQueue
-      .then(() => processHistorySync(sock, payload, state.phoneNumber))
-      .catch((err) => console.error("Baileys: falha ao importar histórico", err));
+    const queue = historyImportQueues.get(tenantId) ?? Promise.resolve();
+    historyImportQueues.set(
+      tenantId,
+      queue
+        .then(() => processHistorySync(tenantId, sock, payload, state.phoneNumber))
+        .catch((err) => console.error(`Baileys (tenant ${tenantId}): falha ao importar histórico`, err)),
+    );
   });
 
   state.starting = false;
@@ -164,7 +177,12 @@ async function resolvePhoneJid(sock: WASocket, jid: string): Promise<string | nu
   return null;
 }
 
-async function handleInboundMessage(sock: WASocket, msg: WAMessage, myPhoneNumber: string | null) {
+async function handleInboundMessage(
+  tenantId: string,
+  sock: WASocket,
+  msg: WAMessage,
+  myPhoneNumber: string | null,
+) {
   if (msg.key.fromMe) return;
 
   const remoteJid = msg.key.remoteJid;
@@ -180,6 +198,7 @@ async function handleInboundMessage(sock: WASocket, msg: WAMessage, myPhoneNumbe
   if (!body) return;
 
   await recordInboundMessage({
+    tenantId,
     fromNumber: `+${decoded.user}`,
     toNumber: myPhoneNumber ?? "",
     externalMessageId: msg.key.id ?? null,
@@ -197,6 +216,7 @@ function toIsoTimestamp(ts: number | { toNumber?: () => number } | null | undefi
 const HISTORY_BATCH_SIZE = 200;
 
 type HistoryMessageRow = {
+  tenant_id: string;
   contact_id: string;
   twilio_sid: string;
   direction: "inbound" | "outbound";
@@ -214,6 +234,7 @@ type HistoryMessageRow = {
  * Idempotente entre reconexões via upsert on-conflict em twilio_sid.
  */
 async function processHistorySync(
+  tenantId: string,
   sock: WASocket,
   payload: BaileysEventMap["messaging-history.set"],
   myPhoneNumber: string | null,
@@ -255,7 +276,7 @@ async function processHistorySync(
 
     if (!contactIdByUser.has(user)) {
       const name = nameByUser.get(user) ?? msg.pushName ?? undefined;
-      const contact = await findOrCreateContact(supabase, theirNumber, name);
+      const contact = await findOrCreateContact(supabase, tenantId, theirNumber, name);
       contactIdByUser.set(user, contact?.id ?? null);
     }
 
@@ -265,6 +286,7 @@ async function processHistorySync(
     const fromMe = !!msg.key.fromMe;
 
     rows.push({
+      tenant_id: tenantId,
       contact_id: contactId,
       twilio_sid: msg.key.id,
       direction: fromMe ? "outbound" : "inbound",
@@ -287,16 +309,19 @@ async function processHistorySync(
       .select("id, contact_id, body, direction");
 
     if (error) {
-      console.error("Baileys: falha ao importar lote de histórico", error);
+      console.error(`Baileys (tenant ${tenantId}): falha ao importar lote de histórico`, error);
       continue;
     }
 
-    console.log(`Baileys: histórico — lote de ${chunk.length}, ${inserted?.length ?? 0} novas mensagens`);
+    console.log(
+      `Baileys (tenant ${tenantId}): histórico — lote de ${chunk.length}, ${inserted?.length ?? 0} novas mensagens`,
+    );
 
     if (!inserted?.length) continue;
 
     await supabase.from("activities").insert(
       inserted.map((m) => ({
+        tenant_id: tenantId,
         contact_id: m.contact_id,
         type: "whatsapp" as const,
         direction: m.direction,

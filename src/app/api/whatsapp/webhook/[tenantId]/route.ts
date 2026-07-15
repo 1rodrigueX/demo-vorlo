@@ -21,22 +21,34 @@ function stripWhatsAppPrefix(address: string) {
   return address.replace(/^whatsapp:/, "");
 }
 
-export async function POST(request: Request) {
+export async function POST(request: Request, { params }: { params: Promise<{ tenantId: string }> }) {
+  const { tenantId } = await params;
+
+  const supabase = createAdminClient();
+
+  const { data: connection } = await supabase
+    .from("whatsapp_connections")
+    .select("twilio_auth_token")
+    .eq("tenant_id", tenantId)
+    .maybeSingle();
+
+  if (!connection?.twilio_auth_token) {
+    return NextResponse.json({ error: "Tenant sem Twilio configurado" }, { status: 404 });
+  }
+
   const rawBody = await request.text();
-  const params = Object.fromEntries(new URLSearchParams(rawBody));
+  const params_ = Object.fromEntries(new URLSearchParams(rawBody));
   const signature = request.headers.get("x-twilio-signature");
 
-  const isValid = verifyTwilioSignature(signature, request.url, params);
+  const isValid = verifyTwilioSignature(signature, request.url, params_, connection.twilio_auth_token);
   if (!isValid) {
     return NextResponse.json({ error: "Assinatura inválida" }, { status: 403 });
   }
 
-  const supabase = createAdminClient();
-
   // Status callback de uma mensagem que a equipe enviou.
-  if (params.MessageStatus && params.MessageSid) {
-    const status = KNOWN_STATUSES.includes(params.MessageStatus as WhatsAppStatus)
-      ? (params.MessageStatus as WhatsAppStatus)
+  if (params_.MessageStatus && params_.MessageSid) {
+    const status = KNOWN_STATUSES.includes(params_.MessageStatus as WhatsAppStatus)
+      ? (params_.MessageStatus as WhatsAppStatus)
       : undefined;
 
     if (status) {
@@ -44,22 +56,24 @@ export async function POST(request: Request) {
         .from("whatsapp_messages")
         .update({
           status,
-          error_message: params.ErrorMessage ?? null,
+          error_message: params_.ErrorMessage ?? null,
         })
-        .eq("twilio_sid", params.MessageSid);
+        .eq("twilio_sid", params_.MessageSid)
+        .eq("tenant_id", tenantId);
     }
 
     return NextResponse.json({ ok: true });
   }
 
   // Mensagem inbound recebida de um contato.
-  if (params.Body !== undefined && params.From && params.MessageSid) {
+  if (params_.Body !== undefined && params_.From && params_.MessageSid) {
     await recordInboundMessage({
-      fromNumber: stripWhatsAppPrefix(params.From),
-      toNumber: stripWhatsAppPrefix(params.To ?? ""),
-      externalMessageId: params.MessageSid,
-      body: params.Body,
-      rawPayload: params,
+      tenantId,
+      fromNumber: stripWhatsAppPrefix(params_.From),
+      toNumber: stripWhatsAppPrefix(params_.To ?? ""),
+      externalMessageId: params_.MessageSid,
+      body: params_.Body,
+      rawPayload: params_,
     });
 
     return NextResponse.json({ ok: true });

@@ -11,7 +11,6 @@ export default async function PipelinePage() {
     supabase
       .from("deals")
       .select("*, contact:contacts(id, name, phone)")
-      .eq("status", "open")
       .order("position"),
     supabase.from("contacts").select("id, name").order("name"),
   ]);

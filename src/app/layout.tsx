@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "CRM Nyplastic",
-  description: "CRM de vendas da equipe Nyplastic",
+  title: "FALA AI.IA",
+  description: "CRM de vendas com assistente de IA",
 };
 
 export default function RootLayout({

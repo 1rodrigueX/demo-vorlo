@@ -11,23 +11,26 @@ import { createAdminClient } from "@/lib/supabase/admin";
  */
 export async function findOrCreateContact(
   supabase: ReturnType<typeof createAdminClient>,
+  tenantId: string,
   phone: string,
   name?: string | null,
 ): Promise<{ id: string } | null> {
   const { data: existing } = await supabase
     .from("contacts")
     .select("id")
+    .eq("tenant_id", tenantId)
     .eq("phone", phone)
     .maybeSingle();
 
   if (existing) return existing;
 
-  const ownerId = await pickLeastLoadedMember(supabase);
+  const ownerId = await pickLeastLoadedMember(supabase, tenantId);
   if (!ownerId) return null;
 
   const { data: created } = await supabase
     .from("contacts")
     .insert({
+      tenant_id: tenantId,
       name: name?.trim() || phone,
       phone,
       lead_source: "WhatsApp",
@@ -40,22 +43,32 @@ export async function findOrCreateContact(
 }
 
 /**
- * Distribui leads novos em rodízio pelos vendedores (role = 'member'),
- * sempre escolhendo quem tem menos contatos no momento — se autoequilibra
- * sozinho, sem precisar de tabela/cursor de rodízio à parte. Admins não
- * entram na distribuição automática (mas continuam vendo tudo e podem
- * assumir qualquer conversa manualmente depois).
+ * Distribui leads novos em rodízio pelos vendedores (role = 'member') do
+ * mesmo tenant, sempre escolhendo quem tem menos contatos no momento — se
+ * autoequilibra sozinho, sem precisar de tabela/cursor de rodízio à parte.
+ * Owners/managers não entram na distribuição automática (mas continuam
+ * vendo tudo e podem assumir qualquer conversa manualmente depois).
  */
 async function pickLeastLoadedMember(
   supabase: ReturnType<typeof createAdminClient>,
+  tenantId: string,
 ): Promise<string | null> {
-  const { data: members } = await supabase.from("profiles").select("id").eq("role", "member");
+  const { data: members } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("tenant_id", tenantId)
+    .eq("role", "member");
 
-  const pool = members?.length ? members : (await supabase.from("profiles").select("id")).data;
+  const pool = members?.length
+    ? members
+    : (await supabase.from("profiles").select("id").eq("tenant_id", tenantId)).data;
   if (!pool?.length) return null;
   if (pool.length === 1) return pool[0].id;
 
-  const { data: existingContacts } = await supabase.from("contacts").select("created_by");
+  const { data: existingContacts } = await supabase
+    .from("contacts")
+    .select("created_by")
+    .eq("tenant_id", tenantId);
 
   const loadByUser = new Map(pool.map((p) => [p.id, 0]));
   for (const c of existingContacts ?? []) {

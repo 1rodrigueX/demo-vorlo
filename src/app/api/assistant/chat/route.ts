@@ -4,16 +4,23 @@ import { createClient } from "@/lib/supabase/server";
 import { getAnthropicClient, ASSISTANT_MODEL } from "@/lib/anthropic/client";
 import { assistantTools, executeAssistantTool } from "@/lib/assistant/tools";
 
-const SYSTEM_PROMPT = `Você é o assistente de vendas do CRM da Nyplastic, usado por uma pequena equipe de vendedores.
+const SYSTEM_PROMPT = `Você é o assistente de vendas do CRM da FALA AI.IA, usado por uma pequena equipe de vendedores.
 Ajude o vendedor a: sugerir/calcular valores de proposta, salvar o orçamento de um negócio, marcar propostas como
-enviadas, marcar vendas como ganhas, e tirar dúvidas sobre a carteira dele.
+enviadas, marcar vendas como ganhas, cadastrar clientes no Bling, e tirar dúvidas sobre a carteira dele.
 
 Regras:
 - Nunca invente contactId ou dealId. Sempre use a ferramenta search_contacts (ou list_open_deals) para descobrir o id
   real antes de chamar qualquer ferramenta que muda dados.
 - Se houver mais de um contato/negócio compatível, pergunte qual é o correto antes de agir.
-- Depois de executar uma ação (salvar orçamento, marcar proposta enviada, marcar venda ganha), confirme na resposta
-  final o nome do contato e o valor envolvido.
+- Depois de executar uma ação (salvar orçamento, marcar proposta enviada, marcar venda ganha, cadastrar no Bling),
+  confirme na resposta final o nome do contato e o valor/resultado envolvido.
+- Se o vendedor pedir pra cadastrar/registrar um cliente no Bling, use a ferramenta register_contact_in_bling.
+- NUNCA diga que executou uma ação, chamou uma ferramenta ou recebeu uma resposta (do Bling ou de qualquer sistema)
+  sem de fato ter chamado a ferramenta correspondente nesta mesma resposta e usado o texto que ela retornou. Se você
+  não chamou a ferramenta, não descreva um resultado como se fosse real.
+- NUNCA invente dado de contato (nome, CPF, e-mail, endereço, CEP etc.) que não esteja de fato salvo no CRM. Se o
+  campo estiver vazio ou você não tiver certeza, diga que está vazio/desconhecido — não preencha com um valor
+  plausível.
 - Seja direto e objetivo. Respostas curtas, sem enrolação.
 - Responda sempre em português do Brasil.`;
 
@@ -67,9 +74,13 @@ export async function POST(request: Request) {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("full_name")
+    .select("full_name, tenant_id")
     .eq("id", user.id)
     .single();
+
+  if (!profile) {
+    return NextResponse.json({ error: "Perfil não encontrado" }, { status: 400 });
+  }
 
   const { data: history } = await supabase
     .from("chat_messages")
@@ -113,6 +124,7 @@ export async function POST(request: Request) {
       for (const toolUse of toolUses) {
         const result = await executeAssistantTool(
           supabase,
+          profile.tenant_id,
           toolUse.name,
           (toolUse.input ?? {}) as Record<string, unknown>,
         );
@@ -138,8 +150,8 @@ export async function POST(request: Request) {
   }
 
   await supabase.from("chat_messages").insert([
-    { user_id: user.id, role: "user", content: userMessage },
-    { user_id: user.id, role: "assistant", content: finalText },
+    { tenant_id: profile.tenant_id, user_id: user.id, role: "user", content: userMessage },
+    { tenant_id: profile.tenant_id, user_id: user.id, role: "assistant", content: finalText },
   ]);
 
   return NextResponse.json({ reply: finalText });

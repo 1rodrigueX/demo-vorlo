@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { requireTenantId } from "@/lib/auth/current-user";
 import { companySchema } from "@/lib/validation/company";
 
 export type ActionState = { error?: string } | null;
@@ -24,9 +25,13 @@ export async function createCompany(_prevState: ActionState, formData: FormData)
   } = await supabase.auth.getUser();
   if (!user) return { error: "Sessão expirada, faça login novamente" };
 
+  const tenantId = await requireTenantId(supabase, user.id);
+  if (!tenantId) return { error: "Tenant não encontrado para este usuário" };
+
   const { data, error } = await supabase
     .from("companies")
     .insert({
+      tenant_id: tenantId,
       name: parsed.data.name,
       website: parsed.data.website || null,
       notes: parsed.data.notes || null,

@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { requireTenantId } from "@/lib/auth/current-user";
+import { syncContactToBling } from "@/lib/bling/sync";
 import { contactSchema } from "@/lib/validation/contact";
 
 export type ActionState = { error?: string } | null;
@@ -14,13 +16,15 @@ export type ActionState = { error?: string } | null;
 async function createInlineCompany(
   supabase: Awaited<ReturnType<typeof createClient>>,
   userId: string,
+  tenantId: string,
   name: string,
-  website?: string,
-  notes?: string,
+  website?: string | null,
+  notes?: string | null,
 ) {
   const { data, error } = await supabase
     .from("companies")
     .insert({
+      tenant_id: tenantId,
       name,
       website: website || null,
       notes: notes || null,
@@ -46,6 +50,14 @@ export async function createContact(_prevState: ActionState, formData: FormData)
     companyName: formData.get("companyName"),
     companyWebsite: formData.get("companyWebsite"),
     companyNotes: formData.get("companyNotes"),
+    cpfCnpj: formData.get("cpfCnpj"),
+    addressZip: formData.get("addressZip"),
+    addressStreet: formData.get("addressStreet"),
+    addressNumber: formData.get("addressNumber"),
+    addressComplement: formData.get("addressComplement"),
+    addressNeighborhood: formData.get("addressNeighborhood"),
+    addressCity: formData.get("addressCity"),
+    addressState: formData.get("addressState"),
   });
 
   if (!parsed.success) {
@@ -58,11 +70,15 @@ export async function createContact(_prevState: ActionState, formData: FormData)
   } = await supabase.auth.getUser();
   if (!user) return { error: "Sessão expirada, faça login novamente" };
 
+  const tenantId = await requireTenantId(supabase, user.id);
+  if (!tenantId) return { error: "Tenant não encontrado para este usuário" };
+
   let companyId = parsed.data.companyId || null;
   if (parsed.data.companyName) {
     companyId = await createInlineCompany(
       supabase,
       user.id,
+      tenantId,
       parsed.data.companyName,
       parsed.data.companyWebsite,
       parsed.data.companyNotes,
@@ -73,12 +89,21 @@ export async function createContact(_prevState: ActionState, formData: FormData)
   const { data, error } = await supabase
     .from("contacts")
     .insert({
+      tenant_id: tenantId,
       name: parsed.data.name,
       email: parsed.data.email || null,
       phone: parsed.data.phone || null,
       lead_source: parsed.data.leadSource || null,
       company_id: companyId,
       created_by: user.id,
+      cpf_cnpj: parsed.data.cpfCnpj || null,
+      address_zip: parsed.data.addressZip || null,
+      address_street: parsed.data.addressStreet || null,
+      address_number: parsed.data.addressNumber || null,
+      address_complement: parsed.data.addressComplement || null,
+      address_neighborhood: parsed.data.addressNeighborhood || null,
+      address_city: parsed.data.addressCity || null,
+      address_state: parsed.data.addressState || null,
     })
     .select("id")
     .single();
@@ -87,6 +112,23 @@ export async function createContact(_prevState: ActionState, formData: FormData)
     console.error("createContact failed:", error);
     return { error: `Não foi possível criar o contato: ${error?.message ?? "erro desconhecido"}` };
   }
+
+  void syncContactToBling(tenantId, {
+    id: data.id,
+    name: parsed.data.name,
+    phone: parsed.data.phone || null,
+    email: parsed.data.email || null,
+    cpfCnpj: parsed.data.cpfCnpj || null,
+    address: {
+      zip: parsed.data.addressZip || null,
+      street: parsed.data.addressStreet || null,
+      number: parsed.data.addressNumber || null,
+      complement: parsed.data.addressComplement || null,
+      neighborhood: parsed.data.addressNeighborhood || null,
+      city: parsed.data.addressCity || null,
+      state: parsed.data.addressState || null,
+    },
+  });
 
   revalidatePath("/contacts");
   revalidatePath("/companies");
@@ -107,6 +149,14 @@ export async function updateContact(
     companyName: formData.get("companyName"),
     companyWebsite: formData.get("companyWebsite"),
     companyNotes: formData.get("companyNotes"),
+    cpfCnpj: formData.get("cpfCnpj"),
+    addressZip: formData.get("addressZip"),
+    addressStreet: formData.get("addressStreet"),
+    addressNumber: formData.get("addressNumber"),
+    addressComplement: formData.get("addressComplement"),
+    addressNeighborhood: formData.get("addressNeighborhood"),
+    addressCity: formData.get("addressCity"),
+    addressState: formData.get("addressState"),
   });
 
   if (!parsed.success) {
@@ -121,9 +171,13 @@ export async function updateContact(
 
   let companyId = parsed.data.companyId || null;
   if (parsed.data.companyName) {
+    const tenantId = await requireTenantId(supabase, user.id);
+    if (!tenantId) return { error: "Tenant não encontrado para este usuário" };
+
     companyId = await createInlineCompany(
       supabase,
       user.id,
+      tenantId,
       parsed.data.companyName,
       parsed.data.companyWebsite,
       parsed.data.companyNotes,
@@ -139,6 +193,14 @@ export async function updateContact(
       phone: parsed.data.phone || null,
       lead_source: parsed.data.leadSource || null,
       company_id: companyId,
+      cpf_cnpj: parsed.data.cpfCnpj || null,
+      address_zip: parsed.data.addressZip || null,
+      address_street: parsed.data.addressStreet || null,
+      address_number: parsed.data.addressNumber || null,
+      address_complement: parsed.data.addressComplement || null,
+      address_neighborhood: parsed.data.addressNeighborhood || null,
+      address_city: parsed.data.addressCity || null,
+      address_state: parsed.data.addressState || null,
     })
     .eq("id", contactId);
 

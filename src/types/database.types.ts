@@ -1,4 +1,4 @@
-// Tipagem manual do schema em supabase/migrations/0001_init.sql.
+// Tipagem manual do schema em supabase/migrations/*.sql.
 // Se preferir gerar automaticamente depois de linkar o projeto:
 //   npx supabase gen types typescript --project-id <ref> > src/types/database.types.ts
 
@@ -13,33 +13,211 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
-      profiles: {
+      tenants: {
+        Row: {
+          id: string;
+          name: string;
+          slug: string;
+          status: "active" | "suspended";
+          seller_limit: number;
+          manager_limit: number;
+          brand_color: string;
+          brand_font: string;
+          assistant_button_position: "bottom-left" | "bottom-right";
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          slug: string;
+          status?: "active" | "suspended";
+          seller_limit?: number;
+          manager_limit?: number;
+          brand_color?: string;
+          brand_font?: string;
+          assistant_button_position?: "bottom-left" | "bottom-right";
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          slug?: string;
+          status?: "active" | "suspended";
+          seller_limit?: number;
+          manager_limit?: number;
+          brand_color?: string;
+          brand_font?: string;
+          assistant_button_position?: "bottom-left" | "bottom-right";
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      whatsapp_connections: {
+        Row: {
+          tenant_id: string;
+          provider: "baileys" | "twilio";
+          twilio_account_sid: string | null;
+          twilio_auth_token: string | null;
+          twilio_whatsapp_number: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          tenant_id: string;
+          provider?: "baileys" | "twilio";
+          twilio_account_sid?: string | null;
+          twilio_auth_token?: string | null;
+          twilio_whatsapp_number?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          tenant_id?: string;
+          provider?: "baileys" | "twilio";
+          twilio_account_sid?: string | null;
+          twilio_auth_token?: string | null;
+          twilio_whatsapp_number?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_connections_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: true;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      bling_connections: {
+        Row: {
+          tenant_id: string;
+          client_id: string | null;
+          client_secret: string | null;
+          access_token: string | null;
+          refresh_token: string | null;
+          expires_at: string | null;
+          connected_at: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          tenant_id: string;
+          client_id?: string | null;
+          client_secret?: string | null;
+          access_token?: string | null;
+          refresh_token?: string | null;
+          expires_at?: string | null;
+          connected_at?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          tenant_id?: string;
+          client_id?: string | null;
+          client_secret?: string | null;
+          access_token?: string | null;
+          refresh_token?: string | null;
+          expires_at?: string | null;
+          connected_at?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "bling_connections_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: true;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      dev_active_view: {
+        Row: {
+          dev_id: string;
+          tenant_id: string;
+          updated_at: string;
+        };
+        Insert: {
+          dev_id: string;
+          tenant_id: string;
+          updated_at?: string;
+        };
+        Update: {
+          dev_id?: string;
+          tenant_id?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "dev_active_view_dev_id_fkey";
+            columns: ["dev_id"];
+            isOneToOne: true;
+            referencedRelation: "dev_users";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "dev_active_view_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      dev_users: {
         Row: {
           id: string;
           full_name: string | null;
-          avatar_url: string | null;
-          role: "admin" | "member";
           created_at: string;
         };
         Insert: {
           id: string;
           full_name?: string | null;
-          avatar_url?: string | null;
-          role?: "admin" | "member";
           created_at?: string;
         };
         Update: {
           id?: string;
           full_name?: string | null;
-          avatar_url?: string | null;
-          role?: "admin" | "member";
           created_at?: string;
         };
         Relationships: [];
       };
+      profiles: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          full_name: string | null;
+          avatar_url: string | null;
+          role: "owner" | "manager" | "member";
+          created_at: string;
+        };
+        Insert: {
+          id: string;
+          tenant_id: string;
+          full_name?: string | null;
+          avatar_url?: string | null;
+          role?: "owner" | "manager" | "member";
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          full_name?: string | null;
+          avatar_url?: string | null;
+          role?: "owner" | "manager" | "member";
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "profiles_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       companies: {
         Row: {
           id: string;
+          tenant_id: string;
           name: string;
           website: string | null;
           notes: string | null;
@@ -49,6 +227,7 @@ export interface Database {
         };
         Insert: {
           id?: string;
+          tenant_id: string;
           name: string;
           website?: string | null;
           notes?: string | null;
@@ -58,6 +237,7 @@ export interface Database {
         };
         Update: {
           id?: string;
+          tenant_id?: string;
           name?: string;
           website?: string | null;
           notes?: string | null;
@@ -73,39 +253,76 @@ export interface Database {
             referencedRelation: "profiles";
             referencedColumns: ["id"];
           },
+          {
+            foreignKeyName: "companies_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
         ];
       };
       contacts: {
         Row: {
           id: string;
+          tenant_id: string;
           name: string;
           email: string | null;
           phone: string | null;
           lead_source: string | null;
           company_id: string | null;
           created_by: string;
+          bling_contact_id: string | null;
+          cpf_cnpj: string | null;
+          address_zip: string | null;
+          address_street: string | null;
+          address_number: string | null;
+          address_complement: string | null;
+          address_neighborhood: string | null;
+          address_city: string | null;
+          address_state: string | null;
           created_at: string;
           updated_at: string;
         };
         Insert: {
           id?: string;
+          tenant_id: string;
           name: string;
           email?: string | null;
           phone?: string | null;
           lead_source?: string | null;
           company_id?: string | null;
           created_by: string;
+          bling_contact_id?: string | null;
+          cpf_cnpj?: string | null;
+          address_zip?: string | null;
+          address_street?: string | null;
+          address_number?: string | null;
+          address_complement?: string | null;
+          address_neighborhood?: string | null;
+          address_city?: string | null;
+          address_state?: string | null;
           created_at?: string;
           updated_at?: string;
         };
         Update: {
           id?: string;
+          tenant_id?: string;
           name?: string;
           email?: string | null;
           phone?: string | null;
           lead_source?: string | null;
           company_id?: string | null;
           created_by?: string;
+          bling_contact_id?: string | null;
+          cpf_cnpj?: string | null;
+          address_zip?: string | null;
+          address_street?: string | null;
+          address_number?: string | null;
+          address_complement?: string | null;
+          address_neighborhood?: string | null;
+          address_city?: string | null;
+          address_state?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -124,11 +341,74 @@ export interface Database {
             referencedRelation: "profiles";
             referencedColumns: ["id"];
           },
+          {
+            foreignKeyName: "contacts_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      contact_attachments: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          contact_id: string;
+          file_name: string;
+          storage_path: string;
+          size_bytes: number | null;
+          uploaded_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          contact_id: string;
+          file_name: string;
+          storage_path: string;
+          size_bytes?: number | null;
+          uploaded_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          contact_id?: string;
+          file_name?: string;
+          storage_path?: string;
+          size_bytes?: number | null;
+          uploaded_by?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "contact_attachments_contact_id_fkey";
+            columns: ["contact_id"];
+            isOneToOne: false;
+            referencedRelation: "contacts";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "contact_attachments_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "contact_attachments_uploaded_by_fkey";
+            columns: ["uploaded_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
         ];
       };
       pipeline_stages: {
         Row: {
           id: string;
+          tenant_id: string;
           name: string;
           position: number;
           color: string;
@@ -138,6 +418,7 @@ export interface Database {
         };
         Insert: {
           id?: string;
+          tenant_id: string;
           name: string;
           position: number;
           color?: string;
@@ -147,6 +428,7 @@ export interface Database {
         };
         Update: {
           id?: string;
+          tenant_id?: string;
           name?: string;
           position?: number;
           color?: string;
@@ -154,11 +436,20 @@ export interface Database {
           is_lost?: boolean;
           created_at?: string;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "pipeline_stages_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       deals: {
         Row: {
           id: string;
+          tenant_id: string;
           title: string;
           contact_id: string;
           stage_id: string;
@@ -168,11 +459,13 @@ export interface Database {
           position: number;
           closed_at: string | null;
           proposal_sent_at: string | null;
+          bling_order_id: string | null;
           created_at: string;
           updated_at: string;
         };
         Insert: {
           id?: string;
+          tenant_id: string;
           title: string;
           contact_id: string;
           stage_id: string;
@@ -182,11 +475,13 @@ export interface Database {
           position?: number;
           closed_at?: string | null;
           proposal_sent_at?: string | null;
+          bling_order_id?: string | null;
           created_at?: string;
           updated_at?: string;
         };
         Update: {
           id?: string;
+          tenant_id?: string;
           title?: string;
           contact_id?: string;
           stage_id?: string;
@@ -196,6 +491,7 @@ export interface Database {
           position?: number;
           closed_at?: string | null;
           proposal_sent_at?: string | null;
+          bling_order_id?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -221,11 +517,19 @@ export interface Database {
             referencedRelation: "profiles";
             referencedColumns: ["id"];
           },
+          {
+            foreignKeyName: "deals_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
         ];
       };
       whatsapp_messages: {
         Row: {
           id: string;
+          tenant_id: string;
           contact_id: string;
           twilio_sid: string | null;
           direction: "outbound" | "inbound";
@@ -241,6 +545,7 @@ export interface Database {
         };
         Insert: {
           id?: string;
+          tenant_id: string;
           contact_id: string;
           twilio_sid?: string | null;
           direction: "outbound" | "inbound";
@@ -256,6 +561,7 @@ export interface Database {
         };
         Update: {
           id?: string;
+          tenant_id?: string;
           contact_id?: string;
           twilio_sid?: string | null;
           direction?: "outbound" | "inbound";
@@ -284,11 +590,19 @@ export interface Database {
             referencedRelation: "profiles";
             referencedColumns: ["id"];
           },
+          {
+            foreignKeyName: "whatsapp_messages_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
         ];
       };
       activities: {
         Row: {
           id: string;
+          tenant_id: string;
           contact_id: string;
           deal_id: string | null;
           type: "note" | "call" | "whatsapp" | "follow_up" | "stage_change";
@@ -300,6 +614,7 @@ export interface Database {
         };
         Insert: {
           id?: string;
+          tenant_id: string;
           contact_id: string;
           deal_id?: string | null;
           type: "note" | "call" | "whatsapp" | "follow_up" | "stage_change";
@@ -311,6 +626,7 @@ export interface Database {
         };
         Update: {
           id?: string;
+          tenant_id?: string;
           contact_id?: string;
           deal_id?: string | null;
           type?: "note" | "call" | "whatsapp" | "follow_up" | "stage_change";
@@ -349,11 +665,19 @@ export interface Database {
             referencedRelation: "whatsapp_messages";
             referencedColumns: ["id"];
           },
+          {
+            foreignKeyName: "activities_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
         ];
       };
       chat_messages: {
         Row: {
           id: string;
+          tenant_id: string;
           user_id: string;
           role: "user" | "assistant";
           content: string;
@@ -361,6 +685,7 @@ export interface Database {
         };
         Insert: {
           id?: string;
+          tenant_id: string;
           user_id: string;
           role: "user" | "assistant";
           content: string;
@@ -368,6 +693,7 @@ export interface Database {
         };
         Update: {
           id?: string;
+          tenant_id?: string;
           user_id?: string;
           role?: "user" | "assistant";
           content?: string;
@@ -379,6 +705,13 @@ export interface Database {
             columns: ["user_id"];
             isOneToOne: false;
             referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "chat_messages_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
             referencedColumns: ["id"];
           },
         ];

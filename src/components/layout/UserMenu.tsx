@@ -1,12 +1,39 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { LogOut } from "lucide-react";
+import { useState, useRef, useEffect, useTransition } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { LogOut, Wrench, DoorOpen } from "lucide-react";
 import { logout } from "@/lib/actions/auth";
+import { exitDevView } from "@/lib/actions/dev-view";
+import { useTenantTheme } from "@/lib/theme/TenantThemeContext";
+import { ROLE_LABEL } from "@/lib/utils/roles";
 
-export function UserMenu({ name, email }: { name: string; email: string }) {
+export function UserMenu({
+  name,
+  email,
+  role,
+  isDev = false,
+  isDevViewing = false,
+}: {
+  name: string;
+  email: string;
+  role?: string;
+  isDev?: boolean;
+  isDevViewing?: boolean;
+}) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const { brandColor } = useTenantTheme();
+  const router = useRouter();
+  const [isExiting, startExit] = useTransition();
+
+  function handleExitDevView() {
+    startExit(async () => {
+      await exitDevView();
+      router.push("/dev");
+    });
+  }
 
   useEffect(() => {
     function onClickOutside(e: MouseEvent) {
@@ -30,12 +57,15 @@ export function UserMenu({ name, email }: { name: string; email: string }) {
         onClick={() => setOpen((v) => !v)}
         className="flex items-center gap-2.5 rounded-lg py-1 pl-1 pr-2 transition-colors hover:bg-gray-50"
       >
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-sm font-medium text-white shadow-sm shadow-indigo-600/25">
+        <div
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-medium text-white shadow-sm"
+          style={{ backgroundColor: brandColor }}
+        >
           {initials || "?"}
         </div>
         <div className="hidden text-left sm:block">
           <p className="max-w-[9rem] truncate text-sm font-medium text-gray-900">{name}</p>
-          <p className="text-xs text-gray-400">Membro da equipe</p>
+          <p className="text-xs text-gray-400">{(role && ROLE_LABEL[role]) || "Membro da equipe"}</p>
         </div>
       </button>
       {open && (
@@ -44,6 +74,26 @@ export function UserMenu({ name, email }: { name: string; email: string }) {
             <p className="truncate text-sm font-medium text-gray-900">{name}</p>
             <p className="truncate text-xs text-gray-500">{email}</p>
           </div>
+          {isDev && (
+            <Link
+              href="/dev"
+              className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+            >
+              <Wrench size={16} />
+              Painel Dev
+            </Link>
+          )}
+          {isDevViewing && (
+            <button
+              type="button"
+              disabled={isExiting}
+              onClick={handleExitDevView}
+              className="flex w-full items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+            >
+              <DoorOpen size={16} />
+              Sair da visualização
+            </button>
+          )}
           <form action={logout}>
             <button
               type="submit"

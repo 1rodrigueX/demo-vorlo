@@ -1,4 +1,4 @@
--- CRM Nyplastic — schema inicial
+-- FALA AI.IA — schema inicial
 -- Rodar no SQL Editor do Supabase (ou via `supabase db push`).
 
 create extension if not exists "pgcrypto";

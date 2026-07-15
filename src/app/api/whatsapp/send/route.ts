@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { requireTenantId } from "@/lib/auth/current-user";
 import { sendWhatsAppMessage } from "@/lib/whatsapp/send";
 import { whatsappSendSchema } from "@/lib/validation/activity";
 
@@ -11,6 +12,11 @@ export async function POST(request: Request) {
 
   if (!user) {
     return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
+  }
+
+  const tenantId = await requireTenantId(supabase, user.id);
+  if (!tenantId) {
+    return NextResponse.json({ error: "Tenant não encontrado" }, { status: 400 });
   }
 
   const body = await request.json().catch(() => null);
@@ -37,11 +43,12 @@ export async function POST(request: Request) {
   }
 
   try {
-    const result = await sendWhatsAppMessage(contact.phone, parsed.data.message);
+    const result = await sendWhatsAppMessage(tenantId, contact.phone, parsed.data.message);
 
     const { data: waMessage, error: insertError } = await supabase
       .from("whatsapp_messages")
       .insert({
+        tenant_id: tenantId,
         contact_id: contact.id,
         twilio_sid: result.externalId,
         direction: "outbound",
@@ -62,6 +69,7 @@ export async function POST(request: Request) {
     }
 
     await supabase.from("activities").insert({
+      tenant_id: tenantId,
       contact_id: contact.id,
       type: "whatsapp",
       direction: "outbound",
@@ -76,9 +84,10 @@ export async function POST(request: Request) {
     console.error("sendWhatsAppMessage failed:", err);
 
     await supabase.from("whatsapp_messages").insert({
+      tenant_id: tenantId,
       contact_id: contact.id,
       direction: "outbound",
-      from_number: process.env.TWILIO_WHATSAPP_NUMBER ?? "",
+      from_number: "",
       to_number: contact.phone,
       body: parsed.data.message,
       status: "failed",

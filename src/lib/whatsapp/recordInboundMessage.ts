@@ -4,11 +4,12 @@ import { findOrCreateContact } from "@/lib/whatsapp/findOrCreateContact";
 import type { Json } from "@/types/database.types";
 
 /**
- * Shared inbound-message recorder used by both the Twilio webhook and the
- * Baileys `messages.upsert` handler — neither has a real user session, so
- * both write via the service-role client.
+ * Shared inbound-message recorder used by both the Twilio webhook (per
+ * tenant) and the Baileys `messages.upsert` handler (per tenant) — neither
+ * has a real user session, so both write via the service-role client.
  */
 export async function recordInboundMessage(input: {
+  tenantId: string;
   fromNumber: string;
   toNumber: string;
   externalMessageId: string | null;
@@ -18,7 +19,7 @@ export async function recordInboundMessage(input: {
 }) {
   const supabase = createAdminClient();
 
-  const contact = await findOrCreateContact(supabase, input.fromNumber, input.contactName);
+  const contact = await findOrCreateContact(supabase, input.tenantId, input.fromNumber, input.contactName);
   if (!contact) {
     console.error("recordInboundMessage: failed to find/create contact for", input.fromNumber);
     return;
@@ -27,6 +28,7 @@ export async function recordInboundMessage(input: {
   const { data: waMessage } = await supabase
     .from("whatsapp_messages")
     .insert({
+      tenant_id: input.tenantId,
       contact_id: contact.id,
       twilio_sid: input.externalMessageId,
       direction: "inbound",
@@ -40,6 +42,7 @@ export async function recordInboundMessage(input: {
     .single();
 
   await supabase.from("activities").insert({
+    tenant_id: input.tenantId,
     contact_id: contact.id,
     type: "whatsapp",
     direction: "inbound",

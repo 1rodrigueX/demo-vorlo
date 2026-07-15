@@ -3,6 +3,7 @@ import type Anthropic from "@anthropic-ai/sdk";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database.types";
 import { setDealBudget, markProposalSent, markDealWon } from "@/lib/actions/deals";
+import { syncContactToBling } from "@/lib/bling/sync";
 import { formatCurrency } from "@/lib/utils/currency";
 import { daysSinceNow } from "@/lib/utils/dates";
 
@@ -69,10 +70,23 @@ export const assistantTools: Anthropic.Tool[] = [
       required: ["dealId"],
     },
   },
+  {
+    name: "register_contact_in_bling",
+    description:
+      "Cadastra um contato como cliente no Bling (ERP), se este CRM estiver conectado ao Bling (Configurações). Use quando o vendedor pedir pra cadastrar/registrar um cliente no Bling.",
+    input_schema: {
+      type: "object",
+      properties: {
+        contactId: { type: "string", description: "id do contato (uuid)" },
+      },
+      required: ["contactId"],
+    },
+  },
 ];
 
 export async function executeAssistantTool(
   supabase: Supabase,
+  tenantId: string,
   name: string,
   input: Record<string, unknown>,
 ): Promise<{ content: string; isError: boolean }> {
@@ -166,6 +180,54 @@ export async function executeAssistantTool(
         const result = await markDealWon(dealId);
         if (result.error) return { content: result.error, isError: true };
         return { content: "Negócio marcado como venda ganha! 🎉", isError: false };
+      }
+
+      case "register_contact_in_bling": {
+        const contactId = String(input.contactId ?? "");
+        if (!contactId) return { content: "contactId é obrigatório", isError: true };
+
+        const { data: contact, error } = await supabase
+          .from("contacts")
+          .select(
+            "id, name, phone, email, bling_contact_id, cpf_cnpj, address_zip, address_street, address_number, address_complement, address_neighborhood, address_city, address_state",
+          )
+          .eq("id", contactId)
+          .single();
+
+        if (error || !contact) return { content: "Contato não encontrado", isError: true };
+
+        if (contact.bling_contact_id) {
+          return {
+            content: `${contact.name} já está cadastrado no Bling (id ${contact.bling_contact_id}).`,
+            isError: false,
+          };
+        }
+
+        const result = await syncContactToBling(tenantId, {
+          id: contact.id,
+          name: contact.name,
+          phone: contact.phone,
+          email: contact.email,
+          cpfCnpj: contact.cpf_cnpj,
+          address: {
+            zip: contact.address_zip,
+            street: contact.address_street,
+            number: contact.address_number,
+            complement: contact.address_complement,
+            neighborhood: contact.address_neighborhood,
+            city: contact.address_city,
+            state: contact.address_state,
+          },
+        });
+
+        if (!result.success) {
+          return { content: `Não foi possível cadastrar no Bling: ${result.error}`, isError: true };
+        }
+
+        return {
+          content: `${contact.name} cadastrado no Bling com sucesso (id ${result.blingId}).`,
+          isError: false,
+        };
       }
 
       default:

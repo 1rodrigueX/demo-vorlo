@@ -2,6 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { requireTenantId } from "@/lib/auth/current-user";
+import { createBlingOrderForDeal } from "@/lib/bling/sync";
 import { dealSchema, updateDealStageSchema } from "@/lib/validation/deal";
 
 export type ActionState = { error?: string } | null;
@@ -24,12 +26,16 @@ export async function createDeal(_prevState: ActionState, formData: FormData): P
   } = await supabase.auth.getUser();
   if (!user) return { error: "Sessão expirada, faça login novamente" };
 
+  const tenantId = await requireTenantId(supabase, user.id);
+  if (!tenantId) return { error: "Tenant não encontrado para este usuário" };
+
   const { count } = await supabase
     .from("deals")
     .select("id", { count: "exact", head: true })
     .eq("stage_id", parsed.data.stageId);
 
   const { error } = await supabase.from("deals").insert({
+    tenant_id: tenantId,
     title: parsed.data.title,
     contact_id: parsed.data.contactId,
     stage_id: parsed.data.stageId,
@@ -93,8 +99,11 @@ export async function updateDealStage(input: {
     .eq("id", parsed.data.dealId)
     .single();
 
-  if (deal) {
+  const tenantId = user ? await requireTenantId(supabase, user.id) : null;
+
+  if (deal && tenantId) {
     await supabase.from("activities").insert({
+      tenant_id: tenantId,
       contact_id: deal.contact_id,
       deal_id: parsed.data.dealId,
       type: "stage_change",
@@ -157,9 +166,13 @@ export async function setDealBudget(contactId: string, dealId: string | null, va
     return { error: `Nenhum estágio de pipeline configurado: ${stageError?.message ?? "erro desconhecido"}` };
   }
 
+  const tenantId = await requireTenantId(supabase, user.id);
+  if (!tenantId) return { error: "Tenant não encontrado para este usuário" };
+
   const { data: created, error } = await supabase
     .from("deals")
     .insert({
+      tenant_id: tenantId,
       title: `Orçamento — ${contact?.name ?? "Lead"}`,
       contact_id: contactId,
       stage_id: firstStage.id,
@@ -206,11 +219,19 @@ export async function markProposalSent(dealId: string) {
       ...(proposalStage ? { stage_id: proposalStage.id } : {}),
     })
     .eq("id", dealId)
-    .select("contact_id")
+    .select("tenant_id, title, value, contact_id, contact:contacts(bling_contact_id)")
     .single();
 
   if (error || !deal) {
     return { error: "Não foi possível marcar a proposta como enviada" };
+  }
+
+  if (deal.contact?.bling_contact_id) {
+    void createBlingOrderForDeal(
+      deal.tenant_id,
+      { id: dealId, title: deal.title, value: Number(deal.value) },
+      deal.contact.bling_contact_id,
+    );
   }
 
   revalidatePath("/pipeline");
