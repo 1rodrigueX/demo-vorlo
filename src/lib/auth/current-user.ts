@@ -42,6 +42,7 @@ export async function getCurrentUser() {
         full_name: "Dev",
         role: "owner",
         avatar_url: null,
+        seller_tag_id: null,
         created_at: new Date().toISOString(),
       };
       return { user, profile: syntheticProfile, isDevViewing: true as const };

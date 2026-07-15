@@ -239,6 +239,86 @@ export interface Database {
           },
         ];
       };
+      bling_connection_sellers: {
+        Row: {
+          bling_connection_id: string;
+          profile_id: string;
+          bling_vendedor_id: string;
+          bling_vendedor_name: string | null;
+          created_at: string;
+        };
+        Insert: {
+          bling_connection_id: string;
+          profile_id: string;
+          bling_vendedor_id: string;
+          bling_vendedor_name?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          bling_connection_id?: string;
+          profile_id?: string;
+          bling_vendedor_id?: string;
+          bling_vendedor_name?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "bling_connection_sellers_bling_connection_id_fkey";
+            columns: ["bling_connection_id"];
+            isOneToOne: false;
+            referencedRelation: "bling_connections";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "bling_connection_sellers_profile_id_fkey";
+            columns: ["profile_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      tenant_api_keys: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          name: string;
+          key_prefix: string;
+          key_hash: string;
+          created_by: string | null;
+          last_used_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          name: string;
+          key_prefix: string;
+          key_hash: string;
+          created_by?: string | null;
+          last_used_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          name?: string;
+          key_prefix?: string;
+          key_hash?: string;
+          created_by?: string | null;
+          last_used_at?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "tenant_api_keys_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       dev_active_view: {
         Row: {
           dev_id: string;
@@ -297,6 +377,7 @@ export interface Database {
           full_name: string | null;
           avatar_url: string | null;
           role: "owner" | "manager" | "member";
+          seller_tag_id: string | null;
           created_at: string;
         };
         Insert: {
@@ -305,6 +386,7 @@ export interface Database {
           full_name?: string | null;
           avatar_url?: string | null;
           role?: "owner" | "manager" | "member";
+          seller_tag_id?: string | null;
           created_at?: string;
         };
         Update: {
@@ -313,6 +395,7 @@ export interface Database {
           full_name?: string | null;
           avatar_url?: string | null;
           role?: "owner" | "manager" | "member";
+          seller_tag_id?: string | null;
           created_at?: string;
         };
         Relationships: [
@@ -392,6 +475,7 @@ export interface Database {
           address_neighborhood: string | null;
           address_city: string | null;
           address_state: string | null;
+          needs_registration: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -413,6 +497,7 @@ export interface Database {
           address_neighborhood?: string | null;
           address_city?: string | null;
           address_state?: string | null;
+          needs_registration?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -434,6 +519,7 @@ export interface Database {
           address_neighborhood?: string | null;
           address_city?: string | null;
           address_state?: string | null;
+          needs_registration?: boolean;
           created_at?: string;
           updated_at?: string;
         };

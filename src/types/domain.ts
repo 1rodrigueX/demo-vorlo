@@ -23,6 +23,8 @@ export type AiAgentMemory = Database["public"]["Tables"]["ai_agent_memory"]["Row
 export type AiAgentLog = Database["public"]["Tables"]["ai_agent_logs"]["Row"];
 export type AgentType = AiAgent["type"];
 export type BillingPlan = Database["public"]["Tables"]["billing_plans"]["Row"];
+export type BlingConnectionSeller = Database["public"]["Tables"]["bling_connection_sellers"]["Row"];
+export type TenantApiKey = Database["public"]["Tables"]["tenant_api_keys"]["Row"];
 
 export type ContactWithCompany = Contact & {
   company: Pick<Company, "id" | "name"> | null;

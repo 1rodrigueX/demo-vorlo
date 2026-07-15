@@ -108,7 +108,7 @@ function BlingConnectionRow({
       </div>
 
       <div className="mb-3">
-        <Label htmlFor={`tag-${connection.id}`}>Tag vinculada (roteia a sincronização)</Label>
+        <Label htmlFor={`tag-${connection.id}`}>Tag que roteia contatos pra esta filial</Label>
         <Select
           id={`tag-${connection.id}`}
           defaultValue={connection.tag_id ?? ""}
@@ -122,6 +122,9 @@ function BlingConnectionRow({
             </option>
           ))}
         </Select>
+        <p className="mt-1 text-xs text-gray-500">
+          Criada automaticamente com o nome desta conexão — troque aqui só se quiser usar outra tag.
+        </p>
       </div>
 
       {isConnected ? (
@@ -194,7 +197,7 @@ function BlingConnectionRow({
   );
 }
 
-function NewBlingConnectionButton({ tags }: { tags: Tag[] }) {
+function NewBlingConnectionButton() {
   const [open, setOpen] = useState(false);
   const [state, formAction, isPending] = useActionState<ActionState, FormData>(createBlingConnection, null);
   const router = useRouter();
@@ -220,17 +223,9 @@ function NewBlingConnectionButton({ tags }: { tags: Tag[] }) {
           <div>
             <Label htmlFor="new-bling-name">Nome</Label>
             <Input id="new-bling-name" name="name" placeholder="Ex: Filial RJ" required />
-          </div>
-          <div>
-            <Label htmlFor="new-bling-tag">Tag vinculada (opcional)</Label>
-            <Select id="new-bling-tag" name="tagId" defaultValue="">
-              <option value="">Nenhuma por enquanto</option>
-              {tags.map((tag) => (
-                <option key={tag.id} value={tag.id}>
-                  {tag.name}
-                </option>
-              ))}
-            </Select>
+            <p className="mt-1 text-xs text-gray-500">
+              Esse nome também vira uma tag — atribua ela aos contatos dessa filial pra rotear a sincronização.
+            </p>
           </div>
           <div>
             <Label htmlFor="new-bling-client-id">Client ID</Label>
@@ -266,7 +261,7 @@ export function BlingConnectionsCard({
       {connections.map((connection) => (
         <BlingConnectionRow key={connection.id} connection={connection} tags={tags} siteUrl={siteUrl} />
       ))}
-      <NewBlingConnectionButton tags={tags} />
+      <NewBlingConnectionButton />
     </div>
   );
 }

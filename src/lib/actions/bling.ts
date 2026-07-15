@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireTenantId } from "@/lib/auth/current-user";
 import { createBlingConnectionSchema, updateBlingCredentialsSchema } from "@/lib/validation/bling";
+import { findOrCreateTagByName } from "@/lib/tags/ensureTag";
 
 export type ActionState = { error?: string } | null;
 
@@ -15,7 +16,6 @@ export async function createBlingConnection(
     name: formData.get("name"),
     clientId: formData.get("clientId"),
     clientSecret: formData.get("clientSecret"),
-    tagId: formData.get("tagId") || undefined,
   });
 
   if (!parsed.success) {
@@ -31,12 +31,16 @@ export async function createBlingConnection(
   const tenantId = await requireTenantId(supabase, user.id);
   if (!tenantId) return { error: "Tenant não encontrado" };
 
+  // O nome da conexão (filial) já vira a tag usada pra rotear contatos até ela.
+  const tagId = await findOrCreateTagByName(supabase, tenantId, parsed.data.name);
+  if (!tagId) return { error: "Não foi possível criar a tag dessa filial" };
+
   const { error } = await supabase.from("bling_connections").insert({
     tenant_id: tenantId,
     name: parsed.data.name,
     client_id: parsed.data.clientId,
     client_secret: parsed.data.clientSecret,
-    tag_id: parsed.data.tagId || null,
+    tag_id: tagId,
     is_default: false,
   });
 
