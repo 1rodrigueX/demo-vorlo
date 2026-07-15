@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils/cn";
 import { formatDateTime } from "@/lib/utils/dates";
 import { EmailAttachmentChip } from "@/components/email/EmailAttachmentChip";
+import { RichTextEditor } from "@/components/email/RichTextEditor";
 import type { EmailMessage } from "@/types/domain";
 
 export function EmailChatPanel({
@@ -69,17 +70,18 @@ export function EmailChatPanel({
     setFiles((prev) => prev.filter((_, i) => i !== index));
   }
 
+  const isBodyEmpty = !body.replace(/<[^>]*>/g, "").trim();
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const text = body.trim();
-    if (!text || !subject.trim()) return;
+    if (isBodyEmpty || !subject.trim()) return;
 
     setIsPending(true);
     try {
       const formData = new FormData();
       formData.set("contactId", contactId);
       formData.set("subject", subject.trim());
-      formData.set("message", text);
+      formData.set("message", body);
       files.forEach((file) => formData.append("files", file));
 
       const res = await fetch("/api/email/send", { method: "POST", body: formData });
@@ -136,7 +138,16 @@ export function EmailChatPanel({
                     <span className="shrink-0">{formatDateTime(msg.created_at)}</span>
                   </div>
                   <p className="mt-1 text-sm font-semibold text-gray-900">{msg.subject || "(sem assunto)"}</p>
-                  <p className="mt-1 whitespace-pre-wrap break-words text-sm text-gray-700">{msg.body}</p>
+                  {msg.body_html ? (
+                    <div
+                      className="mt-1 max-w-none break-words text-sm text-gray-700 [&_a]:text-indigo-600 [&_a]:underline [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:my-1 [&_ul]:list-disc [&_ul]:pl-5"
+                      // body_html já é sanitizado antes de ser gravado (compose e sync) —
+                      // nunca gravamos HTML de origem não confiável sem passar por sanitizeEmailHtml.
+                      dangerouslySetInnerHTML={{ __html: msg.body_html }}
+                    />
+                  ) : (
+                    <p className="mt-1 whitespace-pre-wrap break-words text-sm text-gray-700">{msg.body}</p>
+                  )}
                   {attachments.length > 0 && (
                     <div className="mt-2 flex flex-wrap gap-1.5">
                       {attachments.map((att, i) => (
@@ -186,7 +197,7 @@ export function EmailChatPanel({
                 ))}
               </div>
             )}
-            <div className="flex items-end gap-2">
+            <div className="flex items-start gap-2">
               <input ref={fileInputRef} type="file" multiple className="hidden" onChange={handleFilesSelected} />
               <button
                 type="button"
@@ -196,16 +207,17 @@ export function EmailChatPanel({
               >
                 <Paperclip size={18} />
               </button>
-              <textarea
-                value={body}
-                onChange={(e) => setBody(e.target.value)}
-                placeholder="Escreva o e-mail..."
-                rows={2}
-                className="max-h-40 flex-1 resize-none rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:outline-none"
-              />
+              <div className="flex-1">
+                <RichTextEditor
+                  value={body}
+                  onChange={setBody}
+                  placeholder="Escreva o e-mail..."
+                  minHeightClassName="min-h-[64px]"
+                />
+              </div>
               <button
                 type="submit"
-                disabled={isPending || !body.trim() || !subject.trim()}
+                disabled={isPending || isBodyEmpty || !subject.trim()}
                 className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-600 text-white transition-colors hover:bg-indigo-500 disabled:bg-indigo-300"
                 aria-label="Enviar e-mail"
               >

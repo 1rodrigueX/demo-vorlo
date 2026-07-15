@@ -6,7 +6,11 @@ export const emailSendSchema = z
     to: z.string().trim().toLowerCase().email("E-mail do destinatário inválido").optional(),
     cc: z.string().trim().optional(),
     subject: z.string().trim().min(1, "Escreva um assunto"),
-    message: z.string().trim().min(1, "Escreva uma mensagem"),
+    // `message` chega como HTML do editor rich text — valida pelo texto sem
+    // as tags, já que "<p></p>" (vazio) passaria num min(1) simples.
+    message: z
+      .string()
+      .refine((val) => val.replace(/<[^>]*>/g, "").trim().length > 0, "Escreva uma mensagem"),
     provider: z.enum(["gmail", "outlook"]).optional(),
   })
   .refine((data) => data.contactId || data.to, {

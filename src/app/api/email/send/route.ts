@@ -6,6 +6,7 @@ import { requireTenantId } from "@/lib/auth/current-user";
 import { sendEmailMessage, getConnectedEmailProviders } from "@/lib/email/send";
 import { emailSendSchema, parseCcAddresses } from "@/lib/validation/email";
 import { findOrCreateContactByEmail } from "@/lib/email/findOrCreateContactByEmail";
+import { sanitizeEmailHtml, htmlToPlainText } from "@/lib/email/sanitizeHtml";
 import { uploadMessageAttachment, MAX_ATTACHMENT_SIZE } from "@/lib/storage/messageAttachments";
 import type { OAuthProviderKey } from "@/lib/integrations/providers";
 import type { EmailAttachmentInput } from "@/lib/email/types";
@@ -110,13 +111,15 @@ export async function POST(request: Request) {
   }
 
   const ccAddress = ccList.length ? ccList.join(", ") : null;
+  const bodyHtml = sanitizeEmailHtml(parsed.data.message);
+  const bodyText = htmlToPlainText(bodyHtml);
 
   try {
     const result = await sendEmailMessage(tenantId, provider, {
       to: contact.email,
       cc: ccAddress ?? undefined,
       subject: parsed.data.subject,
-      body: parsed.data.message,
+      html: bodyHtml,
       attachments: attachmentsForSend,
     });
 
@@ -132,7 +135,8 @@ export async function POST(request: Request) {
       to_address: contact.email,
       cc_address: ccAddress,
       subject: parsed.data.subject,
-      body: parsed.data.message,
+      body: bodyText,
+      body_html: bodyHtml,
       status: "sent",
       error_message: null,
       raw_payload: null,
@@ -181,7 +185,8 @@ export async function POST(request: Request) {
       to_address: contact.email,
       cc_address: ccAddress,
       subject: parsed.data.subject,
-      body: parsed.data.message,
+      body: bodyText,
+      body_html: bodyHtml,
       status: "failed",
       error_message: message,
       sent_by: user.id,

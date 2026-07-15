@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getValidOAuthAccessToken } from "@/lib/integrations/oauth";
 import { sendGmailMessage } from "@/lib/email/gmail";
 import { sendOutlookMessage } from "@/lib/email/outlook";
+import { htmlToPlainText } from "@/lib/email/sanitizeHtml";
 import type { OAuthProviderKey } from "@/lib/integrations/providers";
 import type { EmailAttachmentInput } from "@/lib/email/types";
 
@@ -25,7 +26,7 @@ export async function getConnectedEmailProviders(
 export async function sendEmailMessage(
   tenantId: string,
   provider: OAuthProviderKey,
-  params: { to: string; cc?: string; subject: string; body: string; attachments?: EmailAttachmentInput[] },
+  params: { to: string; cc?: string; subject: string; html: string; attachments?: EmailAttachmentInput[] },
 ): Promise<SendEmailResult> {
   const accessToken = await getValidOAuthAccessToken(provider, tenantId);
   if (!accessToken) {
@@ -42,7 +43,7 @@ export async function sendEmailMessage(
 
   const externalId =
     provider === "gmail"
-      ? await sendGmailMessage(accessToken, params)
+      ? await sendGmailMessage(accessToken, { ...params, text: htmlToPlainText(params.html) })
       : await sendOutlookMessage(accessToken, params);
 
   return { externalId, provider, fromAddress: connection?.name || "" };

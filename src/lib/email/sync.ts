@@ -4,6 +4,7 @@ import { getValidOAuthAccessToken } from "@/lib/integrations/oauth";
 import { listGmailMessageIds, getGmailMessage } from "@/lib/email/gmail";
 import { listOutlookMessages } from "@/lib/email/outlook";
 import { findOrCreateContactByEmail, parseEmailAddress } from "@/lib/email/findOrCreateContactByEmail";
+import { sanitizeEmailHtml } from "@/lib/email/sanitizeHtml";
 import type { ParsedEmail } from "@/lib/email/types";
 import type { OAuthProviderKey } from "@/lib/integrations/providers";
 
@@ -52,6 +53,7 @@ async function insertEmails(
         to_address: parseEmailAddress(email.to).email || email.to,
         subject: email.subject,
         body: email.body,
+        body_html: email.bodyHtml ? sanitizeEmailHtml(email.bodyHtml) : null,
         status: "received",
         created_at: email.date,
       })

@@ -38,13 +38,15 @@ export async function listOutlookMessages(accessToken: string, top = 25): Promis
 
   return (data.value ?? []).map((m) => {
     const content = m.body?.content ?? "";
+    const isHtml = m.body?.contentType === "html";
     return {
       externalId: m.id,
       threadId: m.conversationId ?? null,
       from: m.from?.emailAddress?.address ?? "",
       to: (m.toRecipients ?? []).map((r) => r.emailAddress?.address).filter(Boolean).join(", "),
       subject: m.subject ?? "",
-      body: m.body?.contentType === "html" ? stripHtml(content) : content,
+      body: isHtml ? stripHtml(content) : content,
+      bodyHtml: isHtml ? content : null,
       date: m.receivedDateTime ?? new Date().toISOString(),
     };
   });
@@ -53,7 +55,7 @@ export async function listOutlookMessages(accessToken: string, top = 25): Promis
 /** O Graph não retorna o id da mensagem enviada em /sendMail — geramos um id local só pra ter uma chave única na tabela. */
 export async function sendOutlookMessage(
   accessToken: string,
-  params: { to: string; cc?: string; subject: string; body: string; attachments?: EmailAttachmentInput[] },
+  params: { to: string; cc?: string; subject: string; html: string; attachments?: EmailAttachmentInput[] },
 ): Promise<string> {
   const attachments = (params.attachments ?? []).map((att) => ({
     "@odata.type": "#microsoft.graph.fileAttachment",
@@ -74,7 +76,7 @@ export async function sendOutlookMessage(
     body: JSON.stringify({
       message: {
         subject: params.subject,
-        body: { contentType: "Text", content: params.body },
+        body: { contentType: "HTML", content: params.html },
         toRecipients: [{ emailAddress: { address: params.to } }],
         ...(ccRecipients.length ? { ccRecipients } : {}),
         ...(attachments.length ? { attachments } : {}),

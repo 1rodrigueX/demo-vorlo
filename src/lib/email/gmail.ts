@@ -73,6 +73,7 @@ export async function getGmailMessage(accessToken: string, id: string): Promise<
     to: getHeader(headers, "To"),
     subject: getHeader(headers, "Subject"),
     body,
+    bodyHtml: bodyHtml ?? null,
     date: data.internalDate ? new Date(Number(data.internalDate)).toISOString() : new Date().toISOString(),
   };
 }
@@ -81,32 +82,52 @@ function buildGmailRawMessage(params: {
   to: string;
   cc?: string;
   subject: string;
-  body: string;
+  text: string;
+  html: string;
   attachments?: EmailAttachmentInput[];
 }): string {
   const attachments = params.attachments ?? [];
-  const headerLines = [`To: ${params.to}`, ...(params.cc ? [`Cc: ${params.cc}`] : []), `Subject: ${params.subject}`];
-
-  if (!attachments.length) {
-    return [...headerLines, `Content-Type: text/plain; charset="UTF-8"`, "", params.body].join("\r\n");
-  }
-
-  const boundary = `----=_Part_${Date.now()}`;
-  const lines = [
-    ...headerLines,
+  const headerLines = [
+    `To: ${params.to}`,
+    ...(params.cc ? [`Cc: ${params.cc}`] : []),
+    `Subject: ${params.subject}`,
     `MIME-Version: 1.0`,
-    `Content-Type: multipart/mixed; boundary="${boundary}"`,
-    "",
-    `--${boundary}`,
+  ];
+
+  const altBoundary = `----=_Alt_${Date.now()}`;
+  const altPart = [
+    `--${altBoundary}`,
     `Content-Type: text/plain; charset="UTF-8"`,
     "",
-    params.body,
+    params.text,
+    `--${altBoundary}`,
+    `Content-Type: text/html; charset="UTF-8"`,
+    "",
+    params.html,
+    `--${altBoundary}--`,
+  ].join("\r\n");
+
+  if (!attachments.length) {
+    return [...headerLines, `Content-Type: multipart/alternative; boundary="${altBoundary}"`, "", altPart].join(
+      "\r\n",
+    );
+  }
+
+  const mixedBoundary = `----=_Mix_${Date.now()}`;
+  const lines = [
+    ...headerLines,
+    `Content-Type: multipart/mixed; boundary="${mixedBoundary}"`,
+    "",
+    `--${mixedBoundary}`,
+    `Content-Type: multipart/alternative; boundary="${altBoundary}"`,
+    "",
+    altPart,
   ];
 
   for (const att of attachments) {
     lines.push(
       "",
-      `--${boundary}`,
+      `--${mixedBoundary}`,
       `Content-Type: ${att.contentType}; name="${att.filename}"`,
       `Content-Disposition: attachment; filename="${att.filename}"`,
       `Content-Transfer-Encoding: base64`,
@@ -114,14 +135,14 @@ function buildGmailRawMessage(params: {
       att.content.toString("base64"),
     );
   }
-  lines.push("", `--${boundary}--`);
+  lines.push("", `--${mixedBoundary}--`);
 
   return lines.join("\r\n");
 }
 
 export async function sendGmailMessage(
   accessToken: string,
-  params: { to: string; cc?: string; subject: string; body: string; attachments?: EmailAttachmentInput[] },
+  params: { to: string; cc?: string; subject: string; text: string; html: string; attachments?: EmailAttachmentInput[] },
 ): Promise<string> {
   const raw = buildGmailRawMessage(params);
 

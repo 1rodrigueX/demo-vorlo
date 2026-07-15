@@ -811,6 +811,7 @@ export interface Database {
           cc_address: string | null;
           subject: string | null;
           body: string | null;
+          body_html: string | null;
           status: "sent" | "failed" | "received";
           error_message: string | null;
           raw_payload: Json | null;
@@ -831,6 +832,7 @@ export interface Database {
           cc_address?: string | null;
           subject?: string | null;
           body?: string | null;
+          body_html?: string | null;
           status?: "sent" | "failed" | "received";
           error_message?: string | null;
           raw_payload?: Json | null;
@@ -851,6 +853,7 @@ export interface Database {
           cc_address?: string | null;
           subject?: string | null;
           body?: string | null;
+          body_html?: string | null;
           status?: "sent" | "failed" | "received";
           error_message?: string | null;
           raw_payload?: Json | null;

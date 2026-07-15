@@ -8,6 +8,7 @@ import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
+import { RichTextEditor } from "@/components/email/RichTextEditor";
 
 export function NewEmailButton() {
   const [open, setOpen] = useState(false);
@@ -29,9 +30,11 @@ export function NewEmailButton() {
     setFiles([]);
   }
 
+  const isBodyEmpty = !body.replace(/<[^>]*>/g, "").trim();
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!to.trim() || !subject.trim() || !body.trim()) return;
+    if (!to.trim() || !subject.trim() || isBodyEmpty) return;
 
     setIsPending(true);
     try {
@@ -39,7 +42,7 @@ export function NewEmailButton() {
       formData.set("to", to.trim());
       if (cc.trim()) formData.set("cc", cc.trim());
       formData.set("subject", subject.trim());
-      formData.set("message", body.trim());
+      formData.set("message", body);
       files.forEach((file) => formData.append("files", file));
 
       const res = await fetch("/api/email/send", { method: "POST", body: formData });
@@ -118,14 +121,7 @@ export function NewEmailButton() {
 
           <div>
             <Label htmlFor="new-email-body">Mensagem</Label>
-            <textarea
-              id="new-email-body"
-              value={body}
-              onChange={(e) => setBody(e.target.value)}
-              rows={6}
-              required
-              className="w-full resize-none rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:outline-none"
-            />
+            <RichTextEditor value={body} onChange={setBody} placeholder="Escreva sua mensagem..." />
           </div>
 
           {files.length > 0 && (
