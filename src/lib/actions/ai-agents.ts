@@ -14,6 +14,7 @@ import { ASSISTANT_MODEL } from "@/lib/anthropic/client";
 import type { Database } from "@/types/database.types";
 
 type AiAgentUpdate = Database["public"]["Tables"]["ai_agents"]["Update"];
+type AgentType = CreateAgentInput["type"];
 
 type Result<T> = { data?: T; error?: string };
 
@@ -22,13 +23,30 @@ function friendlyError(message: string, code?: string): string {
   return message;
 }
 
+/**
+ * O FALA AI às vezes chama create_agent com type="custom" mesmo quando o
+ * nome corresponde a um template conhecido (ex: pedir "crie um agente SDR"
+ * gerou name="SDR" + type="custom"). Sem essa correção, recursos que
+ * dependem do type real (ex: o SDR automático de leads no WhatsApp) nunca
+ * encontram o agente.
+ */
+function normalizeAgentType(type: AgentType, name: string): AgentType {
+  if (type !== "custom") return type;
+  const normalized = name.trim().toLowerCase();
+  const knownType = (Object.keys(AGENT_TEMPLATES) as (keyof typeof AGENT_TEMPLATES)[]).find(
+    (key) => key === normalized,
+  );
+  return knownType ?? type;
+}
+
 export async function createAgent(
   input: CreateAgentInput,
 ): Promise<Result<{ agentId: string; name: string; type: string }>> {
   const parsed = createAgentInputSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
 
-  const { name, type } = parsed.data;
+  const { name } = parsed.data;
+  const type = normalizeAgentType(parsed.data.type, name);
   let objective = parsed.data.objective;
   let systemPrompt = parsed.data.systemPrompt;
   let tools: string[] | undefined = parsed.data.tools;
