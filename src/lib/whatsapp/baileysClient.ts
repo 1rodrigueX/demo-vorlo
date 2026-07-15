@@ -1,5 +1,6 @@
 import "server-only";
 import path from "node:path";
+import { rm } from "node:fs/promises";
 import pino from "pino";
 import QRCode from "qrcode";
 import type { Boom } from "@hapi/boom";
@@ -115,8 +116,13 @@ export async function startBaileysConnection(tenantId: string) {
       if (loggedOut) {
         state.phoneNumber = null;
         console.error(
-          `Baileys (tenant ${tenantId}): sessão desconectada pelo celular — escaneie um novo QR code`,
+          `Baileys (tenant ${tenantId}): sessão desconectada pelo celular — gerando um novo QR code`,
         );
+        // Sem isso, toda tentativa seguinte reusa a mesma credencial já
+        // inválida e recebe "loggedOut" de novo, num loop infinito que nunca
+        // chega a gerar um QR code novo de verdade.
+        await rm(authFolderFor(tenantId), { recursive: true, force: true }).catch(() => {});
+        void startBaileysConnection(tenantId);
       } else {
         setTimeout(() => {
           void startBaileysConnection(tenantId);
