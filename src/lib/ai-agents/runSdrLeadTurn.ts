@@ -61,14 +61,18 @@ export async function runSdrLeadTurn(tenantId: string, contactId: string): Promi
 
   if (!messages.length) return;
 
-  const [{ data: companyProfile }, { data: productPhotos }, { count: catalogCount }] = await Promise.all([
+  const [{ data: companyProfile }, { data: productPhotos }, { data: catalogs }] = await Promise.all([
     admin
       .from("tenant_company_profile")
       .select("description, website, instagram")
       .eq("tenant_id", tenantId)
       .maybeSingle(),
     admin.from("company_product_photos").select("caption").eq("tenant_id", tenantId),
-    admin.from("company_catalogs").select("id", { count: "exact", head: true }).eq("tenant_id", tenantId),
+    admin
+      .from("company_catalogs")
+      .select("file_name")
+      .eq("tenant_id", tenantId)
+      .order("created_at", { ascending: true }),
   ]);
 
   const company: CompanyProfileContext | null = companyProfile
@@ -76,7 +80,7 @@ export async function runSdrLeadTurn(tenantId: string, contactId: string): Promi
         description: companyProfile.description,
         website: companyProfile.website,
         instagram: companyProfile.instagram,
-        hasCatalog: (catalogCount ?? 0) > 0,
+        catalogNames: (catalogs ?? []).map((c) => c.file_name),
         hasProductPhotos: (productPhotos ?? []).length > 0,
         productPhotoCaptions: (productPhotos ?? []).map((p) => p.caption).filter((c): c is string => !!c),
       }
@@ -85,7 +89,7 @@ export async function runSdrLeadTurn(tenantId: string, contactId: string): Promi
   const system = buildSdrLeadPrompt(agent, contact, company);
   const tools: Anthropic.Tool[] = [COMPLETE_LEAD_REGISTRATION_TOOL];
   if (company?.website) tools.push(SEARCH_COMPANY_WEBSITE_TOOL);
-  if (company?.hasCatalog) tools.push(SEND_CATALOG_TOOL);
+  if (company?.catalogNames.length) tools.push(SEND_CATALOG_TOOL);
   if (company?.hasProductPhotos) tools.push(SEND_PRODUCT_PHOTOS_TOOL);
 
   let finalText = "";
@@ -112,7 +116,10 @@ export async function runSdrLeadTurn(tenantId: string, contactId: string): Promi
         if (toolUse.name === "search_company_website" && company?.website) {
           result = await executeSearchCompanyWebsite(admin, tenantId, company.website);
         } else if (toolUse.name === "send_catalog") {
-          result = await executeSendCatalog(admin, tenantId, contactId, contact.phone);
+          const fileName = String((toolUse.input as { file_name?: string } | undefined)?.file_name ?? "").trim();
+          result = fileName
+            ? await executeSendCatalog(admin, tenantId, contactId, contact.phone, fileName)
+            : { content: "Informe o file_name exato do catálogo escolhido pelo lead.", isError: true };
         } else if (toolUse.name === "send_product_photos") {
           result = await executeSendProductPhotos(admin, tenantId, contactId, contact.phone);
         } else {

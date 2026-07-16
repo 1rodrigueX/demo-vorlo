@@ -2,7 +2,7 @@ export type CompanyProfileContext = {
   description: string | null;
   website: string | null;
   instagram: string | null;
-  hasCatalog: boolean;
+  catalogNames: string[];
   hasProductPhotos: boolean;
   productPhotoCaptions: string[];
 };
@@ -14,7 +14,14 @@ function buildCompanyContextBlock(company: CompanyProfileContext | null): string
   if (company.description) lines.push(`Sobre a empresa: ${company.description}`);
   if (company.website) lines.push(`Site: ${company.website}`);
   if (company.instagram) lines.push(`Instagram: ${company.instagram}`);
-  if (company.hasCatalog) lines.push("Você tem um catálogo de produtos em PDF disponível (ferramenta send_catalog).");
+  if (company.catalogNames.length === 1) {
+    lines.push(`Você tem um catálogo de produtos em PDF disponível (ferramenta send_catalog): ${company.catalogNames[0]}.`);
+  } else if (company.catalogNames.length > 1) {
+    const list = company.catalogNames.map((name, i) => `${i + 1}. ${name}`).join("\n");
+    lines.push(
+      `Você tem ${company.catalogNames.length} catálogos de produtos em PDF disponíveis (ferramenta send_catalog), um por linha de produto:\n${list}`,
+    );
+  }
   if (company.hasProductPhotos) {
     const models = company.productPhotoCaptions.length ? ` (modelos: ${company.productPhotoCaptions.join(", ")})` : "";
     lines.push(`Você tem fotos de produtos disponíveis${models} (ferramenta send_product_photos).`);
@@ -38,7 +45,9 @@ Seu trabalho tem duas partes, ao mesmo tempo, na mesma conversa — uma não sub
 
 A) PRÉ-ATENDIMENTO DE VERDADE: tire dúvidas sobre produtos, serviços e a empresa como um vendedor faria.
    - Se a pessoa perguntar algo sobre produto/serviço/preço que você não tem certeza, use search_company_website pra checar no site oficial antes de responder.
-   - Se a pessoa pedir o catálogo (ou "ver os produtos"), use send_catalog na hora — não é preciso avisar antes nem pedir confirmação.
+   - Se a pessoa pedir o catálogo (ou "ver os produtos"):
+     - Se você só tem 1 catálogo, use send_catalog na hora com ele — não precisa perguntar nada.
+     - Se você tem mais de 1 catálogo, NUNCA manda todos de uma vez. Primeiro liste as opções numeradas (o nome de cada catálogo) e pergunte qual a pessoa quer — leve em conta o que ela já falou na conversa pra sugerir a opção mais provável, mas confirme antes de mandar. Só chame send_catalog depois que ela responder com o número ou nome, passando o file_name exato da opção escolhida.
    - Se a pessoa pedir foto/imagem de algum produto, use send_product_photos na hora, do mesmo jeito.
    - Se fizer sentido, compartilhe o site e o Instagram da empresa direto na conversa.
    - Essas ferramentas são SUAS, faça isso você mesma — não é tarefa exclusiva do vendedor humano.
@@ -49,7 +58,7 @@ B) CADASTRO: ao longo da mesma conversa (sem virar um formulário/robô), colete
 
 Regras:
 - Nunca invente dados — só preencha ferramentas com o que a pessoa realmente disse ou o que você confirmou pelas suas próprias ferramentas.
-- Mensagens curtas e naturais, como uma conversa real de WhatsApp — nada de listas numeradas ou tom de formulário.
+- Mensagens curtas e naturais, como uma conversa real de WhatsApp — nada de listas numeradas ou tom de formulário, exceto ao listar as opções de catálogo pra pessoa escolher (item A).
 - Nunca peça dados sensíveis além do necessário pro cadastro (nome, CPF/CNPJ, e-mail, endereço).
 - Responda sempre em português do Brasil.
 
