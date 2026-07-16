@@ -6,6 +6,7 @@ import { WhatsAppConnectionPanel } from "@/components/settings/WhatsAppConnectio
 import { ConversationList } from "@/components/whatsapp/ConversationList";
 import { WhatsAppListRealtimeListener } from "@/components/whatsapp/WhatsAppListRealtimeListener";
 import { Modal } from "@/components/ui/Modal";
+import { ResizableSplit } from "@/components/ui/ResizableSplit";
 import type { Conversation } from "@/lib/whatsapp/getConversations";
 
 type StatusResponse = {
@@ -61,38 +62,48 @@ export function WhatsAppInboxShell({
   }, []);
 
   return (
-    <div className="flex h-[calc(100vh-4rem-3rem)] overflow-hidden rounded-xl border border-gray-200/80 bg-panel shadow-[0_1px_2px_rgba(16,24,40,0.04),0_1px_3px_rgba(16,24,40,0.06)]">
+    <div className="h-[calc(100vh-4rem-3rem)] overflow-hidden rounded-xl border border-gray-200/80 bg-panel shadow-[0_1px_2px_rgba(16,24,40,0.04),0_1px_3px_rgba(16,24,40,0.06)]">
       <WhatsAppListRealtimeListener />
-      <div className="flex w-64 shrink-0 flex-col border-r border-gray-200">
-        <button
-          type="button"
-          onClick={() => setShowConnectModal(true)}
-          className="flex items-center gap-2 border-b border-gray-100 px-4 py-2.5 text-left text-xs font-medium transition-colors hover:bg-gray-50"
-        >
-          {status === "connected" ? (
-            <>
-              <CheckCircle2 size={14} className="shrink-0 text-emerald-600" />
-              <span className="truncate text-gray-600">
-                Conectado{phoneNumber ? `: ${phoneNumber}` : ""}
-              </span>
-            </>
-          ) : (
-            <>
-              <QrCode size={14} className="shrink-0 text-amber-600" />
-              <span className="text-amber-700">Conectar WhatsApp</span>
-            </>
-          )}
-        </button>
-        {status === "connecting" && everConnected && (
-          <div className="bg-amber-50 px-4 py-1.5 text-center text-xs text-amber-700">
-            Reconectando...
+      <ResizableSplit
+        storageKey="whatsapp-list-width"
+        defaultWidth={264}
+        minWidth={220}
+        maxWidth={440}
+        side="left"
+        panel={
+          <div className="flex h-full flex-col">
+            <button
+              type="button"
+              onClick={() => setShowConnectModal(true)}
+              className="flex items-center gap-2 border-b border-gray-100 px-4 py-2.5 text-left text-xs font-medium transition-colors hover:bg-gray-50"
+            >
+              {status === "connected" ? (
+                <>
+                  <CheckCircle2 size={14} className="shrink-0 text-emerald-600" />
+                  <span className="truncate text-gray-600">
+                    Conectado{phoneNumber ? `: ${phoneNumber}` : ""}
+                  </span>
+                </>
+              ) : (
+                <>
+                  <QrCode size={14} className="shrink-0 text-amber-600" />
+                  <span className="text-amber-700">Conectar WhatsApp</span>
+                </>
+              )}
+            </button>
+            {status === "connecting" && everConnected && (
+              <div className="bg-amber-50 px-4 py-1.5 text-center text-xs text-amber-700">
+                Reconectando...
+              </div>
+            )}
+            <div className="min-h-0 flex-1">
+              <ConversationList conversations={conversations} />
+            </div>
           </div>
-        )}
-        <div className="min-h-0 flex-1">
-          <ConversationList conversations={conversations} />
-        </div>
-      </div>
-      <div className="flex-1 overflow-hidden">{children}</div>
+        }
+      >
+        {children}
+      </ResizableSplit>
 
       <Modal
         open={showConnectModal}

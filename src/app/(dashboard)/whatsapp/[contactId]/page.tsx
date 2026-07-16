@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { WhatsAppChatPanel } from "@/components/contacts/WhatsAppChatPanel";
 import { DealQuickPanel } from "@/components/whatsapp/DealQuickPanel";
 import { AgentChatPanel } from "@/components/assistant/AgentChatPanel";
+import { ConversationWithAssistant } from "@/components/whatsapp/ConversationWithAssistant";
 import type { WhatsAppMessage } from "@/types/domain";
 
 export default async function WhatsAppConversationPage({
@@ -34,9 +35,20 @@ export default async function WhatsAppConversationPage({
 
   if (!contact) notFound();
 
+  const assistant = falaAi ? (
+    <AgentChatPanel
+      agentId={falaAi.id}
+      mode="inline"
+      title="FALA AI"
+      subtitle="Tire dúvidas sobre este lead ou sobre o CRM"
+      emptyStateHint='Pergunte algo como "qual valor sugerir pra esse lead?" ou "como eu marco uma venda como ganha?".'
+      contextHint={`Contexto desta conversa: o vendedor está vendo agora, no WhatsApp, a conversa com o lead "${contact.name}"${contact.phone ? ` (${contact.phone})` : ""}, contactId ${contact.id}. Se a dúvida for sobre esse lead especificamente, use as ferramentas de busca/negócio com esse contactId em vez de perguntar o nome de novo.`}
+    />
+  ) : null;
+
   return (
-    <div className="flex h-full gap-3">
-      <div className="flex h-full min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-gray-200 bg-panel">
+    <ConversationWithAssistant assistant={assistant}>
+      <div className="flex h-full min-w-0 flex-col overflow-hidden rounded-xl border border-gray-200 bg-panel">
         <div className="flex items-center justify-between gap-3 border-b border-gray-200 px-3 py-2.5">
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold text-gray-900">{contact.name}</p>
@@ -75,19 +87,6 @@ export default async function WhatsAppConversationPage({
           />
         </div>
       </div>
-
-      {falaAi && (
-        <div className="h-full w-64 shrink-0">
-          <AgentChatPanel
-            agentId={falaAi.id}
-            mode="inline"
-            title="FALA AI"
-            subtitle="Tire dúvidas sobre este lead ou sobre o CRM"
-            emptyStateHint='Pergunte algo como "qual valor sugerir pra esse lead?" ou "como eu marco uma venda como ganha?".'
-            contextHint={`Contexto desta conversa: o vendedor está vendo agora, no WhatsApp, a conversa com o lead "${contact.name}"${contact.phone ? ` (${contact.phone})` : ""}, contactId ${contact.id}. Se a dúvida for sobre esse lead especificamente, use as ferramentas de busca/negócio com esse contactId em vez de perguntar o nome de novo.`}
-          />
-        </div>
-      )}
-    </div>
+    </ConversationWithAssistant>
   );
 }
