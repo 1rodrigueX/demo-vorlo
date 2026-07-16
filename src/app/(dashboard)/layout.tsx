@@ -17,8 +17,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   // Conta de dev "pura" (sem CRM próprio) não tem linha em profiles — manda
   // direto pro painel dev em vez de renderizar um dashboard de tenant vazio.
+  // Conta comum sem profile é um cadastro que ainda não escolheu/pagou
+  // nenhum plano — manda pra escolha de plano.
   if (!current.profile) {
-    redirect(isDev ? "/dev" : "/login");
+    redirect(isDev ? "/dev" : "/choose-plan");
   }
 
   const supabase = await createClient();

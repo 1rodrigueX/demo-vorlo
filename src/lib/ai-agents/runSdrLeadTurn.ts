@@ -2,8 +2,11 @@ import "server-only";
 import type Anthropic from "@anthropic-ai/sdk";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getAnthropicClientForTenant } from "@/lib/anthropic/client";
-import { buildSdrLeadPrompt } from "@/lib/ai-agents/sdrLeadPrompt";
+import { buildSdrLeadPrompt, type CompanyProfileContext } from "@/lib/ai-agents/sdrLeadPrompt";
 import { COMPLETE_LEAD_REGISTRATION_TOOL, executeCompleteLeadRegistration } from "@/lib/ai-agents/sdrLeadTool";
+import { SEARCH_COMPANY_WEBSITE_TOOL, executeSearchCompanyWebsite } from "@/lib/ai-agents/companyWebsiteTool";
+import { SEND_CATALOG_TOOL, executeSendCatalog } from "@/lib/ai-agents/sendCatalogTool";
+import { SEND_PRODUCT_PHOTOS_TOOL, executeSendProductPhotos } from "@/lib/ai-agents/sendProductPhotosTool";
 import { sendWhatsAppMessage } from "@/lib/whatsapp/send";
 
 const MAX_HISTORY = 20;
@@ -58,8 +61,32 @@ export async function runSdrLeadTurn(tenantId: string, contactId: string): Promi
 
   if (!messages.length) return;
 
-  const system = buildSdrLeadPrompt(agent, contact);
-  const tools = [COMPLETE_LEAD_REGISTRATION_TOOL];
+  const [{ data: companyProfile }, { data: productPhotos }, { count: catalogCount }] = await Promise.all([
+    admin
+      .from("tenant_company_profile")
+      .select("description, website, instagram")
+      .eq("tenant_id", tenantId)
+      .maybeSingle(),
+    admin.from("company_product_photos").select("caption").eq("tenant_id", tenantId),
+    admin.from("company_catalogs").select("id", { count: "exact", head: true }).eq("tenant_id", tenantId),
+  ]);
+
+  const company: CompanyProfileContext | null = companyProfile
+    ? {
+        description: companyProfile.description,
+        website: companyProfile.website,
+        instagram: companyProfile.instagram,
+        hasCatalog: (catalogCount ?? 0) > 0,
+        hasProductPhotos: (productPhotos ?? []).length > 0,
+        productPhotoCaptions: (productPhotos ?? []).map((p) => p.caption).filter((c): c is string => !!c),
+      }
+    : null;
+
+  const system = buildSdrLeadPrompt(agent, contact, company);
+  const tools: Anthropic.Tool[] = [COMPLETE_LEAD_REGISTRATION_TOOL];
+  if (company?.website) tools.push(SEARCH_COMPANY_WEBSITE_TOOL);
+  if (company?.hasCatalog) tools.push(SEND_CATALOG_TOOL);
+  if (company?.hasProductPhotos) tools.push(SEND_PRODUCT_PHOTOS_TOOL);
 
   let finalText = "";
   try {
@@ -81,13 +108,22 @@ export async function runSdrLeadTurn(tenantId: string, contactId: string): Promi
 
       const toolResults: Anthropic.ToolResultBlockParam[] = [];
       for (const toolUse of toolUses) {
-        const result = await executeCompleteLeadRegistration(
-          admin,
-          tenantId,
-          contactId,
-          contact.created_by,
-          (toolUse.input ?? {}) as Record<string, unknown>,
-        );
+        let result: { content: string; isError: boolean };
+        if (toolUse.name === "search_company_website" && company?.website) {
+          result = await executeSearchCompanyWebsite(admin, tenantId, company.website);
+        } else if (toolUse.name === "send_catalog") {
+          result = await executeSendCatalog(admin, tenantId, contactId, contact.phone);
+        } else if (toolUse.name === "send_product_photos") {
+          result = await executeSendProductPhotos(admin, tenantId, contactId, contact.phone);
+        } else {
+          result = await executeCompleteLeadRegistration(
+            admin,
+            tenantId,
+            contactId,
+            contact.created_by,
+            (toolUse.input ?? {}) as Record<string, unknown>,
+          );
+        }
         toolResults.push({
           type: "tool_result",
           tool_use_id: toolUse.id,

@@ -23,6 +23,10 @@ export type AiAgentMemory = Database["public"]["Tables"]["ai_agent_memory"]["Row
 export type AiAgentLog = Database["public"]["Tables"]["ai_agent_logs"]["Row"];
 export type AgentType = AiAgent["type"];
 export type BillingPlan = Database["public"]["Tables"]["billing_plans"]["Row"];
+export type PendingCheckout = Database["public"]["Tables"]["pending_checkouts"]["Row"];
+export type TenantCompanyProfile = Database["public"]["Tables"]["tenant_company_profile"]["Row"];
+export type CompanyProductPhoto = Database["public"]["Tables"]["company_product_photos"]["Row"];
+export type CompanyCatalog = Database["public"]["Tables"]["company_catalogs"]["Row"];
 export type BlingConnectionSeller = Database["public"]["Tables"]["bling_connection_sellers"]["Row"];
 export type TenantApiKey = Database["public"]["Tables"]["tenant_api_keys"]["Row"];
 

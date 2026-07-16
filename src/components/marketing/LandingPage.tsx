@@ -1,13 +1,19 @@
-"use client";
-
-import { useMemo, useState } from "react";
-import { useActionState } from "react";
-import { KanbanSquare, MessageCircle, Sparkles, PlugZap, Minus, Plus } from "lucide-react";
+import Link from "next/link";
+import {
+  KanbanSquare,
+  MessageCircle,
+  Sparkles,
+  PlugZap,
+  UserPlus,
+  Bot,
+  Handshake,
+  CheckCircle2,
+  KeyRound,
+} from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
-import { Label } from "@/components/ui/Label";
-import { startCheckout, type ActionState } from "@/lib/actions/checkout";
-import { calculateTotalCents, formatCentsUsd } from "@/lib/billing/pricing";
+import { Badge } from "@/components/ui/Badge";
+import { formatCentsUsd } from "@/lib/billing/pricing";
+import { getPlanCopy } from "@/lib/billing/plan-copy";
 import type { BillingPlan } from "@/types/domain";
 
 const FEATURES = [
@@ -33,58 +39,25 @@ const FEATURES = [
   },
 ];
 
-function Stepper({
-  label,
-  hint,
-  value,
-  onChange,
-}: {
-  label: string;
-  hint: string;
-  value: number;
-  onChange: (value: number) => void;
-}) {
-  return (
-    <div className="flex items-center justify-between gap-4 py-3">
-      <div>
-        <p className="text-sm font-medium text-gray-900">{label}</p>
-        <p className="text-xs text-gray-500">{hint}</p>
-      </div>
-      <div className="flex items-center gap-3">
-        <button
-          type="button"
-          onClick={() => onChange(Math.max(0, value - 1))}
-          className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50"
-          aria-label={`Diminuir ${label}`}
-        >
-          <Minus size={14} />
-        </button>
-        <span className="w-6 text-center text-sm font-semibold text-gray-900">{value}</span>
-        <button
-          type="button"
-          onClick={() => onChange(value + 1)}
-          className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50"
-          aria-label={`Aumentar ${label}`}
-        >
-          <Plus size={14} />
-        </button>
-      </div>
-    </div>
-  );
-}
+const HOW_IT_WORKS = [
+  {
+    icon: UserPlus,
+    title: "Conecte seus canais",
+    description: "WhatsApp, Bling, Gmail ou Outlook — cada empresa liga suas próprias contas, sem número compartilhado.",
+  },
+  {
+    icon: Bot,
+    title: "A IA atende e qualifica",
+    description: "O SDR do FALA AI responde leads novos no WhatsApp na hora, qualifica e já registra tudo no pipeline.",
+  },
+  {
+    icon: Handshake,
+    title: "Sua equipe fecha",
+    description: "Vendedores e gestores acompanham tudo em um kanban só, com histórico completo de cada conversa.",
+  },
+];
 
-export function LandingPage({ plan }: { plan: BillingPlan | null }) {
-  const [state, formAction, isPending] = useActionState<ActionState, FormData>(startCheckout, null);
-  const [extraSellers, setExtraSellers] = useState(0);
-  const [extraManagers, setExtraManagers] = useState(0);
-  const [extraAgents, setExtraAgents] = useState(0);
-  const [extraIntegrations, setExtraIntegrations] = useState(0);
-
-  const breakdown = useMemo(() => {
-    if (!plan) return null;
-    return calculateTotalCents(plan, { extraSellers, extraManagers, extraAgents, extraIntegrations });
-  }, [plan, extraSellers, extraManagers, extraAgents, extraIntegrations]);
-
+export function LandingPage({ plans }: { plans: BillingPlan[] }) {
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="border-b border-gray-200 bg-panel">
@@ -95,9 +68,14 @@ export function LandingPage({ plan }: { plan: BillingPlan | null }) {
             </div>
             <span className="text-base font-semibold text-gray-900">FALA AI CRM</span>
           </div>
-          <a href="/login" className="text-sm font-medium text-gray-600 hover:text-gray-900">
-            Já sou cliente — Entrar
-          </a>
+          <div className="flex items-center gap-4">
+            <a href="/login" className="text-sm font-medium text-gray-600 hover:text-gray-900">
+              Já sou cliente — Entrar
+            </a>
+            <Link href="/signup">
+              <Button size="sm">Criar conta grátis</Button>
+            </Link>
+          </div>
         </div>
       </header>
 
@@ -109,6 +87,14 @@ export function LandingPage({ plan }: { plan: BillingPlan | null }) {
           Pipeline, WhatsApp e agentes de IA que atendem, qualificam e cobram por você — o FALA AI administra
           tudo isso a partir de uma conversa.
         </p>
+        <div className="mt-8 flex items-center justify-center gap-3">
+          <Link href="/signup">
+            <Button size="md">Criar conta grátis</Button>
+          </Link>
+          <a href="#planos" className="text-sm font-medium text-gray-600 hover:text-gray-900">
+            Ver planos e preços
+          </a>
+        </div>
       </section>
 
       <section className="mx-auto grid max-w-5xl grid-cols-1 gap-6 px-4 pb-16 sm:grid-cols-2 lg:grid-cols-4">
@@ -123,86 +109,83 @@ export function LandingPage({ plan }: { plan: BillingPlan | null }) {
         ))}
       </section>
 
-      <section id="checkout" className="mx-auto max-w-3xl px-4 pb-24">
-        <div className="rounded-2xl border border-gray-200 bg-panel p-6 sm:p-8">
-          <h2 className="text-xl font-semibold text-gray-900">Monte seu plano</h2>
-          {!plan ? (
-            <p className="mt-4 text-sm text-red-600">
-              Não foi possível carregar os preços agora. Tente novamente em instantes.
-            </p>
-          ) : (
-            <>
-              <p className="mt-1 text-sm text-gray-500">
-                A partir de <strong>{formatCentsUsd(plan.base_price_cents)}/mês</strong>, com {plan.included_sellers}{" "}
-                vendedores, {plan.included_managers} gestores e {plan.included_agents} agente de IA (FALA AI)
-                inclusos.
+      <section className="border-y border-gray-200 bg-panel py-16">
+        <div className="mx-auto max-w-5xl px-4">
+          <h2 className="text-center text-2xl font-bold text-gray-900">Como funciona</h2>
+          <div className="mt-10 grid grid-cols-1 gap-8 sm:grid-cols-3">
+            {HOW_IT_WORKS.map((step, i) => (
+              <div key={step.title} className="text-center">
+                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-indigo-600 text-white">
+                  <step.icon size={22} />
+                </div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-indigo-600">Passo {i + 1}</p>
+                <h3 className="mt-1 text-base font-semibold text-gray-900">{step.title}</h3>
+                <p className="mt-2 text-sm text-gray-500">{step.description}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mx-auto mt-12 flex max-w-2xl items-start gap-3 rounded-xl border border-indigo-200 bg-indigo-50 p-5">
+            <KeyRound size={20} className="mt-0.5 shrink-0 text-indigo-600" />
+            <div>
+              <h3 className="text-sm font-semibold text-indigo-900">Traga sua própria chave de IA</h3>
+              <p className="mt-1 text-sm text-indigo-800">
+                Já tem uma conta na Anthropic? Cole sua chave já no cadastro (ou depois, em Configurações) e use ela
+                nos agentes de IA — sem depender de créditos compartilhados.
               </p>
-
-              <div className="mt-6 divide-y divide-gray-100">
-                <Stepper
-                  label="Vendedores extras"
-                  hint={`+${formatCentsUsd(plan.price_per_extra_seller_cents)}/mês cada`}
-                  value={extraSellers}
-                  onChange={setExtraSellers}
-                />
-                <Stepper
-                  label="Gestores extras"
-                  hint={`+${formatCentsUsd(plan.price_per_extra_manager_cents)}/mês cada`}
-                  value={extraManagers}
-                  onChange={setExtraManagers}
-                />
-                <Stepper
-                  label="Agentes de IA extras"
-                  hint={`+${formatCentsUsd(plan.price_per_agent_cents)}/mês cada (SDR, atendente, financeiro...)`}
-                  value={extraAgents}
-                  onChange={setExtraAgents}
-                />
-                <Stepper
-                  label="Integrações extras"
-                  hint={`+${formatCentsUsd(plan.price_per_integration_cents)}/mês cada (Bling, Gmail, Outlook...)`}
-                  value={extraIntegrations}
-                  onChange={setExtraIntegrations}
-                />
-              </div>
-
-              <div className="mt-6 flex items-center justify-between rounded-lg bg-gray-50 px-4 py-3">
-                <span className="text-sm font-medium text-gray-700">Total mensal estimado</span>
-                <span className="text-xl font-bold text-gray-900">
-                  {breakdown ? formatCentsUsd(breakdown.totalCents) : "—"}
-                </span>
-              </div>
-
-              <form action={formAction} className="mt-8 space-y-4">
-                <input type="hidden" name="extraSellers" value={extraSellers} />
-                <input type="hidden" name="extraManagers" value={extraManagers} />
-                <input type="hidden" name="extraAgents" value={extraAgents} />
-                <input type="hidden" name="extraIntegrations" value={extraIntegrations} />
-
-                <div>
-                  <Label htmlFor="companyName">Nome da empresa</Label>
-                  <Input id="companyName" name="companyName" required />
-                </div>
-                <div>
-                  <Label htmlFor="ownerFullName">Seu nome</Label>
-                  <Input id="ownerFullName" name="ownerFullName" required />
-                </div>
-                <div>
-                  <Label htmlFor="ownerEmail">Seu e-mail</Label>
-                  <Input id="ownerEmail" name="ownerEmail" type="email" required autoComplete="email" />
-                  <p className="mt-1 text-xs text-gray-500">
-                    Você vai receber o acesso ao CRM nesse e-mail assim que o pagamento for confirmado.
-                  </p>
-                </div>
-
-                {state?.error && <p className="text-sm text-red-600">{state.error}</p>}
-
-                <Button type="submit" className="w-full" isLoading={isPending}>
-                  Continuar para pagamento
-                </Button>
-              </form>
-            </>
-          )}
+            </div>
+          </div>
         </div>
+      </section>
+
+      <section id="planos" className="mx-auto max-w-5xl px-4 py-16">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900">Planos pra cada tamanho de equipe</h2>
+          <p className="mt-2 text-sm text-gray-500">Crie sua conta, conheça o CRM e escolha o plano depois.</p>
+        </div>
+
+        {plans.length === 0 ? (
+          <p className="mt-8 text-center text-sm text-red-600">
+            Não foi possível carregar os planos agora. Tente novamente em instantes.
+          </p>
+        ) : (
+          <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-3">
+            {plans.map((plan) => {
+              const copy = getPlanCopy(plan.name);
+              return (
+                <div
+                  key={plan.id}
+                  className="flex flex-col rounded-2xl border border-gray-200 bg-panel p-6 shadow-sm"
+                >
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-base font-semibold text-gray-900">{plan.name}</h3>
+                    {plan.is_default && <Badge className="bg-indigo-50 text-indigo-700">Recomendado</Badge>}
+                  </div>
+                  <p className="mt-2 text-3xl font-bold text-gray-900">
+                    {formatCentsUsd(plan.base_price_cents)}
+                    <span className="text-sm font-normal text-gray-500">/mês</span>
+                  </p>
+                  <p className="mt-2 text-sm text-gray-500">{copy.tagline}</p>
+                  <ul className="mt-4 flex-1 space-y-2">
+                    {copy.bullets.map((bullet) => (
+                      <li key={bullet} className="flex items-start gap-2 text-sm text-gray-600">
+                        <CheckCircle2 size={16} className="mt-0.5 shrink-0 text-emerald-600" />
+                        {bullet}
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="mt-4 text-xs text-gray-400">
+                    {plan.included_sellers} vendedores · {plan.included_managers} gestores ·{" "}
+                    {plan.included_agents} agente(s) de IA
+                  </p>
+                  <Link href={`/signup?plan=${plan.id}`} className="mt-5">
+                    <Button className="w-full">Criar conta</Button>
+                  </Link>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </section>
     </div>
   );

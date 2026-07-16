@@ -13,7 +13,7 @@ export default async function Home() {
     redirect(await resolveHomeRoute());
   }
 
-  const { data: plan } = await supabase.from("billing_plans").select("*").eq("is_default", true).maybeSingle();
+  const { data: plans } = await supabase.from("billing_plans").select("*").order("base_price_cents");
 
-  return <LandingPage plan={plan ?? null} />;
+  return <LandingPage plans={plans ?? []} />;
 }

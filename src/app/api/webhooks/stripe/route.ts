@@ -31,19 +31,15 @@ export async function POST(request: Request) {
 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
-    const metadata = session.metadata ?? {};
+    const pendingCheckoutId = session.metadata?.pendingCheckoutId;
 
-    if (!metadata.ownerEmail || !metadata.companyName) {
-      console.error("Stripe webhook: checkout.session.completed sem metadata esperada", session.id);
+    if (!pendingCheckoutId) {
+      console.error("Stripe webhook: checkout.session.completed sem pendingCheckoutId", session.id);
       return NextResponse.json({ received: true });
     }
 
     const result = await provisionTenantFromCheckout({
-      companyName: metadata.companyName,
-      ownerFullName: metadata.ownerFullName ?? metadata.companyName,
-      ownerEmail: metadata.ownerEmail,
-      extraSellers: Number(metadata.extraSellers ?? 0),
-      extraManagers: Number(metadata.extraManagers ?? 0),
+      pendingCheckoutId,
       stripeCustomerId: typeof session.customer === "string" ? session.customer : null,
       stripeSubscriptionId: typeof session.subscription === "string" ? session.subscription : null,
     });

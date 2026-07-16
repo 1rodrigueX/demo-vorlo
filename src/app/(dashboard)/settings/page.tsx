@@ -9,6 +9,8 @@ import { BlingConnectionsCard } from "@/components/settings/BlingConnectionsCard
 import { AnthropicSettingsCard } from "@/components/settings/AnthropicSettingsCard";
 import { EmailIntegrationsCard } from "@/components/settings/EmailIntegrationsCard";
 import { TagsSettingsCard } from "@/components/settings/TagsSettingsCard";
+import { CompanyProfileSettingsCard } from "@/components/settings/CompanyProfileSettingsCard";
+import { getCompanyAssetUrls } from "@/lib/actions/company-profile";
 import { ROLE_LABEL } from "@/lib/utils/roles";
 
 function maskApiKey(apiKey: string): string {
@@ -68,6 +70,9 @@ export default async function SettingsPage({
     { data: emailIntegrations },
     { data: tags },
     { data: sellerMappings },
+    { data: companyProfile },
+    { data: productPhotos },
+    { data: catalogs },
   ] = await Promise.all([
     supabase.from("tenants").select("*").eq("id", current.profile.tenant_id).single(),
     supabase
@@ -101,9 +106,37 @@ export default async function SettingsPage({
       .from("bling_connection_sellers")
       .select("bling_connection_id, profile_id, bling_vendedor_id, bling_vendedor_name, bling_connection:bling_connections!inner(tenant_id)")
       .eq("bling_connection.tenant_id", current.profile.tenant_id),
+    supabase
+      .from("tenant_company_profile")
+      .select("*")
+      .eq("tenant_id", current.profile.tenant_id)
+      .maybeSingle(),
+    supabase
+      .from("company_product_photos")
+      .select("*")
+      .eq("tenant_id", current.profile.tenant_id)
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("company_catalogs")
+      .select("*")
+      .eq("tenant_id", current.profile.tenant_id)
+      .order("created_at", { ascending: false }),
   ]);
 
   if (!tenant) redirect("/dashboard");
+
+  const [photoUrlByPath, catalogUrlByPath] = await Promise.all([
+    getCompanyAssetUrls(productPhotos ?? []),
+    getCompanyAssetUrls(catalogs ?? []),
+  ]);
+  const productPhotosWithUrl = (productPhotos ?? []).map((p) => ({
+    ...p,
+    signedUrl: photoUrlByPath[p.storage_path] ?? "",
+  }));
+  const catalogsWithUrl = (catalogs ?? []).map((c) => ({
+    ...c,
+    signedUrl: catalogUrlByPath[c.storage_path] ?? "",
+  }));
 
   const anthropicApiKey = (anthropicIntegration?.credentials as { apiKey?: string } | null)?.apiKey;
   const gmailIntegration = emailIntegrations?.find((i) => i.provider === "gmail");
@@ -216,6 +249,15 @@ export default async function SettingsPage({
           keyPreview={anthropicApiKey ? maskApiKey(anthropicApiKey) : null}
           lastError={anthropicIntegration?.last_error ?? null}
           lastTestedAt={anthropicIntegration?.last_tested_at ?? null}
+        />
+      </Card>
+
+      <Card className="p-6">
+        <h2 className="mb-4 text-sm font-semibold text-gray-900">Sobre a empresa (contexto pros agentes de IA)</h2>
+        <CompanyProfileSettingsCard
+          profile={companyProfile ?? null}
+          catalogs={catalogsWithUrl}
+          photos={productPhotosWithUrl}
         />
       </Card>
     </div>

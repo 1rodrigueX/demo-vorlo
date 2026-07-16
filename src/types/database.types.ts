@@ -1119,6 +1119,164 @@ export interface Database {
         Update: { id?: string; created_at?: string };
         Relationships: [];
       };
+      tenant_company_profile: {
+        Row: {
+          tenant_id: string;
+          description: string | null;
+          website: string | null;
+          instagram: string | null;
+          website_content: string | null;
+          website_fetched_at: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          tenant_id: string;
+          description?: string | null;
+          website?: string | null;
+          instagram?: string | null;
+          website_content?: string | null;
+          website_fetched_at?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          tenant_id?: string;
+          description?: string | null;
+          website?: string | null;
+          instagram?: string | null;
+          website_content?: string | null;
+          website_fetched_at?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "tenant_company_profile_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: true;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      company_product_photos: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          storage_path: string;
+          file_name: string;
+          caption: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          storage_path: string;
+          file_name: string;
+          caption?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          storage_path?: string;
+          file_name?: string;
+          caption?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "company_product_photos_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      company_catalogs: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          storage_path: string;
+          file_name: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          storage_path: string;
+          file_name: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          storage_path?: string;
+          file_name?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "company_catalogs_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      pending_checkouts: {
+        Row: {
+          id: string;
+          user_id: string;
+          status: "pending" | "completed";
+          company_name: string;
+          plan_id: string;
+          extra_sellers: number;
+          extra_managers: number;
+          extra_agents: number;
+          extra_integrations: number;
+          anthropic_api_key: string | null;
+          stripe_session_id: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          status?: "pending" | "completed";
+          company_name: string;
+          plan_id: string;
+          extra_sellers?: number;
+          extra_managers?: number;
+          extra_agents?: number;
+          extra_integrations?: number;
+          anthropic_api_key?: string | null;
+          stripe_session_id?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          status?: "pending" | "completed";
+          company_name?: string;
+          plan_id?: string;
+          extra_sellers?: number;
+          extra_managers?: number;
+          extra_agents?: number;
+          extra_integrations?: number;
+          anthropic_api_key?: string | null;
+          stripe_session_id?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "pending_checkouts_plan_id_fkey";
+            columns: ["plan_id"];
+            isOneToOne: false;
+            referencedRelation: "billing_plans";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       ai_agents: {
         Row: {
           id: string;

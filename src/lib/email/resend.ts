@@ -17,12 +17,12 @@ export async function sendWelcomeEmail({
   to,
   tenantName,
   ownerName,
-  setPasswordUrl,
+  dashboardUrl,
 }: {
   to: string;
   tenantName: string;
   ownerName: string;
-  setPasswordUrl: string;
+  dashboardUrl: string;
 }) {
   const resend = getResendClient();
   const from = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
@@ -34,11 +34,10 @@ export async function sendWelcomeEmail({
     html: `
       <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; color: #111827;">
         <h1 style="font-size: 20px;">Bem-vindo(a) ao FALA AI CRM 🎉</h1>
-        <p>Olá, ${ownerName}! O pagamento da assinatura da <strong>${tenantName}</strong> foi confirmado e seu CRM já está pronto.</p>
-        <p><strong>Seu login:</strong> ${to}</p>
-        <p>Clique no botão abaixo pra criar sua senha e acessar pela primeira vez (o link expira em algumas horas):</p>
+        <p>Olá, ${ownerName}! O pagamento da assinatura da <strong>${tenantName}</strong> foi confirmado e seu CRM já está liberado.</p>
+        <p>É só entrar com o e-mail e senha (ou Google) que você já usou pra criar sua conta:</p>
         <p style="text-align: center; margin: 24px 0;">
-          <a href="${setPasswordUrl}" style="background:#4f46e5; color:#fff; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600;">Criar minha senha</a>
+          <a href="${dashboardUrl}" style="background:#4f46e5; color:#fff; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600;">Acessar meu CRM</a>
         </p>
         <p style="color:#6b7280; font-size: 13px;">Se você não fez essa compra, ignore este e-mail.</p>
       </div>

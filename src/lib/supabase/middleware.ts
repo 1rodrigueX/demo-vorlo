@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { resolveHomeRouteFor } from "@/lib/auth/current-user";
 
 const PUBLIC_PATHS = ["/login", "/signup", "/auth/callback", "/compra"];
 
@@ -44,7 +45,7 @@ export async function updateSession(request: NextRequest) {
 
   if (user && (path === "/login" || path === "/signup")) {
     const url = request.nextUrl.clone();
-    url.pathname = "/dashboard";
+    url.pathname = await resolveHomeRouteFor(supabase, user.id);
     return NextResponse.redirect(url);
   }
 

@@ -69,40 +69,53 @@ export async function isCurrentUserDev() {
   return !!data;
 }
 
-/**
- * Decide pra onde mandar o usuário logo após o login (ou ao acessar "/"):
- * dono/gestor/vendedor de um CRM cai no dashboard do tenant; dev com um CRM
- * aberto retoma de onde parou; dev sem CRM aberto cai no painel dev; sem
- * sessão, cai no login.
- */
-export async function resolveHomeRoute(): Promise<"/dashboard" | "/dev" | "/login"> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return "/login";
+export type HomeRoute = "/dashboard" | "/dev" | "/choose-plan" | "/login";
 
+/**
+ * Decide pra onde mandar um usuário já autenticado: dono/gestor/vendedor de
+ * um CRM cai no dashboard do tenant; dev com um CRM aberto retoma de onde
+ * parou; dev sem CRM aberto cai no painel dev; sem profile e sem ser dev
+ * (cadastro via Google/e-mail-senha que ainda não pagou nenhum plano) cai na
+ * escolha de plano. Recebe o client e o userId prontos pra poder ser
+ * chamada tanto de Server Components/Actions quanto do middleware (que usa
+ * um client montado sobre os cookies da request, não o de next/headers).
+ */
+export async function resolveHomeRouteFor(
+  supabase: SupabaseClient<Database>,
+  userId: string,
+): Promise<HomeRoute> {
   const { data: profile } = await supabase
     .from("profiles")
     .select("id")
-    .eq("id", user.id)
+    .eq("id", userId)
     .maybeSingle();
   if (profile) return "/dashboard";
 
   const { data: dev } = await supabase
     .from("dev_users")
     .select("id")
-    .eq("id", user.id)
+    .eq("id", userId)
     .maybeSingle();
-  if (!dev) return "/login";
+  if (!dev) return "/choose-plan";
 
   const { data: view } = await supabase
     .from("dev_active_view")
     .select("tenant_id")
-    .eq("dev_id", user.id)
+    .eq("dev_id", userId)
     .maybeSingle();
 
   return view ? "/dashboard" : "/dev";
+}
+
+/** Mesma lógica de resolveHomeRouteFor, mas resolve a própria sessão/client — uso em Server Components/Actions. */
+export async function resolveHomeRoute(): Promise<HomeRoute> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return "/login";
+
+  return resolveHomeRouteFor(supabase, user.id);
 }
 
 /** Busca o tenant_id do usuário logado — usado pelas server actions antes de inserir dados. */

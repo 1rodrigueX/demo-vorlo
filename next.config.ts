@@ -9,6 +9,13 @@ const nextConfig: NextConfig = {
   outputFileTracingExcludes: {
     "*": [".baileys_auth/**"],
   },
+  experimental: {
+    // Default 1MB é menor que o catálogo (até 20MB) e fotos de produto (até
+    // 10MB) enviados via Server Action em Configurações > Sobre a empresa.
+    serverActions: {
+      bodySizeLimit: "25mb",
+    },
+  },
 };
 
 export default nextConfig;
