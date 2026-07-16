@@ -15,7 +15,6 @@ export async function updateTenantBranding(
   const parsed = updateTenantBrandingSchema.safeParse({
     name: formData.get("name"),
     brandColor: formData.get("brandColor"),
-    assistantButtonPosition: formData.get("assistantButtonPosition"),
   });
 
   if (!parsed.success) {
@@ -36,7 +35,6 @@ export async function updateTenantBranding(
     .update({
       name: parsed.data.name,
       brand_color: parsed.data.brandColor,
-      assistant_button_position: parsed.data.assistantButtonPosition,
     })
     .eq("id", tenantId)
     .select("id")

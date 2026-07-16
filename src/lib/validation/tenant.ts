@@ -22,7 +22,6 @@ export const updateTenantBrandingSchema = z.object({
     .string()
     .trim()
     .regex(/^#[0-9a-fA-F]{6}$/, "Use uma cor no formato #RRGGBB"),
-  assistantButtonPosition: z.enum(["bottom-left", "bottom-right"]),
 });
 
 export type UpdateTenantBrandingInput = z.infer<typeof updateTenantBrandingSchema>;

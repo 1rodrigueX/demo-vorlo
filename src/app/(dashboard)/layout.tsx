@@ -3,7 +3,6 @@ import { getCurrentUser, isCurrentUserDev } from "@/lib/auth/current-user";
 import { createClient } from "@/lib/supabase/server";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Topbar } from "@/components/layout/Topbar";
-import { AssistantChatPanel } from "@/components/assistant/AssistantChatPanel";
 import { TenantThemeProvider } from "@/lib/theme/TenantThemeContext";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -24,21 +23,17 @@ export default async function DashboardLayout({ children }: { children: React.Re
   }
 
   const supabase = await createClient();
-  const [{ data: tenant }, { data: falaAi }] = await Promise.all([
-    supabase
-      .from("tenants")
-      .select("name, brand_color, assistant_button_position")
-      .eq("id", current.profile.tenant_id)
-      .single(),
-    supabase.from("ai_agents").select("id").eq("tenant_id", current.profile.tenant_id).eq("is_fala_ai", true).maybeSingle(),
-  ]);
+  const { data: tenant } = await supabase
+    .from("tenants")
+    .select("name, brand_color")
+    .eq("id", current.profile.tenant_id)
+    .single();
 
   const name = current.isDevViewing
     ? `Dev (${current.user.email})`
     : current.profile?.full_name || current.user.email || "Usuário";
   const tenantName = tenant?.name ?? "CRM";
   const brandColor = tenant?.brand_color ?? "#4f46e5";
-  const buttonPosition = tenant?.assistant_button_position ?? "bottom-left";
   const showSettings = current.profile.role === "owner" || current.profile.role === "manager";
 
   return (
@@ -57,7 +52,6 @@ export default async function DashboardLayout({ children }: { children: React.Re
           />
           <main className="flex-1 bg-gray-50 p-3 md:p-4">{children}</main>
         </div>
-        {falaAi && <AssistantChatPanel agentId={falaAi.id} position={buttonPosition} />}
       </div>
     </TenantThemeProvider>
   );

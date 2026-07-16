@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@/lib/supabase/server";
-import { getAnthropicClientForTenant, AnthropicNotConfiguredError } from "@/lib/anthropic/client";
+import { getAnthropicClientForAgent, AnthropicNotConfiguredError } from "@/lib/anthropic/client";
 import { getToolsForAgent } from "@/lib/ai-agents/tools";
 import { executeAgentTool } from "@/lib/ai-agents/execute-tool";
 import { buildSystemPrompt } from "@/lib/ai-agents/prompt";
@@ -74,7 +74,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ age
 
   let client;
   try {
-    client = await getAnthropicClientForTenant(profile.tenant_id);
+    client = await getAnthropicClientForAgent(profile.tenant_id, agent);
   } catch (err) {
     if (err instanceof AnthropicNotConfiguredError) {
       return NextResponse.json({ error: err.message }, { status: 503 });

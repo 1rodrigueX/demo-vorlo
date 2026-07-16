@@ -68,8 +68,9 @@ export function AnthropicSettingsCard({
   return (
     <div className="space-y-4">
       <p className="text-sm text-gray-500">
-        Cada CRM usa sua própria chave da API da Anthropic para os agentes de IA (FALA AI e os
-        demais). Gere uma em{" "}
+        O FALA AI (aba Suporte) já funciona automaticamente neste CRM. Conecte sua própria chave
+        da API da Anthropic se quiser usar outros agentes de IA (SDR, atendente, etc). Gere uma
+        em{" "}
         <a
           href="https://console.anthropic.com/settings/keys"
           target="_blank"

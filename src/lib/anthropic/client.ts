@@ -38,6 +38,28 @@ export async function getAnthropicClientForTenant(tenantId: string): Promise<Ant
   return new Anthropic({ apiKey });
 }
 
+/**
+ * Igual a getAnthropicClientForTenant, mas com fallback pra chave da
+ * plataforma (PLATFORM_ANTHROPIC_API_KEY) quando o agente é o FALA AI e o
+ * tenant não conectou a própria chave — o FALA AI funciona out-of-the-box em
+ * todo CRM, sem custo pro tenant. Outros tipos de agente (SDR etc.) exigem a
+ * chave do próprio tenant, sem fallback, pra não gerar custo de negócio do
+ * cliente na conta da plataforma.
+ */
+export async function getAnthropicClientForAgent(
+  tenantId: string,
+  agent: { is_fala_ai: boolean },
+): Promise<Anthropic> {
+  const tenantKey = await getTenantAnthropicApiKey(tenantId);
+  if (tenantKey) return new Anthropic({ apiKey: tenantKey });
+
+  if (agent.is_fala_ai && process.env.PLATFORM_ANTHROPIC_API_KEY) {
+    return new Anthropic({ apiKey: process.env.PLATFORM_ANTHROPIC_API_KEY });
+  }
+
+  throw new AnthropicNotConfiguredError();
+}
+
 /** Faz uma chamada mínima real à API pra confirmar que a chave funciona. */
 export async function testAnthropicApiKey(
   apiKey: string,

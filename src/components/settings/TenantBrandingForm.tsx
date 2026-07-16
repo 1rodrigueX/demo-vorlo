@@ -6,7 +6,6 @@ import { updateTenantBranding, type ActionState } from "@/lib/actions/tenant-set
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
-import { Select } from "@/components/ui/Select";
 import type { Tenant } from "@/types/domain";
 
 export function TenantBrandingForm({ tenant }: { tenant: Tenant }) {
@@ -50,18 +49,6 @@ export function TenantBrandingForm({ tenant }: { tenant: Tenant }) {
             placeholder="#4f46e5"
           />
         </div>
-      </div>
-
-      <div>
-        <Label htmlFor="assistantButtonPosition">Posição do botão do assistente de IA</Label>
-        <Select
-          id="assistantButtonPosition"
-          name="assistantButtonPosition"
-          defaultValue={tenant.assistant_button_position}
-        >
-          <option value="bottom-left">Canto inferior esquerdo</option>
-          <option value="bottom-right">Canto inferior direito</option>
-        </Select>
       </div>
 
       {state?.error && <p className="text-sm text-red-600">{state.error}</p>}
