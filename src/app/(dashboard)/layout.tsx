@@ -55,7 +55,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
             isDevViewing={current.isDevViewing}
             showSettings={showSettings}
           />
-          <main className="flex-1 bg-gray-50 p-4 md:p-6">{children}</main>
+          <main className="flex-1 bg-gray-50 p-3 md:p-4">{children}</main>
         </div>
         {falaAi && <AssistantChatPanel agentId={falaAi.id} position={buttonPosition} />}
       </div>

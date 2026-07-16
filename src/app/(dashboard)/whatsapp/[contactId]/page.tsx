@@ -35,14 +35,14 @@ export default async function WhatsAppConversationPage({
   if (!contact) notFound();
 
   return (
-    <div className="flex h-full gap-4">
+    <div className="flex h-full gap-3">
       <div className="flex h-full min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-gray-200 bg-panel">
-        <div className="flex items-center justify-between gap-4 border-b border-gray-200 px-4 py-3">
+        <div className="flex items-center justify-between gap-3 border-b border-gray-200 px-3 py-2.5">
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold text-gray-900">{contact.name}</p>
             {contact.phone && <p className="text-xs text-gray-500">{contact.phone}</p>}
           </div>
-          <div className="flex shrink-0 items-center gap-3">
+          <div className="flex shrink-0 items-center gap-2">
             <DealQuickPanel
               contactId={contact.id}
               initialDeal={
@@ -77,7 +77,7 @@ export default async function WhatsAppConversationPage({
       </div>
 
       {falaAi && (
-        <div className="h-full w-80 shrink-0">
+        <div className="h-full w-64 shrink-0">
           <AgentChatPanel
             agentId={falaAi.id}
             mode="inline"
