@@ -24,6 +24,7 @@ export interface Database {
           brand_color: string;
           brand_font: string;
           assistant_button_position: "bottom-left" | "bottom-right";
+          logo_storage_path: string | null;
           billing_plan_id: string | null;
           stripe_customer_id: string | null;
           stripe_subscription_id: string | null;
@@ -39,6 +40,7 @@ export interface Database {
           brand_color?: string;
           brand_font?: string;
           assistant_button_position?: "bottom-left" | "bottom-right";
+          logo_storage_path?: string | null;
           billing_plan_id?: string | null;
           stripe_customer_id?: string | null;
           stripe_subscription_id?: string | null;
@@ -54,6 +56,7 @@ export interface Database {
           brand_color?: string;
           brand_font?: string;
           assistant_button_position?: "bottom-left" | "bottom-right";
+          logo_storage_path?: string | null;
           billing_plan_id?: string | null;
           stripe_customer_id?: string | null;
           stripe_subscription_id?: string | null;

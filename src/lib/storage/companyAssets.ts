@@ -28,7 +28,7 @@ function sanitizeStorageFileName(fileName: string): string {
 
 export async function uploadCompanyAsset(
   tenantId: string,
-  kind: "catalog" | "photos",
+  kind: "catalog" | "photos" | "logo",
   fileName: string,
   contentType: string,
   buffer: Buffer,

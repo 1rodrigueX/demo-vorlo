@@ -17,9 +17,11 @@ const baseLinks = [
 
 export function Sidebar({
   tenantName,
+  logoUrl,
   showSettings = false,
 }: {
   tenantName: string;
+  logoUrl?: string | null;
   showSettings?: boolean;
 }) {
   const pathname = usePathname();
@@ -32,10 +34,15 @@ export function Sidebar({
     <aside className="hidden w-64 shrink-0 border-r border-gray-200 bg-panel md:flex md:flex-col">
       <div className="flex h-16 items-center gap-2.5 border-b border-gray-200 px-5">
         <div
-          className="flex h-8 w-8 items-center justify-center rounded-lg text-sm font-bold text-white shadow-sm"
-          style={{ backgroundColor: brandColor }}
+          className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg text-sm font-bold text-white shadow-sm"
+          style={logoUrl ? undefined : { backgroundColor: brandColor }}
         >
-          {tenantName[0]?.toUpperCase() ?? "?"}
+          {logoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={logoUrl} alt={tenantName} className="h-full w-full object-cover" />
+          ) : (
+            tenantName[0]?.toUpperCase() ?? "?"
+          )}
         </div>
         <span className="truncate text-base font-semibold tracking-tight text-gray-900">
           {tenantName}

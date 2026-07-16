@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Topbar } from "@/components/layout/Topbar";
 import { TenantThemeProvider } from "@/lib/theme/TenantThemeContext";
+import { getCompanyAssetSignedUrl } from "@/lib/storage/companyAssets";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const current = await getCurrentUser();
@@ -25,7 +26,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const supabase = await createClient();
   const { data: tenant } = await supabase
     .from("tenants")
-    .select("name, brand_color")
+    .select("name, brand_color, logo_storage_path")
     .eq("id", current.profile.tenant_id)
     .single();
 
@@ -34,12 +35,13 @@ export default async function DashboardLayout({ children }: { children: React.Re
     : current.profile?.full_name || current.user.email || "Usuário";
   const tenantName = tenant?.name ?? "CRM";
   const brandColor = tenant?.brand_color ?? "#4f46e5";
+  const logoUrl = tenant?.logo_storage_path ? await getCompanyAssetSignedUrl(tenant.logo_storage_path) : null;
   const showSettings = current.profile.role === "owner" || current.profile.role === "manager";
 
   return (
     <TenantThemeProvider brandColor={brandColor}>
       <div className="flex min-h-screen">
-        <Sidebar tenantName={tenantName} showSettings={showSettings} />
+        <Sidebar tenantName={tenantName} logoUrl={logoUrl} showSettings={showSettings} />
         <div className="flex flex-1 flex-col">
           <Topbar
             name={name}
