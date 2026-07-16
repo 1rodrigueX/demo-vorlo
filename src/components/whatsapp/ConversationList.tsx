@@ -2,9 +2,40 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Trophy, FileCheck2 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { formatRelative } from "@/lib/utils/dates";
+import { formatCurrency } from "@/lib/utils/currency";
+import { Badge } from "@/components/ui/Badge";
 import type { Conversation } from "@/lib/whatsapp/getConversations";
+
+function DealBadge({ deal }: { deal: Conversation["deal"] }) {
+  if (!deal) return null;
+
+  if (deal.status === "won") {
+    return (
+      <Badge className="bg-emerald-50 text-emerald-700">
+        <Trophy size={11} className="mr-1" />
+        Ganho
+      </Badge>
+    );
+  }
+
+  if (deal.proposalSentAt) {
+    return (
+      <Badge className="bg-sky-50 text-sky-700">
+        <FileCheck2 size={11} className="mr-1" />
+        Proposta enviada
+      </Badge>
+    );
+  }
+
+  if (deal.value > 0) {
+    return <Badge className="bg-gray-100 text-gray-600">{formatCurrency(deal.value)}</Badge>;
+  }
+
+  return null;
+}
 
 export function ConversationList({ conversations }: { conversations: Conversation[] }) {
   const pathname = usePathname();
@@ -19,7 +50,7 @@ export function ConversationList({ conversations }: { conversations: Conversatio
 
   return (
     <ul className="h-full divide-y divide-gray-100 overflow-y-auto">
-      {conversations.map(({ contact, lastMessage }) => {
+      {conversations.map(({ contact, lastMessage, deal }) => {
         const href = `/whatsapp/${contact.id}`;
         const isActive = pathname === href;
         const initials = contact.name
@@ -52,6 +83,9 @@ export function ConversationList({ conversations }: { conversations: Conversatio
                   {lastMessage.direction === "outbound" && "Você: "}
                   {lastMessage.body}
                 </p>
+                <div className="mt-1">
+                  <DealBadge deal={deal} />
+                </div>
               </div>
             </Link>
           </li>

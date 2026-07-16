@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 export type Conversation = {
   contact: { id: string; name: string; phone: string | null };
   lastMessage: { body: string | null; direction: "outbound" | "inbound"; created_at: string };
+  deal: { value: number; status: "open" | "won" | "lost"; proposalSentAt: string | null } | null;
 };
 
 const RECENT_MESSAGE_LIMIT = 500;
@@ -31,19 +32,34 @@ export async function getConversations(): Promise<Conversation[]> {
 
   const contactIds = [...lastByContact.keys()];
 
-  const { data: contacts } = await supabase
-    .from("contacts")
-    .select("id, name, phone")
-    .in("id", contactIds);
+  const [{ data: contacts }, { data: deals }] = await Promise.all([
+    supabase.from("contacts").select("id, name, phone").in("id", contactIds),
+    supabase
+      .from("deals")
+      .select("contact_id, value, status, proposal_sent_at")
+      .in("contact_id", contactIds)
+      .order("created_at", { ascending: false }),
+  ]);
 
   const contactById = new Map((contacts ?? []).map((c) => [c.id, c]));
+
+  // A mais recente primeiro (já ordenado na query) — só guarda a primeira por contato.
+  const dealByContact = new Map<string, NonNullable<typeof deals>[number]>();
+  for (const d of deals ?? []) {
+    if (!dealByContact.has(d.contact_id)) dealByContact.set(d.contact_id, d);
+  }
 
   const conversations: Conversation[] = [];
   for (const contactId of contactIds) {
     const contact = contactById.get(contactId);
     const lastMessage = lastByContact.get(contactId);
     if (!contact || !lastMessage) continue;
-    conversations.push({ contact, lastMessage });
+    const deal = dealByContact.get(contactId);
+    conversations.push({
+      contact,
+      lastMessage,
+      deal: deal ? { value: Number(deal.value), status: deal.status, proposalSentAt: deal.proposal_sent_at } : null,
+    });
   }
 
   return conversations;

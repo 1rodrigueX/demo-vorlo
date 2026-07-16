@@ -4,6 +4,7 @@ export function buildSystemPrompt(
   agent: Pick<AiAgent, "system_prompt">,
   memoryFacts: Pick<AiAgentMemory, "label" | "content">[],
   userDisplayName: string,
+  contextHint?: string,
 ): string {
   let prompt = agent.system_prompt;
 
@@ -13,5 +14,10 @@ export function buildSystemPrompt(
   }
 
   prompt += `\n\nUsuário atual: ${userDisplayName}.`;
+
+  if (contextHint) {
+    prompt += `\n\n${contextHint}`;
+  }
+
   return prompt;
 }

@@ -42,7 +42,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ age
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Sessão expirada, faça login novamente" }, { status: 401 });
 
-  let body: { message?: string };
+  let body: { message?: string; contextHint?: string };
   try {
     body = await request.json();
   } catch {
@@ -54,6 +54,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ age
   if (userMessage.length > MAX_MESSAGE_LENGTH) {
     return NextResponse.json({ error: "Mensagem muito longa" }, { status: 400 });
   }
+  const contextHint = (body.contextHint ?? "").trim().slice(0, 500) || undefined;
 
   const { data: agent } = await supabase.from("ai_agents").select("*").eq("id", agentId).maybeSingle();
   if (!agent) return NextResponse.json({ error: "Agente não encontrado" }, { status: 404 });
@@ -102,7 +103,12 @@ export async function POST(request: Request, { params }: { params: Promise<{ age
     .map((m) => ({ role: m.role, content: m.content }));
   messages.push({ role: "user", content: userMessage });
 
-  const system = buildSystemPrompt(agent, memoryFacts ?? [], profile.full_name ?? user.email ?? "vendedor");
+  const system = buildSystemPrompt(
+    agent,
+    memoryFacts ?? [],
+    profile.full_name ?? user.email ?? "vendedor",
+    contextHint,
+  );
   const tools = getToolsForAgent(agent.tools);
 
   let finalText = "";
