@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
+import { Suspense, useActionState } from "react";
 import { useSearchParams } from "next/navigation";
 import { signup, type AuthActionState } from "@/lib/actions/auth";
 import { Button } from "@/components/ui/Button";
@@ -10,6 +10,14 @@ import { Label } from "@/components/ui/Label";
 import { GoogleAuthButton } from "@/components/auth/GoogleAuthButton";
 
 export default function SignupPage() {
+  return (
+    <Suspense fallback={null}>
+      <SignupForm />
+    </Suspense>
+  );
+}
+
+function SignupForm() {
   const [state, formAction, isPending] = useActionState<AuthActionState, FormData>(signup, null);
   const searchParams = useSearchParams();
   const plan = searchParams.get("plan");
@@ -19,7 +27,7 @@ export default function SignupPage() {
       <div className="w-full max-w-sm rounded-lg border border-gray-200 bg-panel p-8 shadow-sm">
         <h1 className="mb-1 text-xl font-semibold text-gray-900">Criar conta</h1>
         <p className="mb-6 text-sm text-gray-500">
-          Comece grátis, escolha o plano depois de conhecer o CRM.
+          Crie sua conta no FALA AI CRM — escolha o plano depois de conhecer a plataforma.
         </p>
 
         <GoogleAuthButton next={plan ? `/choose-plan?plan=${plan}` : "/choose-plan"} />

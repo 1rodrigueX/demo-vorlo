@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
 import { Badge } from "@/components/ui/Badge";
+import { UserMenu } from "@/components/layout/UserMenu";
 import { cn } from "@/lib/utils/cn";
 import { startCheckout, cancelPendingCheckout, type ActionState } from "@/lib/actions/checkout";
 import { calculateTotalCents, formatCentsUsd } from "@/lib/billing/pricing";
@@ -83,11 +84,13 @@ export function ChoosePlanForm({
   preselectedPlanId,
   hasActiveCheckout,
   ownerName,
+  email,
 }: {
   plans: BillingPlan[];
   preselectedPlanId?: string;
   hasActiveCheckout: boolean;
   ownerName: string | null;
+  email: string;
 }) {
   const [state, formAction, isPending] = useActionState<ActionState, FormData>(startCheckout, null);
   const defaultPlan = plans.find((p) => p.id === preselectedPlanId) ?? plans.find((p) => p.is_default) ?? plans[0];
@@ -103,10 +106,18 @@ export function ChoosePlanForm({
     return calculateTotalCents(selectedPlan, { extraSellers, extraManagers, extraAgents, extraIntegrations });
   }, [selectedPlan, extraSellers, extraManagers, extraAgents, extraIntegrations]);
 
+  const userMenu = <UserMenu name={ownerName || email || "Usuário"} email={email} />;
+
   if (hasActiveCheckout) {
     return (
-      <div className="flex min-h-screen items-center bg-gray-50 px-4 py-16">
-        <ActiveCheckoutNotice />
+      <div className="min-h-screen bg-gray-50 px-4 py-6">
+        <header className="mx-auto flex max-w-4xl items-center justify-between pb-10">
+          <span className="text-sm font-semibold text-gray-900">FALA AI CRM</span>
+          {userMenu}
+        </header>
+        <div className="flex items-center justify-center">
+          <ActiveCheckoutNotice />
+        </div>
       </div>
     );
   }
@@ -114,6 +125,11 @@ export function ChoosePlanForm({
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-12">
       <div className="mx-auto max-w-4xl">
+        <header className="mb-8 flex items-center justify-between">
+          <span className="text-sm font-semibold text-gray-900">FALA AI CRM</span>
+          {userMenu}
+        </header>
+
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900">
             {ownerName ? `Falta pouco, ${ownerName.split(" ")[0]}!` : "Falta pouco!"}

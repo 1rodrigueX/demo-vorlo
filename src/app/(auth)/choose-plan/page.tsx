@@ -49,6 +49,7 @@ export default async function ChoosePlanPage({
       preselectedPlanId={preselectedPlanId}
       hasActiveCheckout={!!activeCheckout}
       ownerName={(user.user_metadata?.full_name as string | undefined) ?? null}
+      email={user.email ?? ""}
     />
   );
 }
