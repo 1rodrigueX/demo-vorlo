@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Permite acessar o dev server pelo IP de rede (ex: outro PC testando a
+  // landing page) sem o Next bloquear os recursos de HMR como cross-origin.
+  allowedDevOrigins: ["192.168.18.4"],
   // pino/baileys use dynamic requires (worker-thread transports) that break
   // if Next tries to bundle them.
   serverExternalPackages: ["@whiskeysockets/baileys", "pino"],
