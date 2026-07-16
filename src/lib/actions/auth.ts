@@ -24,7 +24,7 @@ export async function signup(_prevState: AuthActionState, formData: FormData): P
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signUp({
     email: parsed.data.email,
     password: parsed.data.password,
     options: { data: { full_name: parsed.data.fullName } },
@@ -35,6 +35,12 @@ export async function signup(_prevState: AuthActionState, formData: FormData): P
       return { error: "Esse e-mail já tem uma conta. Faça login." };
     }
     return { error: "Não foi possível criar sua conta. Tente novamente." };
+  }
+
+  // Com confirmação de email ativada no Supabase, signUp não retorna sessão —
+  // tentar logar agora daria "Email ou senha incorretos" mesmo com a senha certa.
+  if (!data.session) {
+    return { message: "Conta criada! Enviamos um link de confirmação para o seu email — confirme antes de entrar." };
   }
 
   const plan = formData.get("plan");
@@ -55,6 +61,9 @@ export async function login(_prevState: AuthActionState, formData: FormData): Pr
   const { error } = await supabase.auth.signInWithPassword(parsed.data);
 
   if (error) {
+    if (error.code === "email_not_confirmed") {
+      return { error: "Confirme seu email antes de entrar. Verifique sua caixa de entrada (e o spam)." };
+    }
     return { error: "Email ou senha incorretos" };
   }
 
