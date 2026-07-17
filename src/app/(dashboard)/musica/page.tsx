@@ -1,3 +1,14 @@
+import { redirect } from "next/navigation";
+
+// Música (YouTube + Spotify) desativada temporariamente a pedido do usuário
+// (2026-07-17) — a rota /musica só redireciona pro dashboard, sem carregar
+// nada do player. Toda a implementação original fica comentada abaixo pra
+// reativar depois é só remover o /* */ e apagar esse redirect.
+export default function MusicaPage() {
+  redirect("/dashboard");
+}
+
+/*
 "use client";
 
 import { Suspense, useEffect, useState, useTransition } from "react";
@@ -19,7 +30,7 @@ const SPOTIFY_STATUS_MESSAGE: Record<string, { text: string; tone: "error" | "su
   not_configured: { text: "O Spotify ainda não foi configurado nesta plataforma.", tone: "error" },
 };
 
-export default function MusicaPage() {
+function MusicaPageContent_DISABLED() {
   return (
     <Suspense fallback={null}>
       <MusicaPageContent />
@@ -181,7 +192,6 @@ function SpotifyPanel({
               onClick={() => playTrack(track.uri)}
               className="flex items-center gap-3 rounded-xl border border-gray-200 bg-panel p-2 text-left transition-colors hover:border-gray-300"
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={track.albumArt} alt={track.name} className="h-14 w-14 shrink-0 rounded-lg object-cover" />
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium text-gray-900">{track.name}</p>
@@ -277,8 +287,7 @@ function YoutubePanel() {
                 className="flex items-center gap-3 rounded-xl border border-gray-200 bg-panel p-2 text-left transition-colors hover:border-gray-300"
                 style={isActive ? { borderColor: brandColor } : undefined}
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={result.thumbnailUrl} alt={result.title} className="h-14 w-14 shrink-0 rounded-lg object-cover" />
+                  <img src={result.thumbnailUrl} alt={result.title} className="h-14 w-14 shrink-0 rounded-lg object-cover" />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-gray-900">{result.title}</p>
                   <p className="truncate text-xs text-gray-500">{result.channelTitle}</p>
@@ -321,3 +330,4 @@ function YoutubePanel() {
     </div>
   );
 }
+*/

@@ -6,10 +6,12 @@ import { Topbar } from "@/components/layout/Topbar";
 import { TenantThemeProvider } from "@/lib/theme/TenantThemeContext";
 import { getCompanyAssetSignedUrl } from "@/lib/storage/companyAssets";
 import { ClickSoundListener } from "@/components/layout/ClickSoundListener";
-import { MusicPlayerProvider } from "@/lib/music/MusicPlayerContext";
-import { MusicWidget } from "@/components/music/MusicWidget";
-import { SpotifyPlayerProvider } from "@/lib/spotify/SpotifyPlayerContext";
-import { getSpotifyStatus } from "@/lib/actions/spotify";
+// Música desativada temporariamente (a pedido do usuário, 2026-07-17) — ver
+// nota mais abaixo, antes do JSX que ficaria no lugar do children.
+// import { MusicPlayerProvider } from "@/lib/music/MusicPlayerContext";
+// import { MusicWidget } from "@/components/music/MusicWidget";
+// import { SpotifyPlayerProvider } from "@/lib/spotify/SpotifyPlayerContext";
+// import { getSpotifyStatus } from "@/lib/actions/spotify";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const current = await getCurrentUser();
@@ -48,39 +50,46 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const logoUrl = tenant?.logo_storage_path ? await getCompanyAssetSignedUrl(tenant.logo_storage_path) : null;
   const clickSoundUrl = tenant?.click_sound_path ? await getCompanyAssetSignedUrl(tenant.click_sound_path) : null;
   const showSettings = current.profile.role === "owner" || current.profile.role === "manager";
-  const spotifyStatus = await getSpotifyStatus();
+  // const spotifyStatus = await getSpotifyStatus();
 
   return (
     <TenantThemeProvider>
       {clickSoundUrl && <ClickSoundListener soundUrl={clickSoundUrl} />}
-      <MusicPlayerProvider>
-        <SpotifyPlayerProvider enabled={spotifyStatus.connected}>
-          <div className="flex min-h-screen">
-            <Sidebar tenantName={tenantName} logoUrl={logoUrl} showSettings={showSettings} />
-            <div className="flex flex-1 flex-col">
-              <Topbar
-                name={name}
-                email={current.user.email ?? ""}
-                role={current.isDevViewing ? "dev" : current.profile.role}
-                tenantName={tenantName}
-                isDev={isDev}
-                isDevViewing={current.isDevViewing}
-                showSettings={showSettings}
-              />
-              <main className="flex-1 bg-gray-50 p-3 md:p-4">
-                {tenant?.status === "past_due" && !current.isDevViewing && (
-                  <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm text-amber-800">
-                    A mensalidade está pendente. Confira o e-mail de cobrança pra regularizar antes da suspensão do
-                    acesso.
-                  </div>
-                )}
-                {children}
-              </main>
-            </div>
-          </div>
-          <MusicWidget />
-        </SpotifyPlayerProvider>
-      </MusicPlayerProvider>
+      {/*
+        Música (YouTube + Spotify) desativada temporariamente — nem o SDK do
+        YouTube nem o Web Playback SDK do Spotify carregam enquanto isso
+        estiver comentado. Pra reativar, volta essa árvore de providers:
+
+        <MusicPlayerProvider>
+          <SpotifyPlayerProvider enabled={spotifyStatus.connected}>
+            ...o <div className="flex min-h-screen">...</div> abaixo...
+            <MusicWidget />
+          </SpotifyPlayerProvider>
+        </MusicPlayerProvider>
+      */}
+      <div className="flex min-h-screen">
+        <Sidebar tenantName={tenantName} logoUrl={logoUrl} showSettings={showSettings} />
+        <div className="flex flex-1 flex-col">
+          <Topbar
+            name={name}
+            email={current.user.email ?? ""}
+            role={current.isDevViewing ? "dev" : current.profile.role}
+            tenantName={tenantName}
+            isDev={isDev}
+            isDevViewing={current.isDevViewing}
+            showSettings={showSettings}
+          />
+          <main className="flex-1 bg-gray-50 p-3 md:p-4">
+            {tenant?.status === "past_due" && !current.isDevViewing && (
+              <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm text-amber-800">
+                A mensalidade está pendente. Confira o e-mail de cobrança pra regularizar antes da suspensão do
+                acesso.
+              </div>
+            )}
+            {children}
+          </main>
+        </div>
+      </div>
     </TenantThemeProvider>
   );
 }
