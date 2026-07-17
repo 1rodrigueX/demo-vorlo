@@ -17,6 +17,8 @@ type YTPlayer = {
   pauseVideo: () => void;
   stopVideo: () => void;
   setVolume: (v: number) => void;
+  unMute: () => void;
+  isMuted: () => boolean;
   loadVideoById: (id: string) => void;
   loadPlaylist: (opts: { list: string }) => void;
   getVideoData?: () => { title?: string };
@@ -72,6 +74,9 @@ export function MusicPlayerProvider({ children }: { children: React.ReactNode })
     } else {
       return;
     }
+    // loadVideoById/loadPlaylist às vezes deixam o player mudo (proteção de
+    // autoplay do navegador) mesmo com volume definido — desmuta explícito.
+    playerRef.current.unMute();
     if (persist) localStorage.setItem(STORAGE_URL_KEY, url);
   }, []);
 
@@ -85,6 +90,7 @@ export function MusicPlayerProvider({ children }: { children: React.ReactNode })
         events: {
           onReady: () => {
             setIsReady(true);
+            playerRef.current?.unMute();
             const savedVolume = localStorage.getItem(STORAGE_VOLUME_KEY);
             if (savedVolume) {
               const v = Number(savedVolume);
