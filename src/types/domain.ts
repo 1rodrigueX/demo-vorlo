@@ -29,6 +29,8 @@ export type CompanyProductPhoto = Database["public"]["Tables"]["company_product_
 export type CompanyCatalog = Database["public"]["Tables"]["company_catalogs"]["Row"];
 export type BlingConnectionSeller = Database["public"]["Tables"]["bling_connection_sellers"]["Row"];
 export type TenantApiKey = Database["public"]["Tables"]["tenant_api_keys"]["Row"];
+export type PlatformTutorialVideo = Database["public"]["Tables"]["platform_tutorial_videos"]["Row"];
+export type Suggestion = Database["public"]["Tables"]["suggestions"]["Row"];
 
 export type ContactWithCompany = Contact & {
   company: Pick<Company, "id" | "name"> | null;

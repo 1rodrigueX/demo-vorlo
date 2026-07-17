@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { isCurrentUserDev } from "@/lib/auth/current-user";
+import { DevNavTabs } from "@/components/dev/DevNavTabs";
 
 export default async function DevLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
@@ -28,6 +29,9 @@ export default async function DevLayout({ children }: { children: React.ReactNod
           Ir para meu CRM
         </Link>
       </header>
+      <div className="mx-auto max-w-5xl px-6 pt-4">
+        <DevNavTabs />
+      </div>
       <main className="mx-auto max-w-5xl p-6">{children}</main>
     </div>
   );

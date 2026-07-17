@@ -26,7 +26,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const supabase = await createClient();
   const { data: tenant } = await supabase
     .from("tenants")
-    .select("name, brand_color, logo_storage_path")
+    .select("name, brand_color, brand_font, text_size, logo_storage_path")
     .eq("id", current.profile.tenant_id)
     .single();
 
@@ -39,7 +39,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const showSettings = current.profile.role === "owner" || current.profile.role === "manager";
 
   return (
-    <TenantThemeProvider brandColor={brandColor}>
+    <TenantThemeProvider brandColor={brandColor} brandFont={tenant?.brand_font} textSize={tenant?.text_size}>
       <div className="flex min-h-screen">
         <Sidebar tenantName={tenantName} logoUrl={logoUrl} showSettings={showSettings} />
         <div className="flex flex-1 flex-col">

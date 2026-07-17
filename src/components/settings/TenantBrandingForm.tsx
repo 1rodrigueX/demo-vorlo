@@ -13,6 +13,8 @@ import {
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
+import { Select } from "@/components/ui/Select";
+import { FONT_OPTIONS, TEXT_SIZE_OPTIONS } from "@/lib/theme/TenantThemeContext";
 import type { Tenant } from "@/types/domain";
 
 export function TenantBrandingForm({ tenant, logoUrl }: { tenant: Tenant; logoUrl: string | null }) {
@@ -84,6 +86,29 @@ export function TenantBrandingForm({ tenant, logoUrl }: { tenant: Tenant; logoUr
               pattern="^#[0-9a-fA-F]{6}$"
               placeholder="#4f46e5"
             />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
+            <Label htmlFor="brandFont">Fonte</Label>
+            <Select id="brandFont" name="brandFont" defaultValue={tenant.brand_font || "default"}>
+              {Object.entries(FONT_OPTIONS).map(([key, opt]) => (
+                <option key={key} value={key}>
+                  {opt.label}
+                </option>
+              ))}
+            </Select>
+          </div>
+          <div>
+            <Label htmlFor="textSize">Tamanho do texto</Label>
+            <Select id="textSize" name="textSize" defaultValue={tenant.text_size}>
+              {Object.entries(TEXT_SIZE_OPTIONS).map(([key, opt]) => (
+                <option key={key} value={key}>
+                  {opt.label}
+                </option>
+              ))}
+            </Select>
           </div>
         </div>
 

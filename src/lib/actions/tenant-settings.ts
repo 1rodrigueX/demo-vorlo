@@ -16,6 +16,8 @@ export async function updateTenantBranding(
   const parsed = updateTenantBrandingSchema.safeParse({
     name: formData.get("name"),
     brandColor: formData.get("brandColor"),
+    brandFont: formData.get("brandFont"),
+    textSize: formData.get("textSize"),
   });
 
   if (!parsed.success) {
@@ -36,6 +38,8 @@ export async function updateTenantBranding(
     .update({
       name: parsed.data.name,
       brand_color: parsed.data.brandColor,
+      brand_font: parsed.data.brandFont,
+      text_size: parsed.data.textSize,
     })
     .eq("id", tenantId)
     .select("id")

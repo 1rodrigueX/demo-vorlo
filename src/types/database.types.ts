@@ -25,6 +25,7 @@ export interface Database {
           brand_font: string;
           assistant_button_position: "bottom-left" | "bottom-right";
           logo_storage_path: string | null;
+          text_size: "small" | "medium" | "large";
           billing_plan_id: string | null;
           stripe_customer_id: string | null;
           stripe_subscription_id: string | null;
@@ -41,6 +42,7 @@ export interface Database {
           brand_font?: string;
           assistant_button_position?: "bottom-left" | "bottom-right";
           logo_storage_path?: string | null;
+          text_size?: "small" | "medium" | "large";
           billing_plan_id?: string | null;
           stripe_customer_id?: string | null;
           stripe_subscription_id?: string | null;
@@ -57,6 +59,7 @@ export interface Database {
           brand_font?: string;
           assistant_button_position?: "bottom-left" | "bottom-right";
           logo_storage_path?: string | null;
+          text_size?: "small" | "medium" | "large";
           billing_plan_id?: string | null;
           stripe_customer_id?: string | null;
           stripe_subscription_id?: string | null;
@@ -68,6 +71,77 @@ export interface Database {
             columns: ["billing_plan_id"];
             isOneToOne: false;
             referencedRelation: "billing_plans";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      platform_tutorial_videos: {
+        Row: {
+          id: string;
+          title: string;
+          description: string | null;
+          video_url: string;
+          position: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          title: string;
+          description?: string | null;
+          video_url: string;
+          position?: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          title?: string;
+          description?: string | null;
+          video_url?: string;
+          position?: number;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      suggestions: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          created_by: string | null;
+          created_by_name: string | null;
+          message: string;
+          status: "new" | "answered";
+          response: string | null;
+          responded_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          created_by?: string | null;
+          created_by_name?: string | null;
+          message: string;
+          status?: "new" | "answered";
+          response?: string | null;
+          responded_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          created_by?: string | null;
+          created_by_name?: string | null;
+          message?: string;
+          status?: "new" | "answered";
+          response?: string | null;
+          responded_at?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "suggestions_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
             referencedColumns: ["id"];
           },
         ];
