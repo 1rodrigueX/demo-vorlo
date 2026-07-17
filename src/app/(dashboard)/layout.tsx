@@ -6,6 +6,8 @@ import { Topbar } from "@/components/layout/Topbar";
 import { TenantThemeProvider } from "@/lib/theme/TenantThemeContext";
 import { getCompanyAssetSignedUrl } from "@/lib/storage/companyAssets";
 import { ClickSoundListener } from "@/components/layout/ClickSoundListener";
+import { MusicPlayerProvider } from "@/lib/music/MusicPlayerContext";
+import { MusicWidget } from "@/components/music/MusicWidget";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const current = await getCurrentUser();
@@ -52,21 +54,24 @@ export default async function DashboardLayout({ children }: { children: React.Re
       textColor={tenant?.text_color}
     >
       {clickSoundUrl && <ClickSoundListener soundUrl={clickSoundUrl} />}
-      <div className="flex min-h-screen">
-        <Sidebar tenantName={tenantName} logoUrl={logoUrl} showSettings={showSettings} />
-        <div className="flex flex-1 flex-col">
-          <Topbar
-            name={name}
-            email={current.user.email ?? ""}
-            role={current.isDevViewing ? "dev" : current.profile.role}
-            tenantName={tenantName}
-            isDev={isDev}
-            isDevViewing={current.isDevViewing}
-            showSettings={showSettings}
-          />
-          <main className="flex-1 bg-gray-50 p-3 md:p-4">{children}</main>
+      <MusicPlayerProvider>
+        <div className="flex min-h-screen">
+          <Sidebar tenantName={tenantName} logoUrl={logoUrl} showSettings={showSettings} />
+          <div className="flex flex-1 flex-col">
+            <Topbar
+              name={name}
+              email={current.user.email ?? ""}
+              role={current.isDevViewing ? "dev" : current.profile.role}
+              tenantName={tenantName}
+              isDev={isDev}
+              isDevViewing={current.isDevViewing}
+              showSettings={showSettings}
+            />
+            <main className="flex-1 bg-gray-50 p-3 md:p-4">{children}</main>
+          </div>
         </div>
-      </div>
+        <MusicWidget />
+      </MusicPlayerProvider>
     </TenantThemeProvider>
   );
 }

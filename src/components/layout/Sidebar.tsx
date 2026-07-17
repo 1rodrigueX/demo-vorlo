@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, KanbanSquare, Building2, MessageCircle, Mail, Sparkles, Lightbulb, Settings } from "lucide-react";
+import { LayoutDashboard, KanbanSquare, Building2, MessageCircle, Mail, Sparkles, Lightbulb, Music2, Settings } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { useTenantTheme } from "@/lib/theme/TenantThemeContext";
 
@@ -14,6 +14,7 @@ const baseLinks = [
   { href: "/emails", label: "E-mails", icon: Mail },
   { href: "/suporte", label: "Suporte", icon: Sparkles },
   { href: "/sugestoes", label: "Sugestões", icon: Lightbulb },
+  { href: "/musica", label: "Música", icon: Music2 },
 ];
 
 export function Sidebar({
