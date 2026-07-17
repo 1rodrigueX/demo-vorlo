@@ -11,7 +11,17 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 
 export default function MusicaPage() {
-  const { isReady, isPlaying, title, volume, loadFromUrl, togglePlay, setVolume, stop } = useMusicPlayer();
+  const {
+    isReady,
+    isPlaying,
+    title,
+    volume,
+    error: playerError,
+    loadFromUrl,
+    togglePlay,
+    setVolume,
+    stop,
+  } = useMusicPlayer();
   const { brandColor } = useTenantTheme();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<YoutubeSearchResult[]>([]);
@@ -69,6 +79,8 @@ export default function MusicaPage() {
           </Link>
         </Card>
       )}
+
+      {playerError && <Card className="p-4 text-sm text-red-600">{playerError}</Card>}
 
       {results.length > 0 && (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">

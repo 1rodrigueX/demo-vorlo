@@ -30,10 +30,19 @@ type MusicState = {
   isPlaying: boolean;
   title: string | null;
   volume: number;
+  error: string | null;
   loadFromUrl: (url: string) => void;
   togglePlay: () => void;
   setVolume: (v: number) => void;
   stop: () => void;
+};
+
+const ERROR_MESSAGES: Record<number, string> = {
+  2: "Link de vídeo inválido.",
+  5: "Erro ao carregar o player.",
+  100: "Vídeo não encontrado ou removido.",
+  101: "O dono do vídeo não permite tocar ele fora do YouTube.",
+  150: "O dono do vídeo não permite tocar ele fora do YouTube.",
 };
 
 const MusicContext = createContext<MusicState | null>(null);
@@ -63,8 +72,10 @@ export function MusicPlayerProvider({ children }: { children: React.ReactNode })
   const [isPlaying, setIsPlaying] = useState(false);
   const [title, setTitle] = useState<string | null>(null);
   const [volume, setVolumeState] = useState(70);
+  const [error, setError] = useState<string | null>(null);
 
   const loadFromUrl = useCallback((url: string, persist = true) => {
+    setError(null);
     const { videoId, listId } = extractYouTubeIds(url);
     if (!playerRef.current) return;
     if (listId) {
@@ -110,6 +121,9 @@ export function MusicPlayerProvider({ children }: { children: React.ReactNode })
               if (data?.title) setTitle(data.title);
             }
           },
+          onError: (e: { data: number }) => {
+            setError(ERROR_MESSAGES[e.data] ?? `Não foi possível tocar (erro ${e.data}).`);
+          },
         },
       });
     }
@@ -148,7 +162,9 @@ export function MusicPlayerProvider({ children }: { children: React.ReactNode })
   }, []);
 
   return (
-    <MusicContext.Provider value={{ isReady, isPlaying, title, volume, loadFromUrl, togglePlay, setVolume, stop }}>
+    <MusicContext.Provider
+      value={{ isReady, isPlaying, title, volume, error, loadFromUrl, togglePlay, setVolume, stop }}
+    >
       <div
         id="music-player-host"
         className="fixed h-[200px] w-[200px] overflow-hidden"
