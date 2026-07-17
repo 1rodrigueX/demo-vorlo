@@ -43,16 +43,19 @@ const INTEGRATION_STATUS_MESSAGE: Record<string, { text: (provider: string) => s
 };
 
 export default async function SettingsIntegracoesPage({
+  params,
   searchParams,
 }: {
+  params: Promise<{ tenantSlug: string }>;
   searchParams: Promise<{ bling?: string; integration?: string; provider?: string }>;
 }) {
+  const { tenantSlug } = await params;
   const { bling, integration, provider } = await searchParams;
   const blingStatusMessage = bling ? BLING_STATUS_MESSAGE[bling] : undefined;
   const integrationStatusMessage = integration ? INTEGRATION_STATUS_MESSAGE[integration] : undefined;
 
   const current = await getCurrentUser();
-  if (!current?.profile) redirect("/dashboard");
+  if (!current?.profile) redirect(`/${tenantSlug}/dashboard`);
 
   const supabase = await createClient();
   const [
@@ -104,7 +107,7 @@ export default async function SettingsIntegracoesPage({
       .order("created_at", { ascending: false }),
   ]);
 
-  if (!tenant) redirect("/dashboard");
+  if (!tenant) redirect(`/${tenantSlug}/dashboard`);
 
   const anthropicApiKey = (anthropicIntegration?.credentials as { apiKey?: string } | null)?.apiKey;
   const gmailIntegration = emailIntegrations?.find((i) => i.provider === "gmail");

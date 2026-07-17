@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { requireTenantId } from "@/lib/auth/current-user";
+import { requireTenantId, getTenantSlug } from "@/lib/auth/current-user";
 import { syncContactToBling } from "@/lib/bling/sync";
 import { contactSchema } from "@/lib/validation/contact";
 
@@ -130,9 +130,10 @@ export async function createContact(_prevState: ActionState, formData: FormData)
     },
   });
 
-  revalidatePath("/contacts");
-  revalidatePath("/companies");
-  redirect(`/contacts/${data.id}`);
+  revalidatePath("/[tenantSlug]/contacts", "page");
+  revalidatePath("/[tenantSlug]/companies", "page");
+  const slug = await getTenantSlug(supabase, tenantId);
+  redirect(`/${slug}/contacts/${data.id}`);
 }
 
 export async function updateContact(
@@ -209,15 +210,20 @@ export async function updateContact(
     return { error: `Não foi possível salvar: ${error.message}` };
   }
 
-  revalidatePath("/contacts");
-  revalidatePath(`/contacts/${contactId}`);
-  revalidatePath("/companies");
+  revalidatePath("/[tenantSlug]/contacts", "page");
+  revalidatePath(`/[tenantSlug]/contacts/${contactId}`, "page");
+  revalidatePath("/[tenantSlug]/companies", "page");
   return null;
 }
 
 export async function deleteContact(contactId: string) {
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const tenantId = user ? await requireTenantId(supabase, user.id) : null;
   await supabase.from("contacts").delete().eq("id", contactId);
-  revalidatePath("/contacts");
-  redirect("/contacts");
+  revalidatePath("/[tenantSlug]/contacts", "page");
+  const slug = tenantId ? await getTenantSlug(supabase, tenantId) : null;
+  redirect(slug ? `/${slug}/contacts` : "/login");
 }

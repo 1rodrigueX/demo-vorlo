@@ -11,9 +11,9 @@ import type { WhatsAppMessage } from "@/types/domain";
 export default async function WhatsAppConversationPage({
   params,
 }: {
-  params: Promise<{ contactId: string }>;
+  params: Promise<{ tenantSlug: string; contactId: string }>;
 }) {
-  const { contactId } = await params;
+  const { tenantSlug, contactId } = await params;
   const supabase = await createClient();
 
   const [{ data: contact }, { data: messages }, { data: deal }, { data: falaAi }] = await Promise.all([
@@ -69,7 +69,7 @@ export default async function WhatsAppConversationPage({
               }
             />
             <Link
-              href={`/contacts/${contact.id}`}
+              href={`/${tenantSlug}/contacts/${contact.id}`}
               className="flex items-center gap-1.5 rounded-lg border border-gray-300 bg-panel px-3 py-1.5 text-xs font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50 hover:border-gray-400"
             >
               <SquarePen size={13} />

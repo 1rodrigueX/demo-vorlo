@@ -2,12 +2,19 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { SettingsNavTabs } from "@/components/settings/SettingsNavTabs";
 
-export default async function SettingsLayout({ children }: { children: React.ReactNode }) {
+export default async function SettingsLayout({
+  children,
+  params,
+}: {
+  children: React.ReactNode;
+  params: Promise<{ tenantSlug: string }>;
+}) {
+  const { tenantSlug } = await params;
   const current = await getCurrentUser();
-  if (!current?.profile) redirect("/dashboard");
+  if (!current?.profile) redirect(`/${tenantSlug}/dashboard`);
 
   const isAdmin = current.profile.role === "owner" || current.profile.role === "manager";
-  if (!isAdmin) redirect("/dashboard");
+  if (!isAdmin) redirect(`/${tenantSlug}/dashboard`);
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">

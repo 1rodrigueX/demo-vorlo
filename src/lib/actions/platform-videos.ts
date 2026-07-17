@@ -29,7 +29,7 @@ export async function createTutorialVideo(_prevState: ActionState, formData: For
   if (error) return { error: `Não foi possível salvar: ${error.message}` };
 
   revalidatePath("/dev/videos");
-  revalidatePath("/suporte");
+  revalidatePath("/[tenantSlug]/suporte", "page");
   return null;
 }
 
@@ -43,7 +43,7 @@ export async function deleteTutorialVideo(videoId: string): Promise<ActionState>
   if (error) return { error: "Não foi possível remover" };
 
   revalidatePath("/dev/videos");
-  revalidatePath("/suporte");
+  revalidatePath("/[tenantSlug]/suporte", "page");
   return null;
 }
 

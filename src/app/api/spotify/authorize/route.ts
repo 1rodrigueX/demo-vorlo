@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { randomBytes } from "node:crypto";
 import { createClient } from "@/lib/supabase/server";
+import { requireTenantId, getTenantSlug } from "@/lib/auth/current-user";
 import { getSpotifyAuthorizeUrl } from "@/lib/spotify/client";
 
 export async function GET() {
@@ -14,11 +15,15 @@ export async function GET() {
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.redirect(`${siteUrl}/login`);
 
+  const tenantId = await requireTenantId(supabase, user.id);
+  const slug = tenantId ? await getTenantSlug(supabase, tenantId) : null;
+  if (!slug) return NextResponse.redirect(`${siteUrl}/login`);
+
   const redirectUri = `${siteUrl}/api/spotify/callback`;
   const state = randomBytes(16).toString("hex");
 
   const authorizeUrl = getSpotifyAuthorizeUrl(state, redirectUri);
-  if (!authorizeUrl) return NextResponse.redirect(`${siteUrl}/musica?spotify=not_configured`);
+  if (!authorizeUrl) return NextResponse.redirect(`${siteUrl}/${slug}/musica?spotify=not_configured`);
 
   const response = NextResponse.redirect(authorizeUrl);
   response.cookies.set("spotify_oauth_state", state, {

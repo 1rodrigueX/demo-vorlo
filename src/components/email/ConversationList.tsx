@@ -4,10 +4,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils/cn";
 import { formatRelative } from "@/lib/utils/dates";
+import { useTenantSlug } from "@/lib/tenant/useTenantSlug";
 import type { EmailConversation } from "@/lib/email/getConversations";
 
 export function ConversationList({ conversations }: { conversations: EmailConversation[] }) {
   const pathname = usePathname();
+  const tenantSlug = useTenantSlug();
 
   if (!conversations.length) {
     return (
@@ -20,7 +22,7 @@ export function ConversationList({ conversations }: { conversations: EmailConver
   return (
     <ul className="h-full divide-y divide-gray-100 overflow-y-auto">
       {conversations.map(({ contact, lastMessage }) => {
-        const href = `/emails/${contact.id}`;
+        const href = `/${tenantSlug}/emails/${contact.id}`;
         const isActive = pathname === href;
         const initials = contact.name
           .split(" ")

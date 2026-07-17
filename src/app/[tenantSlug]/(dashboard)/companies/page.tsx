@@ -4,7 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { Card } from "@/components/ui/Card";
 import { NewCompanyButton } from "@/components/companies/NewCompanyButton";
 
-export default async function CompaniesPage() {
+export default async function CompaniesPage({ params }: { params: Promise<{ tenantSlug: string }> }) {
+  const { tenantSlug } = await params;
   const supabase = await createClient();
   const { data: companies } = await supabase
     .from("companies")
@@ -30,7 +31,7 @@ export default async function CompaniesPage() {
           {companies.map((company) => (
             <Link
               key={company.id}
-              href={`/companies/${company.id}`}
+              href={`/${tenantSlug}/companies/${company.id}`}
               className="flex items-center gap-3 px-4 py-3.5 transition-colors hover:bg-gray-50"
             >
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">

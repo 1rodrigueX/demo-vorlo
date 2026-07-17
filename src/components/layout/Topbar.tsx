@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
 import { UserMenu } from "@/components/layout/UserMenu";
+import { useTenantSlug } from "@/lib/tenant/useTenantSlug";
 
 const baseLinks = [
   { href: "/dashboard", label: "Dashboard" },
@@ -30,6 +31,7 @@ export function Topbar({
   showSettings?: boolean;
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const tenantSlug = useTenantSlug();
   const links = showSettings ? [...baseLinks, { href: "/settings", label: "Configurações" }] : baseLinks;
 
   return (
@@ -52,7 +54,7 @@ export function Topbar({
           {links.map((l) => (
             <Link
               key={l.href}
-              href={l.href}
+              href={`/${tenantSlug}${l.href}`}
               onClick={() => setMobileOpen(false)}
               className="rounded-lg px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
             >

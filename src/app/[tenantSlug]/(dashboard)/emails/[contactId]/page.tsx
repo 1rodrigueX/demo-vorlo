@@ -8,9 +8,9 @@ import type { EmailMessage } from "@/types/domain";
 export default async function EmailConversationPage({
   params,
 }: {
-  params: Promise<{ contactId: string }>;
+  params: Promise<{ tenantSlug: string; contactId: string }>;
 }) {
-  const { contactId } = await params;
+  const { tenantSlug, contactId } = await params;
   const supabase = await createClient();
 
   const [{ data: contact }, { data: messages }] = await Promise.all([
@@ -32,7 +32,7 @@ export default async function EmailConversationPage({
           {contact.email && <p className="text-xs text-gray-500">{contact.email}</p>}
         </div>
         <Link
-          href={`/contacts/${contact.id}`}
+          href={`/${tenantSlug}/contacts/${contact.id}`}
           className="flex shrink-0 items-center gap-1 text-xs font-medium text-indigo-600 hover:underline"
         >
           Ver contato <ExternalLink size={12} />

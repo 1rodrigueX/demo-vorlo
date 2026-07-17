@@ -10,9 +10,9 @@ import { deleteCompany } from "@/lib/actions/companies";
 export default async function CompanyDetailPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ tenantSlug: string; id: string }>;
 }) {
-  const { id } = await params;
+  const { tenantSlug, id } = await params;
   const supabase = await createClient();
 
   const [{ data: company }, { data: contacts }] = await Promise.all([
@@ -29,7 +29,7 @@ export default async function CompanyDetailPage({
   return (
     <div className="mx-auto max-w-3xl">
       <Link
-        href="/companies"
+        href={`/${tenantSlug}/companies`}
         className="mb-4 inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700"
       >
         <ArrowLeft size={14} /> Empresas
@@ -58,7 +58,7 @@ export default async function CompanyDetailPage({
               {contacts.map((contact) => (
                 <li key={contact.id}>
                   <Link
-                    href={`/contacts/${contact.id}`}
+                    href={`/${tenantSlug}/contacts/${contact.id}`}
                     className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-gray-50"
                   >
                     <User size={14} className="text-gray-400" />

@@ -58,7 +58,7 @@ export async function updateWhatsAppConnection(
     return { error: "Só o dono ou gestor pode alterar a conexão de WhatsApp" };
   }
 
-  revalidatePath("/settings/integracoes");
-  revalidatePath("/whatsapp");
+  revalidatePath("/[tenantSlug]/settings/integracoes", "page");
+  revalidatePath("/[tenantSlug]/whatsapp", "page");
   return null;
 }

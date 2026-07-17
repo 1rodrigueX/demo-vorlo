@@ -31,10 +31,13 @@ function toDateInputValue(date: Date): string {
 }
 
 export default async function DashboardPage({
+  params,
   searchParams,
 }: {
+  params: Promise<{ tenantSlug: string }>;
   searchParams: Promise<{ tab?: string; period?: string; from?: string; to?: string; owner?: string }>;
 }) {
+  const { tenantSlug } = await params;
   const { tab, period: periodParam, from: fromParam, to: toParam, owner } = await searchParams;
   const activeTab = tab === "fechados" ? "fechados" : "overview";
   const period: PeriodPreset = (["today", "week", "month", "custom"] as const).includes(
@@ -95,7 +98,7 @@ export default async function DashboardPage({
     const params = new URLSearchParams(filterQueryString);
     if (value !== "overview") params.set("tab", value);
     const qs = params.toString();
-    return qs ? `/dashboard?${qs}` : "/dashboard";
+    return qs ? `/${tenantSlug}/dashboard?${qs}` : `/${tenantSlug}/dashboard`;
   }
 
   return (
@@ -181,7 +184,7 @@ export default async function DashboardPage({
             <ConversionFunnel totalDeals={allDeals.length} wonDeals={wonDeals.length} />
           </div>
 
-          <OpenProposalsCard proposals={proposals} />
+          <OpenProposalsCard proposals={proposals} tenantSlug={tenantSlug} />
         </>
       ) : (
         <>
@@ -207,7 +210,7 @@ export default async function DashboardPage({
             />
           </div>
 
-          <ClosedDealsCard deals={closedDeals} />
+          <ClosedDealsCard deals={closedDeals} tenantSlug={tenantSlug} />
         </>
       )}
     </div>

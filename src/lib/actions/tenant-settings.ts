@@ -46,8 +46,8 @@ export async function updateTenantBranding(
     return { error: "Só o dono ou gestor pode alterar essas configurações" };
   }
 
-  revalidatePath("/dashboard", "layout");
-  revalidatePath("/settings");
+  revalidatePath("/[tenantSlug]/dashboard", "layout");
+  revalidatePath("/[tenantSlug]/settings", "page");
   return null;
 }
 
@@ -90,8 +90,8 @@ export async function uploadTenantLogo(_prevState: ActionState, formData: FormDa
     await deleteCompanyAsset(current.logo_storage_path);
   }
 
-  revalidatePath("/dashboard", "layout");
-  revalidatePath("/settings");
+  revalidatePath("/[tenantSlug]/dashboard", "layout");
+  revalidatePath("/[tenantSlug]/settings", "page");
   return null;
 }
 
@@ -117,8 +117,8 @@ export async function removeTenantLogo(): Promise<ActionState> {
 
   await deleteCompanyAsset(current.logo_storage_path);
 
-  revalidatePath("/dashboard", "layout");
-  revalidatePath("/settings");
+  revalidatePath("/[tenantSlug]/dashboard", "layout");
+  revalidatePath("/[tenantSlug]/settings", "page");
   return null;
 }
 
@@ -161,8 +161,8 @@ export async function uploadClickSound(_prevState: ActionState, formData: FormDa
     await deleteCompanyAsset(current.click_sound_path);
   }
 
-  revalidatePath("/dashboard", "layout");
-  revalidatePath("/settings");
+  revalidatePath("/[tenantSlug]/dashboard", "layout");
+  revalidatePath("/[tenantSlug]/settings", "page");
   return null;
 }
 
@@ -188,8 +188,8 @@ export async function removeClickSound(): Promise<ActionState> {
 
   await deleteCompanyAsset(current.click_sound_path);
 
-  revalidatePath("/dashboard", "layout");
-  revalidatePath("/settings");
+  revalidatePath("/[tenantSlug]/dashboard", "layout");
+  revalidatePath("/[tenantSlug]/settings", "page");
   return null;
 }
 
@@ -264,6 +264,6 @@ export async function createTeamMember(
     return { error: `Não foi possível criar o acesso: ${error.message}` };
   }
 
-  revalidatePath("/settings");
+  revalidatePath("/[tenantSlug]/settings", "page");
   return null;
 }

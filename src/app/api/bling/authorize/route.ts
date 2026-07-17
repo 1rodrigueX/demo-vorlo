@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { randomBytes } from "node:crypto";
 import { createClient } from "@/lib/supabase/server";
-import { requireTenantId } from "@/lib/auth/current-user";
+import { requireTenantId, getTenantSlug } from "@/lib/auth/current-user";
 import { getBlingAuthorizeUrl } from "@/lib/bling/client";
 
 export async function GET(request: Request) {
@@ -20,13 +20,15 @@ export async function GET(request: Request) {
   if (!user) {
     return NextResponse.redirect(`${siteUrl}/login`);
   }
-  if (!connectionId) {
-    return NextResponse.redirect(`${siteUrl}/settings/integracoes?bling=error`);
-  }
 
   const tenantId = await requireTenantId(supabase, user.id);
-  if (!tenantId) {
-    return NextResponse.redirect(`${siteUrl}/settings/integracoes?bling=error`);
+  const slug = tenantId ? await getTenantSlug(supabase, tenantId) : null;
+  if (!tenantId || !slug) {
+    return NextResponse.redirect(`${siteUrl}/login`);
+  }
+
+  if (!connectionId) {
+    return NextResponse.redirect(`${siteUrl}/${slug}/settings/integracoes?bling=error`);
   }
 
   // Confere, com o client comum (RLS), que essa conexão é mesmo deste tenant.
@@ -38,7 +40,7 @@ export async function GET(request: Request) {
     .maybeSingle();
 
   if (!connection) {
-    return NextResponse.redirect(`${siteUrl}/settings/integracoes?bling=error`);
+    return NextResponse.redirect(`${siteUrl}/${slug}/settings/integracoes?bling=error`);
   }
 
   const redirectUri = `${siteUrl}/api/bling/callback`;
@@ -46,7 +48,7 @@ export async function GET(request: Request) {
 
   const authorizeUrl = await getBlingAuthorizeUrl(connectionId, state, redirectUri);
   if (!authorizeUrl) {
-    return NextResponse.redirect(`${siteUrl}/settings/integracoes?bling=not_configured`);
+    return NextResponse.redirect(`${siteUrl}/${slug}/settings/integracoes?bling=not_configured`);
   }
 
   const response = NextResponse.redirect(authorizeUrl);

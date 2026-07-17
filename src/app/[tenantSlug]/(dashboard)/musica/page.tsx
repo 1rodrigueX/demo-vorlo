@@ -4,8 +4,9 @@ import { redirect } from "next/navigation";
 // (2026-07-17) — a rota /musica só redireciona pro dashboard, sem carregar
 // nada do player. Toda a implementação original fica comentada abaixo pra
 // reativar depois é só remover o /* */ e apagar esse redirect.
-export default function MusicaPage() {
-  redirect("/dashboard");
+export default async function MusicaPage({ params }: { params: Promise<{ tenantSlug: string }> }) {
+  const { tenantSlug } = await params;
+  redirect(`/${tenantSlug}/dashboard`);
 }
 
 /*

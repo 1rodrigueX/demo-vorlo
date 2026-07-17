@@ -6,9 +6,10 @@ import { TagsSettingsCard } from "@/components/settings/TagsSettingsCard";
 import { CompanyProfileSettingsCard } from "@/components/settings/CompanyProfileSettingsCard";
 import { getCompanyAssetUrls } from "@/lib/actions/company-profile";
 
-export default async function SettingsEmpresaPage() {
+export default async function SettingsEmpresaPage({ params }: { params: Promise<{ tenantSlug: string }> }) {
+  const { tenantSlug } = await params;
   const current = await getCurrentUser();
-  if (!current?.profile) redirect("/dashboard");
+  if (!current?.profile) redirect(`/${tenantSlug}/dashboard`);
 
   const supabase = await createClient();
   const [{ data: tags }, { data: companyProfile }, { data: productPhotos }, { data: catalogs }] = await Promise.all([

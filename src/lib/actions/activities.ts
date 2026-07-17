@@ -39,6 +39,6 @@ export async function logActivity(_prevState: ActionState, formData: FormData): 
     return { error: "Não foi possível salvar a atividade" };
   }
 
-  revalidatePath(`/contacts/${parsed.data.contactId}`);
+  revalidatePath(`/[tenantSlug]/contacts/${parsed.data.contactId}`, "page");
   return null;
 }

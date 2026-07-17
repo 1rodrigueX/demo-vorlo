@@ -32,7 +32,7 @@ export async function submitSuggestion(_prevState: ActionState, formData: FormDa
 
   if (error) return { error: `Não foi possível enviar: ${error.message}` };
 
-  revalidatePath("/sugestoes");
+  revalidatePath("/[tenantSlug]/sugestoes", "page");
   return null;
 }
 

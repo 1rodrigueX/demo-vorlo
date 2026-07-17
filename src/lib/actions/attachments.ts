@@ -67,7 +67,7 @@ export async function uploadContactAttachment(
     return { error: "Não foi possível salvar o anexo" };
   }
 
-  revalidatePath(`/contacts/${contactId}`);
+  revalidatePath(`/[tenantSlug]/contacts/${contactId}`, "page");
   return null;
 }
 
@@ -91,5 +91,5 @@ export async function deleteContactAttachment(attachmentId: string) {
   await admin.storage.from(ATTACHMENTS_BUCKET).remove([attachment.storage_path]);
   await admin.from("contact_attachments").delete().eq("id", attachmentId);
 
-  revalidatePath(`/contacts/${attachment.contact_id}`);
+  revalidatePath(`/[tenantSlug]/contacts/${attachment.contact_id}`, "page");
 }

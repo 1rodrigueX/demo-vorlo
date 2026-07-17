@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { isCurrentUserDev } from "@/lib/auth/current-user";
+import { isCurrentUserDev, resolveHomeRoute } from "@/lib/auth/current-user";
 import { ActiveCheckoutNotice } from "@/components/billing/ChoosePlanForm";
 import { OnboardingTabs } from "@/components/onboarding/OnboardingTabs";
 import { listTutorialVideos } from "@/lib/actions/platform-videos";
@@ -21,7 +21,7 @@ export default async function ChoosePlanPage({
   if (!user) redirect("/login");
 
   const { data: profile } = await supabase.from("profiles").select("id").eq("id", user.id).maybeSingle();
-  if (profile) redirect("/dashboard");
+  if (profile) redirect(await resolveHomeRoute());
 
   if (await isCurrentUserDev()) redirect("/dev");
 

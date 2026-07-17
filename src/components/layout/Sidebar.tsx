@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { LayoutDashboard, KanbanSquare, Building2, MessageCircle, Mail, Sparkles, Lightbulb, Settings } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { useTenantTheme } from "@/lib/theme/TenantThemeContext";
+import { useTenantSlug } from "@/lib/tenant/useTenantSlug";
 
 const baseLinks = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -28,6 +29,7 @@ export function Sidebar({
   showSettings?: boolean;
 }) {
   const pathname = usePathname();
+  const tenantSlug = useTenantSlug();
   const { brandColor } = useTenantTheme();
   const links = showSettings
     ? [...baseLinks, { href: "/settings", label: "Configurações", icon: Settings }]
@@ -55,11 +57,12 @@ export function Sidebar({
       <nav className="flex-1 space-y-1 px-3 py-4">
         <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-white/40">Menu</p>
         {links.map(({ href, label, icon: Icon }) => {
-          const isActive = pathname === href || pathname.startsWith(`${href}/`);
+          const fullHref = `/${tenantSlug}${href}`;
+          const isActive = pathname === fullHref || pathname.startsWith(`${fullHref}/`);
           return (
             <Link
               key={href}
-              href={href}
+              href={fullHref}
               style={isActive ? { backgroundColor: brandColor } : undefined}
               className={cn(
                 "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150",

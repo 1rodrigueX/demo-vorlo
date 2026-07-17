@@ -13,7 +13,14 @@ import { ClickSoundListener } from "@/components/layout/ClickSoundListener";
 // import { SpotifyPlayerProvider } from "@/lib/spotify/SpotifyPlayerContext";
 // import { getSpotifyStatus } from "@/lib/actions/spotify";
 
-export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
+export default async function DashboardLayout({
+  children,
+  params,
+}: {
+  children: React.ReactNode;
+  params: Promise<{ tenantSlug: string }>;
+}) {
+  const { tenantSlug } = await params;
   const current = await getCurrentUser();
 
   if (!current) {
@@ -33,9 +40,17 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const supabase = await createClient();
   const { data: tenant } = await supabase
     .from("tenants")
-    .select("name, status, logo_storage_path, click_sound_path")
+    .select("name, slug, status, logo_storage_path, click_sound_path")
     .eq("id", current.profile.tenant_id)
     .single();
+
+  // Slug da URL não bate com o tenant da sessão (link salvo de outra empresa
+  // que teve o nome mudado, digitação errada, ou alguém tentando adivinhar o
+  // slug de outro CRM) — os dados sempre vêm do tenant_id da sessão, nunca
+  // do slug da URL, então isso é só uma questão de UX: manda pro slug certo.
+  if (tenant && tenant.slug !== tenantSlug) {
+    redirect(`/${tenant.slug}/dashboard`);
+  }
 
   // Dev "visitando" um tenant (suporte) não é bloqueado por inadimplência —
   // só o próprio dono/equipe do CRM é.

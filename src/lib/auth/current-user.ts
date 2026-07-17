@@ -69,7 +69,14 @@ export async function isCurrentUserDev() {
   return !!data;
 }
 
-export type HomeRoute = "/dashboard" | "/dev" | "/choose-plan" | "/login";
+/** Busca o slug de um tenant pelo id — usado pra montar caminhos prefixados com o slug. */
+export async function getTenantSlug(
+  supabase: SupabaseClient<Database>,
+  tenantId: string,
+): Promise<string | null> {
+  const { data } = await supabase.from("tenants").select("slug").eq("id", tenantId).maybeSingle();
+  return data?.slug ?? null;
+}
 
 /**
  * Decide pra onde mandar um usuário já autenticado: dono/gestor/vendedor de
@@ -83,13 +90,16 @@ export type HomeRoute = "/dashboard" | "/dev" | "/choose-plan" | "/login";
 export async function resolveHomeRouteFor(
   supabase: SupabaseClient<Database>,
   userId: string,
-): Promise<HomeRoute> {
+): Promise<string> {
   const { data: profile } = await supabase
     .from("profiles")
-    .select("id")
+    .select("tenant_id")
     .eq("id", userId)
     .maybeSingle();
-  if (profile) return "/dashboard";
+  if (profile) {
+    const slug = await getTenantSlug(supabase, profile.tenant_id);
+    return slug ? `/${slug}/dashboard` : "/login";
+  }
 
   const { data: dev } = await supabase
     .from("dev_users")
@@ -103,12 +113,14 @@ export async function resolveHomeRouteFor(
     .select("tenant_id")
     .eq("dev_id", userId)
     .maybeSingle();
+  if (!view) return "/dev";
 
-  return view ? "/dashboard" : "/dev";
+  const slug = await getTenantSlug(supabase, view.tenant_id);
+  return slug ? `/${slug}/dashboard` : "/dev";
 }
 
 /** Mesma lógica de resolveHomeRouteFor, mas resolve a própria sessão/client — uso em Server Components/Actions. */
-export async function resolveHomeRoute(): Promise<HomeRoute> {
+export async function resolveHomeRoute(): Promise<string> {
   const supabase = await createClient();
   const {
     data: { user },

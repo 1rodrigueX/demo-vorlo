@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
-import { requireTenantId } from "@/lib/auth/current-user";
+import { requireTenantId, getTenantSlug } from "@/lib/auth/current-user";
 import { exchangeOAuthCode } from "@/lib/integrations/oauth";
 import { isOAuthProviderKey } from "@/lib/integrations/providers";
 
@@ -13,19 +13,11 @@ export async function GET(request: Request, { params }: { params: Promise<{ prov
   // público, e isso quebrava o redirect de volta pro usuário.
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
 
-  if (!isOAuthProviderKey(provider)) {
-    return NextResponse.redirect(`${siteUrl}/settings/integracoes?integration=error`);
-  }
-
   const code = searchParams.get("code");
   const state = searchParams.get("state");
 
   const cookieStore = await cookies();
   const expectedState = cookieStore.get(`${provider}_oauth_state`)?.value;
-
-  if (!code || !state || !expectedState || state !== expectedState) {
-    return NextResponse.redirect(`${siteUrl}/settings/integracoes?integration=error&provider=${provider}`);
-  }
 
   const supabase = await createClient();
   const {
@@ -37,8 +29,17 @@ export async function GET(request: Request, { params }: { params: Promise<{ prov
   }
 
   const tenantId = await requireTenantId(supabase, user.id);
-  if (!tenantId) {
-    return NextResponse.redirect(`${siteUrl}/settings/integracoes?integration=error&provider=${provider}`);
+  const slug = tenantId ? await getTenantSlug(supabase, tenantId) : null;
+  if (!tenantId || !slug) {
+    return NextResponse.redirect(`${siteUrl}/login`);
+  }
+
+  if (!isOAuthProviderKey(provider)) {
+    return NextResponse.redirect(`${siteUrl}/${slug}/settings/integracoes?integration=error`);
+  }
+
+  if (!code || !state || !expectedState || state !== expectedState) {
+    return NextResponse.redirect(`${siteUrl}/${slug}/settings/integracoes?integration=error&provider=${provider}`);
   }
 
   const redirectUri = `${siteUrl}/api/integrations/${provider}/callback`;
@@ -47,10 +48,12 @@ export async function GET(request: Request, { params }: { params: Promise<{ prov
     await exchangeOAuthCode(provider, tenantId, code, redirectUri);
   } catch (err) {
     console.error(`${provider}: falha ao trocar código por token`, err);
-    return NextResponse.redirect(`${siteUrl}/settings/integracoes?integration=error&provider=${provider}`);
+    return NextResponse.redirect(`${siteUrl}/${slug}/settings/integracoes?integration=error&provider=${provider}`);
   }
 
-  const response = NextResponse.redirect(`${siteUrl}/settings/integracoes?integration=connected&provider=${provider}`);
+  const response = NextResponse.redirect(
+    `${siteUrl}/${slug}/settings/integracoes?integration=connected&provider=${provider}`,
+  );
   response.cookies.delete(`${provider}_oauth_state`);
   return response;
 }

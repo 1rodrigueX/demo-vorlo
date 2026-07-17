@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { isCurrentUserDev } from "@/lib/auth/current-user";
+import { isCurrentUserDev, resolveHomeRoute } from "@/lib/auth/current-user";
 import { DevNavTabs } from "@/components/dev/DevNavTabs";
 
 export default async function DevLayout({ children }: { children: React.ReactNode }) {
@@ -12,7 +12,8 @@ export default async function DevLayout({ children }: { children: React.ReactNod
   if (!user) redirect("/login");
 
   const isDev = await isCurrentUserDev();
-  if (!isDev) redirect("/dashboard");
+  const homeRoute = await resolveHomeRoute();
+  if (!isDev) redirect(homeRoute);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -25,7 +26,7 @@ export default async function DevLayout({ children }: { children: React.ReactNod
             Painel Dev <span className="font-normal text-gray-400">FALA AI.IA</span>
           </span>
         </div>
-        <Link href="/dashboard" className="text-sm font-medium text-indigo-600 hover:underline">
+        <Link href={homeRoute} className="text-sm font-medium text-indigo-600 hover:underline">
           Ir para meu CRM
         </Link>
       </header>

@@ -3,9 +3,10 @@ import { getCurrentUser } from "@/lib/auth/current-user";
 import { createClient } from "@/lib/supabase/server";
 import { AgentChatPanel } from "@/components/assistant/AgentChatPanel";
 
-export default async function SuportePage() {
+export default async function SuportePage({ params }: { params: Promise<{ tenantSlug: string }> }) {
+  const { tenantSlug } = await params;
   const current = await getCurrentUser();
-  if (!current?.profile) redirect("/dashboard");
+  if (!current?.profile) redirect(`/${tenantSlug}/dashboard`);
 
   const supabase = await createClient();
   const { data: falaAi } = await supabase

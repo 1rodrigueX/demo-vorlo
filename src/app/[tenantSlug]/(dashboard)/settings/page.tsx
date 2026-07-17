@@ -7,9 +7,10 @@ import { NewTeamMemberButton } from "@/components/settings/NewTeamMemberButton";
 import { getCompanyAssetSignedUrl } from "@/lib/storage/companyAssets";
 import { ROLE_LABEL } from "@/lib/utils/roles";
 
-export default async function SettingsGeralPage() {
+export default async function SettingsGeralPage({ params }: { params: Promise<{ tenantSlug: string }> }) {
+  const { tenantSlug } = await params;
   const current = await getCurrentUser();
-  if (!current?.profile) redirect("/dashboard");
+  if (!current?.profile) redirect(`/${tenantSlug}/dashboard`);
 
   const supabase = await createClient();
   const [{ data: tenant }, { data: members }] = await Promise.all([
@@ -21,7 +22,7 @@ export default async function SettingsGeralPage() {
       .order("role"),
   ]);
 
-  if (!tenant) redirect("/dashboard");
+  if (!tenant) redirect(`/${tenantSlug}/dashboard`);
 
   const [logoUrl, clickSoundUrl] = await Promise.all([
     tenant.logo_storage_path ? getCompanyAssetSignedUrl(tenant.logo_storage_path) : Promise.resolve(null),

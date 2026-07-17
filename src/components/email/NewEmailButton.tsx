@@ -9,8 +9,10 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
 import { RichTextEditor } from "@/components/email/RichTextEditor";
+import { useTenantSlug } from "@/lib/tenant/useTenantSlug";
 
 export function NewEmailButton() {
+  const tenantSlug = useTenantSlug();
   const [open, setOpen] = useState(false);
   const [to, setTo] = useState("");
   const [cc, setCc] = useState("");
@@ -57,7 +59,7 @@ export function NewEmailButton() {
       setOpen(false);
       const sentContactId = data.message?.contact_id as string | undefined;
       reset();
-      if (sentContactId) router.push(`/emails/${sentContactId}`);
+      if (sentContactId) router.push(`/${tenantSlug}/emails/${sentContactId}`);
       router.refresh();
     } catch {
       toast.error("Falha ao enviar e-mail");

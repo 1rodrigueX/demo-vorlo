@@ -13,7 +13,7 @@ export type ClosedDeal = {
   closedAt: string;
 };
 
-export function ClosedDealsCard({ deals }: { deals: ClosedDeal[] }) {
+export function ClosedDealsCard({ deals, tenantSlug }: { deals: ClosedDeal[]; tenantSlug: string }) {
   return (
     <Card className="p-6">
       <div className="mb-5 flex items-center gap-2.5">
@@ -30,7 +30,7 @@ export function ClosedDealsCard({ deals }: { deals: ClosedDeal[] }) {
           {deals.map((d) => (
             <li key={d.dealId}>
               <Link
-                href={`/contacts/${d.contactId}`}
+                href={`/${tenantSlug}/contacts/${d.contactId}`}
                 className="flex items-center justify-between gap-3 rounded-lg border border-gray-100 px-3 py-2.5 transition-colors hover:bg-gray-50"
               >
                 <div className="min-w-0">

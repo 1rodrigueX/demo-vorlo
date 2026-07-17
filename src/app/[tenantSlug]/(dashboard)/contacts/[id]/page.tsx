@@ -24,9 +24,9 @@ const ATTACHMENTS_BUCKET = "contact-attachments";
 export default async function ContactDetailPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ tenantSlug: string; id: string }>;
 }) {
-  const { id } = await params;
+  const { tenantSlug, id } = await params;
   const supabase = await createClient();
 
   const [
@@ -96,7 +96,7 @@ export default async function ContactDetailPage({
       <ContactRealtimeListener contactId={id} />
 
       <Link
-        href="/contacts"
+        href={`/${tenantSlug}/contacts`}
         className="mb-4 inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700"
       >
         <ArrowLeft size={14} /> Contatos

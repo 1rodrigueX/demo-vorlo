@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { randomBytes } from "node:crypto";
 import { createClient } from "@/lib/supabase/server";
-import { requireTenantId } from "@/lib/auth/current-user";
+import { requireTenantId, getTenantSlug } from "@/lib/auth/current-user";
 import { getAuthorizeUrl } from "@/lib/integrations/oauth";
 import { isOAuthProviderKey } from "@/lib/integrations/providers";
 
@@ -11,10 +11,6 @@ export async function GET(request: Request, { params }: { params: Promise<{ prov
   // Nginx, request.url reflete o bind interno (45.149.153.20), não o host
   // público, e isso quebrava o redirect_uri enviado às integrações.
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
-
-  if (!isOAuthProviderKey(provider)) {
-    return NextResponse.redirect(`${siteUrl}/settings/integracoes?integration=error`);
-  }
 
   const supabase = await createClient();
   const {
@@ -26,8 +22,13 @@ export async function GET(request: Request, { params }: { params: Promise<{ prov
   }
 
   const tenantId = await requireTenantId(supabase, user.id);
-  if (!tenantId) {
-    return NextResponse.redirect(`${siteUrl}/settings/integracoes?integration=error&provider=${provider}`);
+  const slug = tenantId ? await getTenantSlug(supabase, tenantId) : null;
+  if (!tenantId || !slug) {
+    return NextResponse.redirect(`${siteUrl}/login`);
+  }
+
+  if (!isOAuthProviderKey(provider)) {
+    return NextResponse.redirect(`${siteUrl}/${slug}/settings/integracoes?integration=error`);
   }
 
   const redirectUri = `${siteUrl}/api/integrations/${provider}/callback`;
@@ -35,7 +36,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ prov
 
   const authorizeUrl = getAuthorizeUrl(provider, state, redirectUri);
   if (!authorizeUrl) {
-    return NextResponse.redirect(`${siteUrl}/settings/integracoes?integration=not_configured&provider=${provider}`);
+    return NextResponse.redirect(
+      `${siteUrl}/${slug}/settings/integracoes?integration=not_configured&provider=${provider}`,
+    );
   }
 
   const response = NextResponse.redirect(authorizeUrl);

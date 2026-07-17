@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isReservedSlug } from "@/lib/tenant/reserved-slugs";
 
 export const createTenantSchema = z.object({
   name: z.string().trim().min(2, "Informe o nome da empresa"),
@@ -6,7 +7,8 @@ export const createTenantSchema = z.object({
     .string()
     .trim()
     .toLowerCase()
-    .regex(/^[a-z0-9-]+$/, "Use apenas letras minúsculas, números e hífen"),
+    .regex(/^[a-z0-9-]+$/, "Use apenas letras minúsculas, números e hífen")
+    .refine((slug) => !isReservedSlug(slug), "Esse slug é reservado pelo sistema, escolha outro"),
   sellerLimit: z.coerce.number().int().min(1, "Mínimo 1").max(999),
   managerLimit: z.coerce.number().int().min(0).max(999),
   ownerFullName: z.string().trim().min(2, "Informe o nome do dono"),

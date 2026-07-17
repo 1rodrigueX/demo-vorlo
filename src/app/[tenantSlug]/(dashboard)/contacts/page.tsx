@@ -6,10 +6,13 @@ import { Input } from "@/components/ui/Input";
 import { NewContactButton } from "@/components/contacts/NewContactButton";
 
 export default async function ContactsPage({
+  params,
   searchParams,
 }: {
+  params: Promise<{ tenantSlug: string }>;
   searchParams: Promise<{ q?: string }>;
 }) {
+  const { tenantSlug } = await params;
   const { q } = await searchParams;
   const supabase = await createClient();
 
@@ -47,7 +50,7 @@ export default async function ContactsPage({
           {contacts.map((contact) => (
             <Link
               key={contact.id}
-              href={`/contacts/${contact.id}`}
+              href={`/${tenantSlug}/contacts/${contact.id}`}
               className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50"
             >
               <div className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-50 text-indigo-600">

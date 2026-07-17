@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils/cn";
 import { formatRelative } from "@/lib/utils/dates";
 import { formatCurrency } from "@/lib/utils/currency";
 import { Badge } from "@/components/ui/Badge";
+import { useTenantSlug } from "@/lib/tenant/useTenantSlug";
 import type { Conversation } from "@/lib/whatsapp/getConversations";
 
 function DealBadge({ deal }: { deal: Conversation["deal"] }) {
@@ -39,6 +40,7 @@ function DealBadge({ deal }: { deal: Conversation["deal"] }) {
 
 export function ConversationList({ conversations }: { conversations: Conversation[] }) {
   const pathname = usePathname();
+  const tenantSlug = useTenantSlug();
 
   if (!conversations.length) {
     return (
@@ -51,7 +53,7 @@ export function ConversationList({ conversations }: { conversations: Conversatio
   return (
     <ul className="h-full divide-y divide-gray-100 overflow-y-auto">
       {conversations.map(({ contact, lastMessage, deal }) => {
-        const href = `/whatsapp/${contact.id}`;
+        const href = `/${tenantSlug}/whatsapp/${contact.id}`;
         const isActive = pathname === href;
         const initials = contact.name
           .split(" ")

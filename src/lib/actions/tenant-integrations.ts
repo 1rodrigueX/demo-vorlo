@@ -59,7 +59,7 @@ export async function saveAnthropicKey(
     return { error: `Não foi possível salvar: ${error.message}` };
   }
 
-  revalidatePath("/settings/integracoes");
+  revalidatePath("/[tenantSlug]/settings/integracoes", "page");
 
   if (!test.ok) {
     return { error: `Chave salva, mas o teste de conexão falhou: ${test.error}` };
@@ -102,7 +102,7 @@ export async function testAnthropicConnection(): Promise<ActionState> {
     .eq("tenant_id", tenantId)
     .eq("provider", "anthropic");
 
-  revalidatePath("/settings/integracoes");
+  revalidatePath("/[tenantSlug]/settings/integracoes", "page");
 
   if (!test.ok) return { error: `Teste de conexão falhou: ${test.error}` };
   return null;
@@ -126,7 +126,7 @@ export async function disconnectOAuthIntegration(provider: "gmail" | "outlook"):
 
   if (error) return { error: "Não foi possível desconectar" };
 
-  revalidatePath("/settings/integracoes");
+  revalidatePath("/[tenantSlug]/settings/integracoes", "page");
   return null;
 }
 
@@ -148,6 +148,6 @@ export async function disconnectAnthropicKey(): Promise<ActionState> {
 
   if (error) return { error: "Não foi possível desconectar" };
 
-  revalidatePath("/settings/integracoes");
+  revalidatePath("/[tenantSlug]/settings/integracoes", "page");
   return null;
 }

@@ -14,7 +14,7 @@ export type OpenProposal = {
   daysSince: number;
 };
 
-export function OpenProposalsCard({ proposals }: { proposals: OpenProposal[] }) {
+export function OpenProposalsCard({ proposals, tenantSlug }: { proposals: OpenProposal[]; tenantSlug: string }) {
   return (
     <Card className="p-6">
       <div className="mb-5 flex items-center gap-2.5">
@@ -33,7 +33,7 @@ export function OpenProposalsCard({ proposals }: { proposals: OpenProposal[] }) 
             return (
               <li key={p.dealId}>
                 <Link
-                  href={`/whatsapp/${p.contactId}`}
+                  href={`/${tenantSlug}/whatsapp/${p.contactId}`}
                   className={cn(
                     "flex items-center justify-between gap-3 rounded-lg border px-3 py-2.5 transition-colors hover:bg-gray-50",
                     isLate ? "border-amber-200 bg-amber-50/50" : "border-gray-100",

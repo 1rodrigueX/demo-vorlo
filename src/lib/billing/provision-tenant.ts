@@ -5,6 +5,7 @@ import { sendWelcomeEmail } from "@/lib/email/resend";
 import { testAnthropicApiKey } from "@/lib/anthropic/client";
 import { calculateTotalCents } from "@/lib/billing/pricing";
 import { addOneMonth } from "@/lib/billing/cycle";
+import { isReservedSlug } from "@/lib/tenant/reserved-slugs";
 
 const DEFAULT_STAGES = [
   { name: "Novo", position: 1, color: "#6366f1", is_won: false, is_lost: false },
@@ -81,7 +82,8 @@ export async function provisionTenantFromCheckout(
   let lastError: string | undefined;
 
   for (let attempt = 0; attempt < 5 && !tenantId; attempt++) {
-    const slug = attempt === 0 ? baseSlug : `${baseSlug}-${randomBytes(2).toString("hex")}`;
+    const slug =
+      attempt === 0 && !isReservedSlug(baseSlug) ? baseSlug : `${baseSlug}-${randomBytes(2).toString("hex")}`;
     const { data: tenant, error } = await admin
       .from("tenants")
       .insert({

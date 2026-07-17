@@ -14,11 +14,11 @@ export function AccessTenantButton({ tenantId }: { tenantId: string }) {
   function handleClick() {
     startTransition(async () => {
       const result = await viewTenantAsDev(tenantId);
-      if (result?.error) {
-        toast.error(result.error);
+      if (result?.error || !result.slug) {
+        toast.error(result?.error ?? "Não foi possível abrir esse CRM");
         return;
       }
-      router.push("/dashboard");
+      router.push(`/${result.slug}/dashboard`);
     });
   }
 

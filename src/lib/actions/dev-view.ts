@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { isCurrentUserDev } from "@/lib/auth/current-user";
+import { isCurrentUserDev, getTenantSlug } from "@/lib/auth/current-user";
 
 export type ActionState = { error?: string } | null;
 
@@ -10,11 +10,12 @@ export type ActionState = { error?: string } | null;
  * Abre um CRM pro dev visualizar/gerenciar sem trocar de sessão — o dev
  * continua logado como ele mesmo (tag "Dev"), só passa a enxergar os dados
  * daquele tenant (ver current_tenant_id() na migration 0007). A navegação
- * pro /dashboard é feita no cliente (router.push) depois do sucesso, já que
- * redirect() dentro de uma action chamada fora de <form>/useActionState nem
- * sempre navega de forma confiável.
+ * pro /{slug}/dashboard é feita no cliente (router.push) depois do sucesso,
+ * usando o slug retornado aqui, já que redirect() dentro de uma action
+ * chamada fora de <form>/useActionState nem sempre navega de forma
+ * confiável.
  */
-export async function viewTenantAsDev(tenantId: string): Promise<ActionState> {
+export async function viewTenantAsDev(tenantId: string): Promise<{ error?: string; slug?: string }> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -33,7 +34,12 @@ export async function viewTenantAsDev(tenantId: string): Promise<ActionState> {
     return { error: `Não foi possível abrir esse CRM: ${error.message}` };
   }
 
-  return null;
+  const slug = await getTenantSlug(supabase, tenantId);
+  if (!slug) {
+    return { error: "CRM sem slug configurado" };
+  }
+
+  return { slug };
 }
 
 /** Fecha a visualização atual (a navegação de volta pro /dev é feita no cliente). */

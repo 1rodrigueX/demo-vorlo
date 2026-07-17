@@ -25,9 +25,9 @@ export function LandingPage({ plans }: { plans: BillingPlan[] }) {
             <span className="text-base font-semibold text-gray-900">FALA AI CRM</span>
           </div>
           <div className="flex items-center gap-4">
-            <a href="/login" className="text-sm font-medium text-gray-600 hover:text-gray-900">
+            <Link href="/login" className="text-sm font-medium text-gray-600 hover:text-gray-900">
               Já sou cliente — Entrar
-            </a>
+            </Link>
             <Link href="/signup">
               <Button size="sm">Criar conta grátis</Button>
             </Link>

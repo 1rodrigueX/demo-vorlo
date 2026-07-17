@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { requireTenantId } from "@/lib/auth/current-user";
+import { requireTenantId, getTenantSlug } from "@/lib/auth/current-user";
 import { exchangeBlingCode } from "@/lib/bling/client";
 
 export async function GET(request: Request) {
@@ -18,10 +18,6 @@ export async function GET(request: Request) {
   const expectedState = cookieStore.get("bling_oauth_state")?.value;
   const connectionId = cookieStore.get("bling_oauth_connection_id")?.value;
 
-  if (!code || !state || !expectedState || state !== expectedState || !connectionId) {
-    return NextResponse.redirect(`${siteUrl}/settings/integracoes?bling=error`);
-  }
-
   const supabase = await createClient();
   const {
     data: { user },
@@ -32,8 +28,13 @@ export async function GET(request: Request) {
   }
 
   const tenantId = await requireTenantId(supabase, user.id);
-  if (!tenantId) {
-    return NextResponse.redirect(`${siteUrl}/settings/integracoes?bling=error`);
+  const slug = tenantId ? await getTenantSlug(supabase, tenantId) : null;
+  if (!tenantId || !slug) {
+    return NextResponse.redirect(`${siteUrl}/login`);
+  }
+
+  if (!code || !state || !expectedState || state !== expectedState || !connectionId) {
+    return NextResponse.redirect(`${siteUrl}/${slug}/settings/integracoes?bling=error`);
   }
 
   // Confere de novo que a conexão é deste tenant antes de gravar o token.
@@ -45,7 +46,7 @@ export async function GET(request: Request) {
     .maybeSingle();
 
   if (!connection) {
-    return NextResponse.redirect(`${siteUrl}/settings/integracoes?bling=error`);
+    return NextResponse.redirect(`${siteUrl}/${slug}/settings/integracoes?bling=error`);
   }
 
   try {
@@ -63,10 +64,10 @@ export async function GET(request: Request) {
       .eq("id", connectionId);
   } catch (err) {
     console.error("Bling: falha ao trocar código por token", err);
-    return NextResponse.redirect(`${siteUrl}/settings/integracoes?bling=error`);
+    return NextResponse.redirect(`${siteUrl}/${slug}/settings/integracoes?bling=error`);
   }
 
-  const response = NextResponse.redirect(`${siteUrl}/settings/integracoes?bling=connected`);
+  const response = NextResponse.redirect(`${siteUrl}/${slug}/settings/integracoes?bling=connected`);
   response.cookies.delete("bling_oauth_state");
   response.cookies.delete("bling_oauth_connection_id");
   return response;

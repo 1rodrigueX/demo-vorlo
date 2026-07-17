@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { requireTenantId } from "@/lib/auth/current-user";
+import { requireTenantId, getTenantSlug } from "@/lib/auth/current-user";
 import { companySchema } from "@/lib/validation/company";
 
 export type ActionState = { error?: string } | null;
@@ -45,8 +45,9 @@ export async function createCompany(_prevState: ActionState, formData: FormData)
     return { error: `Não foi possível criar a empresa: ${error?.message ?? "erro desconhecido"}` };
   }
 
-  revalidatePath("/companies");
-  redirect(`/companies/${data.id}`);
+  revalidatePath("/[tenantSlug]/companies", "page");
+  const slug = await getTenantSlug(supabase, tenantId);
+  redirect(`/${slug}/companies/${data.id}`);
 }
 
 export async function updateCompany(
@@ -79,14 +80,19 @@ export async function updateCompany(
     return { error: `Não foi possível salvar: ${error.message}` };
   }
 
-  revalidatePath("/companies");
-  revalidatePath(`/companies/${companyId}`);
+  revalidatePath("/[tenantSlug]/companies", "page");
+  revalidatePath(`/[tenantSlug]/companies/${companyId}`, "page");
   return null;
 }
 
 export async function deleteCompany(companyId: string) {
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const tenantId = user ? await requireTenantId(supabase, user.id) : null;
   await supabase.from("companies").delete().eq("id", companyId);
-  revalidatePath("/companies");
-  redirect("/companies");
+  revalidatePath("/[tenantSlug]/companies", "page");
+  const slug = tenantId ? await getTenantSlug(supabase, tenantId) : null;
+  redirect(slug ? `/${slug}/companies` : "/login");
 }

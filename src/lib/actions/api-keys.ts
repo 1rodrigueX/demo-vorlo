@@ -40,12 +40,12 @@ export async function createApiKey(
     return { error: `Não foi possível criar a chave: ${error.message}` };
   }
 
-  revalidatePath("/dashboard");
+  revalidatePath("/[tenantSlug]/dashboard", "page");
   return { rawKey };
 }
 
 export async function revokeApiKey(keyId: string) {
   const supabase = await createClient();
   await supabase.from("tenant_api_keys").delete().eq("id", keyId);
-  revalidatePath("/dashboard");
+  revalidatePath("/[tenantSlug]/dashboard", "page");
 }

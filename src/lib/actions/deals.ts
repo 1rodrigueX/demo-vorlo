@@ -48,10 +48,10 @@ export async function createDeal(_prevState: ActionState, formData: FormData): P
     return { error: "Não foi possível criar o negócio" };
   }
 
-  revalidatePath("/pipeline");
-  revalidatePath("/dashboard");
-  revalidatePath(`/contacts/${parsed.data.contactId}`);
-  revalidatePath(`/whatsapp/${parsed.data.contactId}`);
+  revalidatePath("/[tenantSlug]/pipeline", "page");
+  revalidatePath("/[tenantSlug]/dashboard", "page");
+  revalidatePath(`/[tenantSlug]/contacts/${parsed.data.contactId}`, "page");
+  revalidatePath(`/[tenantSlug]/whatsapp/${parsed.data.contactId}`, "page");
   return null;
 }
 
@@ -112,11 +112,11 @@ export async function updateDealStage(input: {
     });
   }
 
-  revalidatePath("/pipeline");
-  revalidatePath("/dashboard");
+  revalidatePath("/[tenantSlug]/pipeline", "page");
+  revalidatePath("/[tenantSlug]/dashboard", "page");
   if (deal) {
-    revalidatePath(`/contacts/${deal.contact_id}`);
-    revalidatePath(`/whatsapp/${deal.contact_id}`);
+    revalidatePath(`/[tenantSlug]/contacts/${deal.contact_id}`, "page");
+    revalidatePath(`/[tenantSlug]/whatsapp/${deal.contact_id}`, "page");
   }
 
   return { error: undefined };
@@ -125,8 +125,8 @@ export async function updateDealStage(input: {
 export async function deleteDeal(dealId: string) {
   const supabase = await createClient();
   await supabase.from("deals").delete().eq("id", dealId);
-  revalidatePath("/pipeline");
-  revalidatePath("/dashboard");
+  revalidatePath("/[tenantSlug]/pipeline", "page");
+  revalidatePath("/[tenantSlug]/dashboard", "page");
 }
 
 /**
@@ -149,10 +149,10 @@ export async function setDealBudget(contactId: string, dealId: string | null, va
     const { error } = await supabase.from("deals").update({ value }).eq("id", dealId);
     if (error) return { error: "Não foi possível salvar o orçamento" };
 
-    revalidatePath(`/whatsapp/${contactId}`);
-    revalidatePath(`/contacts/${contactId}`);
-    revalidatePath("/pipeline");
-    revalidatePath("/dashboard");
+    revalidatePath(`/[tenantSlug]/whatsapp/${contactId}`, "page");
+    revalidatePath(`/[tenantSlug]/contacts/${contactId}`, "page");
+    revalidatePath("/[tenantSlug]/pipeline", "page");
+    revalidatePath("/[tenantSlug]/dashboard", "page");
     return { dealId };
   }
 
@@ -187,10 +187,10 @@ export async function setDealBudget(contactId: string, dealId: string | null, va
     return { error: `Não foi possível criar o orçamento: ${error?.message ?? "erro desconhecido"}` };
   }
 
-  revalidatePath(`/whatsapp/${contactId}`);
-  revalidatePath(`/contacts/${contactId}`);
-  revalidatePath("/pipeline");
-  revalidatePath("/dashboard");
+  revalidatePath(`/[tenantSlug]/whatsapp/${contactId}`, "page");
+  revalidatePath(`/[tenantSlug]/contacts/${contactId}`, "page");
+  revalidatePath("/[tenantSlug]/pipeline", "page");
+  revalidatePath("/[tenantSlug]/dashboard", "page");
   return { dealId: created.id };
 }
 
@@ -234,10 +234,10 @@ export async function markProposalSent(dealId: string) {
     );
   }
 
-  revalidatePath("/pipeline");
-  revalidatePath(`/whatsapp/${deal.contact_id}`);
-  revalidatePath(`/contacts/${deal.contact_id}`);
-  revalidatePath("/dashboard");
+  revalidatePath("/[tenantSlug]/pipeline", "page");
+  revalidatePath(`/[tenantSlug]/whatsapp/${deal.contact_id}`, "page");
+  revalidatePath(`/[tenantSlug]/contacts/${deal.contact_id}`, "page");
+  revalidatePath("/[tenantSlug]/dashboard", "page");
   return { error: undefined };
 }
 
