@@ -74,7 +74,8 @@ export async function searchSpotify(query: string): Promise<{ results: SpotifyTr
   const data = await res.json().catch(() => null);
 
   if (!res.ok || !data) {
-    return { error: data?.error?.message ?? "Falha ao buscar no Spotify" };
+    console.error("searchSpotify: falha na busca", res.status, JSON.stringify(data));
+    return { error: data?.error?.message ?? `Falha ao buscar no Spotify (${res.status})` };
   }
 
   type SpotifyTrackItem = {
