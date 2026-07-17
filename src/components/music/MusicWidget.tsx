@@ -8,7 +8,6 @@ import { useTenantTheme } from "@/lib/theme/TenantThemeContext";
 import { cn } from "@/lib/utils/cn";
 
 const STORAGE_POSITION_KEY = "musicWidgetPosition";
-const DRAG_THRESHOLD_PX = 4;
 const EDGE_MARGIN_PX = 8;
 
 type Position = { x: number; y: number };
@@ -27,7 +26,6 @@ export function MusicWidget() {
   const widgetRef = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState<Position | null>(null);
   const draggingRef = useRef(false);
-  const movedRef = useRef(false);
   const dragStartRef = useRef({ pointerX: 0, pointerY: 0, posX: 0, posY: 0 });
 
   useEffect(() => {
@@ -49,10 +47,12 @@ export function MusicWidget() {
   }
 
   function handlePointerDown(e: React.PointerEvent<HTMLDivElement>) {
+    // Clique começando no botão de play/pause não deve virar arraste — deixa
+    // o clique nativo do botão intocado (sem pointer capture disputando com ele).
+    if ((e.target as HTMLElement).closest("button")) return;
     const rect = widgetRef.current?.getBoundingClientRect();
     if (!rect) return;
     draggingRef.current = true;
-    movedRef.current = false;
     dragStartRef.current = { pointerX: e.clientX, pointerY: e.clientY, posX: rect.left, posY: rect.top };
     e.currentTarget.setPointerCapture(e.pointerId);
   }
@@ -61,7 +61,6 @@ export function MusicWidget() {
     if (!draggingRef.current) return;
     const dx = e.clientX - dragStartRef.current.pointerX;
     const dy = e.clientY - dragStartRef.current.pointerY;
-    if (Math.abs(dx) > DRAG_THRESHOLD_PX || Math.abs(dy) > DRAG_THRESHOLD_PX) movedRef.current = true;
     setPosition(clamp(dragStartRef.current.posX + dx, dragStartRef.current.posY + dy));
   }
 
@@ -72,14 +71,6 @@ export function MusicWidget() {
       if (current) localStorage.setItem(STORAGE_POSITION_KEY, JSON.stringify(current));
       return current;
     });
-  }
-
-  function handleToggleClick(e: React.MouseEvent) {
-    if (movedRef.current) {
-      e.preventDefault();
-      return;
-    }
-    togglePlay();
   }
 
   if (!title) return null;
@@ -98,7 +89,7 @@ export function MusicWidget() {
       )}
     >
       <button
-        onClick={handleToggleClick}
+        onClick={togglePlay}
         style={{ backgroundColor: brandColor }}
         className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-white"
         aria-label={isPlaying ? "Pausar música" : "Tocar música"}
