@@ -32,9 +32,9 @@ export function Sidebar({
 
   return (
     <aside className="hidden w-64 shrink-0 border-r border-gray-200 bg-panel md:flex md:flex-col">
-      <div className="flex h-16 items-center gap-2.5 border-b border-gray-200 px-5">
+      <div className="flex h-20 items-center gap-2.5 border-b border-gray-200 px-5">
         <div
-          className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg text-sm font-bold text-white shadow-sm"
+          className="flex h-12 w-20 shrink-0 items-center justify-center overflow-hidden rounded-lg text-sm font-bold text-white shadow-sm"
           style={logoUrl ? undefined : { backgroundColor: brandColor }}
         >
           {logoUrl ? (

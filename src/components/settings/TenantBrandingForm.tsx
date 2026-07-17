@@ -99,7 +99,7 @@ export function TenantBrandingForm({ tenant, logoUrl }: { tenant: Tenant; logoUr
         <p className="mb-3 mt-0.5 text-xs text-gray-500">Aparece na barra lateral no lugar da inicial do nome.</p>
 
         <div className="flex items-center gap-4">
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-gray-200 bg-gray-50">
+          <div className="flex h-14 w-24 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-gray-200 bg-gray-50">
             {logoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={logoUrl} alt="Logo" className="h-full w-full object-cover" />
