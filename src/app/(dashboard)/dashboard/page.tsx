@@ -1,34 +1,50 @@
 import Link from "next/link";
-import { DollarSign, TrendingUp, Briefcase, Users } from "lucide-react";
+import { DollarSign, TrendingUp, Briefcase, Users, FileDown } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils/cn";
 import { PipelineValueCard } from "@/components/dashboard/PipelineValueCard";
-import { StageCountChart, type StageSummary } from "@/components/dashboard/StageCountChart";
+import { StageCountChart } from "@/components/dashboard/StageCountChart";
 import { ConversionFunnel } from "@/components/dashboard/ConversionFunnel";
-import { OpenProposalsCard, type OpenProposal } from "@/components/dashboard/OpenProposalsCard";
-import { ClosedDealsCard, type ClosedDeal } from "@/components/dashboard/ClosedDealsCard";
-import { RevenueTrendChart, type MonthlyRevenuePoint } from "@/components/dashboard/RevenueTrendChart";
-import { SalesBySellerChart, type SellerSummary } from "@/components/dashboard/SalesBySellerChart";
+import { OpenProposalsCard } from "@/components/dashboard/OpenProposalsCard";
+import { ClosedDealsCard } from "@/components/dashboard/ClosedDealsCard";
+import { RevenueTrendChart } from "@/components/dashboard/RevenueTrendChart";
+import { SalesBySellerChart } from "@/components/dashboard/SalesBySellerChart";
 import { PowerBiExportButton } from "@/components/dashboard/PowerBiExportButton";
-import { daysSinceNow } from "@/lib/utils/dates";
-
-const REVENUE_TREND_MONTHS = 6;
-const MONTH_LABELS = [
-  "jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez",
-];
+import { DashboardFiltersBar } from "@/components/dashboard/DashboardFiltersBar";
+import { getDashboardData } from "@/lib/dashboard/getDashboardData";
+import { resolvePeriod, type PeriodPreset } from "@/lib/dashboard/period";
 
 const tabs = [
   { value: "overview", label: "Visão geral" },
   { value: "fechados", label: "Fechados" },
 ] as const;
 
+const PERIOD_LABEL: Record<PeriodPreset, string> = {
+  today: "hoje",
+  week: "na semana",
+  month: "no mês",
+  custom: "no período",
+};
+
+function toDateInputValue(date: Date): string {
+  return date.toISOString().slice(0, 10);
+}
+
 export default async function DashboardPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tab?: string }>;
+  searchParams: Promise<{ tab?: string; period?: string; from?: string; to?: string; owner?: string }>;
 }) {
-  const { tab } = await searchParams;
+  const { tab, period: periodParam, from: fromParam, to: toParam, owner } = await searchParams;
   const activeTab = tab === "fechados" ? "fechados" : "overview";
+  const period: PeriodPreset = (["today", "week", "month", "custom"] as const).includes(
+    periodParam as PeriodPreset,
+  )
+    ? (periodParam as PeriodPreset)
+    : "month";
+  const ownerId = owner || null;
+
+  const { from, to } = resolvePeriod(period, fromParam, toParam);
 
   const supabase = await createClient();
   const {
@@ -39,103 +55,55 @@ export default async function DashboardPage({
     : { data: null };
   const isAdmin = currentProfile?.role === "owner" || currentProfile?.role === "manager";
 
-  const startOfMonth = new Date();
-  startOfMonth.setDate(1);
-  startOfMonth.setHours(0, 0, 0, 0);
+  const [{ data: apiKeys }, { data: sellerProfiles }, data] = await Promise.all([
+    isAdmin
+      ? supabase
+          .from("tenant_api_keys")
+          .select("id, name, key_prefix, created_at, last_used_at")
+          .order("created_at", { ascending: false })
+      : Promise.resolve({ data: null }),
+    supabase.from("profiles").select("id, full_name").order("full_name"),
+    getDashboardData(supabase, { from, to, ownerId }),
+  ]);
 
-  const [{ data: stages }, { data: deals }, { count: contactsCount }, { data: openProposals }, { data: apiKeys }] =
-    await Promise.all([
-      supabase.from("pipeline_stages").select("*").order("position"),
-      supabase
-        .from("deals")
-        .select(
-          "id, title, stage_id, value, status, closed_at, owner_id, contact:contacts(id, name), owner:profiles(full_name)",
-        ),
-      supabase.from("contacts").select("id", { count: "exact", head: true }),
-      supabase
-        .from("deals")
-        .select("id, value, proposal_sent_at, contact:contacts(id, name)")
-        .eq("status", "open")
-        .not("proposal_sent_at", "is", null)
-        .order("proposal_sent_at", { ascending: true }),
-      isAdmin
-        ? supabase
-            .from("tenant_api_keys")
-            .select("id, name, key_prefix, created_at, last_used_at")
-            .order("created_at", { ascending: false })
-        : Promise.resolve({ data: null }),
-    ]);
+  const {
+    allDeals,
+    openDeals,
+    wonDeals,
+    wonInPeriodValue,
+    totalPipelineValue,
+    contactsCount,
+    revenueTrend,
+    salesBySeller,
+    stageSummaries,
+    proposals,
+    closedDeals,
+  } = data;
 
-  const allDeals = deals ?? [];
-  const openDeals = allDeals.filter((d) => d.status === "open");
-  const wonDeals = allDeals.filter((d) => d.status === "won");
-  const wonThisMonth = wonDeals.filter(
-    (d) => d.closed_at && new Date(d.closed_at) >= startOfMonth,
-  );
+  const sellers = (sellerProfiles ?? []).map((p) => ({ id: p.id, name: p.full_name || "Sem nome" }));
 
-  const totalPipelineValue = openDeals.reduce((sum, d) => sum + Number(d.value), 0);
-  const wonThisMonthValue = wonThisMonth.reduce((sum, d) => sum + Number(d.value), 0);
-
-  const revenueTrend: MonthlyRevenuePoint[] = Array.from({ length: REVENUE_TREND_MONTHS }, (_, i) => {
-    const ref = new Date();
-    ref.setDate(1);
-    ref.setMonth(ref.getMonth() - (REVENUE_TREND_MONTHS - 1 - i));
-    const monthKey = `${ref.getFullYear()}-${ref.getMonth()}`;
-    const value = wonDeals
-      .filter((d) => {
-        if (!d.closed_at) return false;
-        const closed = new Date(d.closed_at);
-        return closed.getFullYear() === ref.getFullYear() && closed.getMonth() === ref.getMonth();
-      })
-      .reduce((sum, d) => sum + Number(d.value), 0);
-    return { month: monthKey, label: `${MONTH_LABELS[ref.getMonth()]}/${String(ref.getFullYear()).slice(2)}`, value };
-  });
-
-  const sellerTotals = new Map<string, { name: string; value: number; count: number }>();
-  for (const d of wonDeals) {
-    const name = d.owner?.full_name || "Sem vendedor";
-    const current = sellerTotals.get(d.owner_id) ?? { name, value: 0, count: 0 };
-    current.value += Number(d.value);
-    current.count += 1;
-    sellerTotals.set(d.owner_id, current);
+  const filterQuery = new URLSearchParams();
+  if (period !== "month") filterQuery.set("period", period);
+  if (period === "custom") {
+    filterQuery.set("from", fromParam ?? toDateInputValue(from));
+    filterQuery.set("to", toParam ?? toDateInputValue(to));
   }
-  const salesBySeller: SellerSummary[] = [...sellerTotals.entries()]
-    .map(([sellerId, s]) => ({ sellerId, name: s.name, value: s.value, count: s.count }))
-    .sort((a, b) => b.value - a.value);
+  if (ownerId) filterQuery.set("owner", ownerId);
+  const filterQueryString = filterQuery.toString();
 
-  const stageSummaries: StageSummary[] = (stages ?? []).map((stage) => {
-    const stageDeals = allDeals.filter((d) => d.stage_id === stage.id && d.status !== "lost");
-    return {
-      id: stage.id,
-      name: stage.name,
-      color: stage.color,
-      count: stageDeals.length,
-      value: stageDeals.reduce((sum, d) => sum + Number(d.value), 0),
-    };
-  });
+  function tabHref(value: string) {
+    const params = new URLSearchParams(filterQueryString);
+    if (value !== "overview") params.set("tab", value);
+    const qs = params.toString();
+    return qs ? `/dashboard?${qs}` : "/dashboard";
+  }
 
-  const proposals: OpenProposal[] = (openProposals ?? [])
-    .filter((p) => p.contact)
-    .map((p) => ({
-      dealId: p.id,
-      contactId: p.contact!.id,
-      contactName: p.contact!.name,
-      value: Number(p.value),
-      proposalSentAt: p.proposal_sent_at as string,
-      daysSince: daysSinceNow(p.proposal_sent_at as string),
-    }));
-
-  const closedDeals: ClosedDeal[] = wonDeals
-    .filter((d) => d.contact && d.closed_at)
-    .map((d) => ({
-      dealId: d.id,
-      contactId: d.contact!.id,
-      contactName: d.contact!.name,
-      title: d.title,
-      value: Number(d.value),
-      closedAt: d.closed_at as string,
-    }))
-    .sort((a, b) => new Date(b.closedAt).getTime() - new Date(a.closedAt).getTime());
+  const exportHref = `/api/dashboard/export?${new URLSearchParams({
+    period,
+    from: fromParam ?? toDateInputValue(from),
+    to: toParam ?? toDateInputValue(to),
+    ...(ownerId ? { owner: ownerId } : {}),
+  }).toString()}`;
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
@@ -144,19 +112,38 @@ export default async function DashboardPage({
           <h1 className="text-2xl font-semibold tracking-tight text-gray-900">Dashboard</h1>
           <p className="mt-1 text-sm text-gray-500">Visão geral do funil de vendas da equipe.</p>
         </div>
-        {isAdmin && (
-          <PowerBiExportButton
-            apiKeys={apiKeys ?? []}
-            siteUrl={process.env.NEXT_PUBLIC_SITE_URL ?? "http://45.149.153.20"}
-          />
-        )}
+        <div className="flex items-center gap-2">
+          <a href={exportHref}>
+            <button
+              type="button"
+              className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-panel px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50"
+            >
+              <FileDown size={15} />
+              Exportar Excel
+            </button>
+          </a>
+          {isAdmin && (
+            <PowerBiExportButton
+              apiKeys={apiKeys ?? []}
+              siteUrl={process.env.NEXT_PUBLIC_SITE_URL ?? "http://45.149.153.20"}
+            />
+          )}
+        </div>
       </div>
+
+      <DashboardFiltersBar
+        sellers={sellers}
+        period={period}
+        from={fromParam ?? toDateInputValue(from)}
+        to={toParam ?? toDateInputValue(to)}
+        ownerId={ownerId}
+      />
 
       <div className="flex gap-1 border-b border-gray-200">
         {tabs.map((t) => (
           <Link
             key={t.value}
-            href={t.value === "overview" ? "/dashboard" : `/dashboard?tab=${t.value}`}
+            href={tabHref(t.value)}
             className={cn(
               "border-b-2 px-3 pb-2.5 text-sm font-medium transition-colors",
               activeTab === t.value
@@ -179,8 +166,8 @@ export default async function DashboardPage({
               color="indigo"
             />
             <PipelineValueCard
-              label="Ganho este mês"
-              value={wonThisMonthValue}
+              label={`Ganho ${PERIOD_LABEL[period]}`}
+              value={wonInPeriodValue}
               icon={TrendingUp}
               color="emerald"
             />
@@ -192,8 +179,8 @@ export default async function DashboardPage({
               color="amber"
             />
             <PipelineValueCard
-              label="Leads cadastrados"
-              value={contactsCount ?? 0}
+              label={`Leads cadastrados ${PERIOD_LABEL[period]}`}
+              value={contactsCount}
               isCurrency={false}
               icon={Users}
               color="sky"
@@ -216,8 +203,8 @@ export default async function DashboardPage({
         <>
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <PipelineValueCard
-              label="Ganho este mês"
-              value={wonThisMonthValue}
+              label={`Ganho ${PERIOD_LABEL[period]}`}
+              value={wonInPeriodValue}
               icon={TrendingUp}
               color="emerald"
             />
