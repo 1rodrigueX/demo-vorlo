@@ -7,10 +7,13 @@ import { isOAuthProviderKey } from "@/lib/integrations/providers";
 
 export async function GET(request: Request, { params }: { params: Promise<{ provider: string }> }) {
   const { provider } = await params;
-  const { origin } = new URL(request.url);
+  // Sempre usa NEXT_PUBLIC_SITE_URL, nunca o origin da requisição — atrás do
+  // Nginx, request.url reflete o bind interno (localhost:3000), não o host
+  // público, e isso quebrava o redirect_uri enviado às integrações.
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
 
   if (!isOAuthProviderKey(provider)) {
-    return NextResponse.redirect(`${origin}/settings?integration=error`);
+    return NextResponse.redirect(`${siteUrl}/settings?integration=error`);
   }
 
   const supabase = await createClient();
@@ -19,21 +22,20 @@ export async function GET(request: Request, { params }: { params: Promise<{ prov
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.redirect(`${origin}/login`);
+    return NextResponse.redirect(`${siteUrl}/login`);
   }
 
   const tenantId = await requireTenantId(supabase, user.id);
   if (!tenantId) {
-    return NextResponse.redirect(`${origin}/settings?integration=error&provider=${provider}`);
+    return NextResponse.redirect(`${siteUrl}/settings?integration=error&provider=${provider}`);
   }
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? origin;
   const redirectUri = `${siteUrl}/api/integrations/${provider}/callback`;
   const state = randomBytes(16).toString("hex");
 
   const authorizeUrl = getAuthorizeUrl(provider, state, redirectUri);
   if (!authorizeUrl) {
-    return NextResponse.redirect(`${origin}/settings?integration=not_configured&provider=${provider}`);
+    return NextResponse.redirect(`${siteUrl}/settings?integration=not_configured&provider=${provider}`);
   }
 
   const response = NextResponse.redirect(authorizeUrl);

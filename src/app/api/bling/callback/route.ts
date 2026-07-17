@@ -6,16 +6,20 @@ import { requireTenantId } from "@/lib/auth/current-user";
 import { exchangeBlingCode } from "@/lib/bling/client";
 
 export async function GET(request: Request) {
-  const { searchParams, origin } = new URL(request.url);
+  const { searchParams } = new URL(request.url);
   const code = searchParams.get("code");
   const state = searchParams.get("state");
+  // Sempre usa NEXT_PUBLIC_SITE_URL, nunca o origin da requisição — atrás do
+  // Nginx, request.url reflete o bind interno (localhost:3000), não o host
+  // público, e isso quebrava o redirect de volta pro usuário.
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
 
   const cookieStore = await cookies();
   const expectedState = cookieStore.get("bling_oauth_state")?.value;
   const connectionId = cookieStore.get("bling_oauth_connection_id")?.value;
 
   if (!code || !state || !expectedState || state !== expectedState || !connectionId) {
-    return NextResponse.redirect(`${origin}/settings?bling=error`);
+    return NextResponse.redirect(`${siteUrl}/settings?bling=error`);
   }
 
   const supabase = await createClient();
@@ -24,12 +28,12 @@ export async function GET(request: Request) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.redirect(`${origin}/login`);
+    return NextResponse.redirect(`${siteUrl}/login`);
   }
 
   const tenantId = await requireTenantId(supabase, user.id);
   if (!tenantId) {
-    return NextResponse.redirect(`${origin}/settings?bling=error`);
+    return NextResponse.redirect(`${siteUrl}/settings?bling=error`);
   }
 
   // Confere de novo que a conexão é deste tenant antes de gravar o token.
@@ -41,7 +45,7 @@ export async function GET(request: Request) {
     .maybeSingle();
 
   if (!connection) {
-    return NextResponse.redirect(`${origin}/settings?bling=error`);
+    return NextResponse.redirect(`${siteUrl}/settings?bling=error`);
   }
 
   try {
@@ -59,10 +63,10 @@ export async function GET(request: Request) {
       .eq("id", connectionId);
   } catch (err) {
     console.error("Bling: falha ao trocar código por token", err);
-    return NextResponse.redirect(`${origin}/settings?bling=error`);
+    return NextResponse.redirect(`${siteUrl}/settings?bling=error`);
   }
 
-  const response = NextResponse.redirect(`${origin}/settings?bling=connected`);
+  const response = NextResponse.redirect(`${siteUrl}/settings?bling=connected`);
   response.cookies.delete("bling_oauth_state");
   response.cookies.delete("bling_oauth_connection_id");
   return response;

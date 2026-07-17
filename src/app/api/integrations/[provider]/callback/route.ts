@@ -7,10 +7,14 @@ import { isOAuthProviderKey } from "@/lib/integrations/providers";
 
 export async function GET(request: Request, { params }: { params: Promise<{ provider: string }> }) {
   const { provider } = await params;
-  const { searchParams, origin } = new URL(request.url);
+  const { searchParams } = new URL(request.url);
+  // Sempre usa NEXT_PUBLIC_SITE_URL, nunca o origin da requisição — atrás do
+  // Nginx, request.url reflete o bind interno (localhost:3000), não o host
+  // público, e isso quebrava o redirect de volta pro usuário.
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
 
   if (!isOAuthProviderKey(provider)) {
-    return NextResponse.redirect(`${origin}/settings?integration=error`);
+    return NextResponse.redirect(`${siteUrl}/settings?integration=error`);
   }
 
   const code = searchParams.get("code");
@@ -20,7 +24,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ prov
   const expectedState = cookieStore.get(`${provider}_oauth_state`)?.value;
 
   if (!code || !state || !expectedState || state !== expectedState) {
-    return NextResponse.redirect(`${origin}/settings?integration=error&provider=${provider}`);
+    return NextResponse.redirect(`${siteUrl}/settings?integration=error&provider=${provider}`);
   }
 
   const supabase = await createClient();
@@ -29,25 +33,24 @@ export async function GET(request: Request, { params }: { params: Promise<{ prov
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.redirect(`${origin}/login`);
+    return NextResponse.redirect(`${siteUrl}/login`);
   }
 
   const tenantId = await requireTenantId(supabase, user.id);
   if (!tenantId) {
-    return NextResponse.redirect(`${origin}/settings?integration=error&provider=${provider}`);
+    return NextResponse.redirect(`${siteUrl}/settings?integration=error&provider=${provider}`);
   }
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? origin;
   const redirectUri = `${siteUrl}/api/integrations/${provider}/callback`;
 
   try {
     await exchangeOAuthCode(provider, tenantId, code, redirectUri);
   } catch (err) {
     console.error(`${provider}: falha ao trocar código por token`, err);
-    return NextResponse.redirect(`${origin}/settings?integration=error&provider=${provider}`);
+    return NextResponse.redirect(`${siteUrl}/settings?integration=error&provider=${provider}`);
   }
 
-  const response = NextResponse.redirect(`${origin}/settings?integration=connected&provider=${provider}`);
+  const response = NextResponse.redirect(`${siteUrl}/settings?integration=connected&provider=${provider}`);
   response.cookies.delete(`${provider}_oauth_state`);
   return response;
 }

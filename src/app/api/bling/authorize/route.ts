@@ -10,19 +10,23 @@ export async function GET(request: Request) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { origin, searchParams } = new URL(request.url);
+  const { searchParams } = new URL(request.url);
   const connectionId = searchParams.get("connectionId");
+  // Sempre usa NEXT_PUBLIC_SITE_URL, nunca o origin da requisição — atrás do
+  // Nginx, request.url reflete o bind interno (localhost:3000), não o host
+  // público, e isso quebrava o redirect_uri enviado às integrações.
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
 
   if (!user) {
-    return NextResponse.redirect(`${origin}/login`);
+    return NextResponse.redirect(`${siteUrl}/login`);
   }
   if (!connectionId) {
-    return NextResponse.redirect(`${origin}/settings?bling=error`);
+    return NextResponse.redirect(`${siteUrl}/settings?bling=error`);
   }
 
   const tenantId = await requireTenantId(supabase, user.id);
   if (!tenantId) {
-    return NextResponse.redirect(`${origin}/settings?bling=error`);
+    return NextResponse.redirect(`${siteUrl}/settings?bling=error`);
   }
 
   // Confere, com o client comum (RLS), que essa conexão é mesmo deste tenant.
@@ -34,10 +38,9 @@ export async function GET(request: Request) {
     .maybeSingle();
 
   if (!connection) {
-    return NextResponse.redirect(`${origin}/settings?bling=error`);
+    return NextResponse.redirect(`${siteUrl}/settings?bling=error`);
   }
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? origin;
   const redirectUri = `${siteUrl}/api/bling/callback`;
   const state = randomBytes(16).toString("hex");
 
