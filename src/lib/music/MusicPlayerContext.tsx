@@ -79,9 +79,9 @@ export function MusicPlayerProvider({ children }: { children: React.ReactNode })
     function createPlayer() {
       if (!window.YT) return;
       playerRef.current = new window.YT.Player("music-player-host", {
-        height: "0",
-        width: "0",
-        playerVars: { autoplay: 0 },
+        height: "200",
+        width: "200",
+        playerVars: { autoplay: 0, playsinline: 1 },
         events: {
           onReady: () => {
             setIsReady(true);
@@ -143,7 +143,11 @@ export function MusicPlayerProvider({ children }: { children: React.ReactNode })
 
   return (
     <MusicContext.Provider value={{ isReady, isPlaying, title, volume, loadFromUrl, togglePlay, setVolume, stop }}>
-      <div id="music-player-host" className="fixed -bottom-24 -left-24 h-px w-px overflow-hidden" />
+      <div
+        id="music-player-host"
+        className="fixed h-[200px] w-[200px] overflow-hidden"
+        style={{ left: "-9999px", top: "-9999px" }}
+      />
       {children}
     </MusicContext.Provider>
   );
