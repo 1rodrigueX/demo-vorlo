@@ -30,6 +30,7 @@ export interface Database {
           background_color: string | null;
           text_color: string | null;
           click_sound_path: string | null;
+          youtube_api_key: string | null;
           billing_plan_id: string | null;
           stripe_customer_id: string | null;
           stripe_subscription_id: string | null;
@@ -51,6 +52,7 @@ export interface Database {
           background_color?: string | null;
           text_color?: string | null;
           click_sound_path?: string | null;
+          youtube_api_key?: string | null;
           billing_plan_id?: string | null;
           stripe_customer_id?: string | null;
           stripe_subscription_id?: string | null;
@@ -72,6 +74,7 @@ export interface Database {
           background_color?: string | null;
           text_color?: string | null;
           click_sound_path?: string | null;
+          youtube_api_key?: string | null;
           billing_plan_id?: string | null;
           stripe_customer_id?: string | null;
           stripe_subscription_id?: string | null;

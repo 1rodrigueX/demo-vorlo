@@ -7,6 +7,7 @@ import { NewTeamMemberButton } from "@/components/settings/NewTeamMemberButton";
 import { WhatsAppSettingsForm } from "@/components/settings/WhatsAppSettingsForm";
 import { BlingConnectionsCard } from "@/components/settings/BlingConnectionsCard";
 import { AnthropicSettingsCard } from "@/components/settings/AnthropicSettingsCard";
+import { YoutubeSettingsCard } from "@/components/settings/YoutubeSettingsCard";
 import { EmailIntegrationsCard } from "@/components/settings/EmailIntegrationsCard";
 import { TagsSettingsCard } from "@/components/settings/TagsSettingsCard";
 import { CompanyProfileSettingsCard } from "@/components/settings/CompanyProfileSettingsCard";
@@ -253,6 +254,11 @@ export default async function SettingsPage({
           lastError={anthropicIntegration?.last_error ?? null}
           lastTestedAt={anthropicIntegration?.last_tested_at ?? null}
         />
+      </Card>
+
+      <Card className="p-6">
+        <h2 className="mb-4 text-sm font-semibold text-gray-900">Música</h2>
+        <YoutubeSettingsCard apiKey={tenant.youtube_api_key} />
       </Card>
 
       <Card className="p-6">

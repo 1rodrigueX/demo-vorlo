@@ -158,7 +158,7 @@ export const AGENT_TOOL_REGISTRY: Record<string, Anthropic.Tool> = {
       properties: {
         provider: {
           type: "string",
-          enum: ["anthropic", "bling", "gmail", "outlook", "google_calendar", "microsoft365", "custom"],
+          enum: ["anthropic", "bling", "gmail", "outlook", "google_calendar", "microsoft365", "youtube", "custom"],
         },
       },
       required: ["provider"],

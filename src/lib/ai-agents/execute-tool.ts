@@ -17,6 +17,7 @@ const INTEGRATION_GUIDANCE: Record<string, string> = {
   bling: "O Bling já pode ser conectado em Configurações > Bling.",
   gmail: "O Gmail já pode ser conectado em Configurações > E-mail — é só clicar em Conectar e fazer login com a conta Google.",
   outlook: "O Outlook já pode ser conectado em Configurações > E-mail — é só clicar em Conectar e fazer login com a conta Microsoft.",
+  youtube: "A busca de música (aba Música) precisa de uma chave da YouTube Data API v3, configurada em Configurações > Música. O passo a passo está em Suporte > Tutoriais.",
   google_calendar:
     "O Google Agenda ainda não está disponível nesta versão do CRM — em breve você poderá conectá-lo na tela de Integrações.",
   microsoft365:

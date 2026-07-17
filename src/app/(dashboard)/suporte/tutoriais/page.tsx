@@ -38,6 +38,16 @@ const GUIDES = [
     ],
     link: "https://portal.azure.com",
   },
+  {
+    title: "Música (busca do YouTube)",
+    steps: [
+      "Em console.cloud.google.com, ative a \"YouTube Data API v3\" (menu APIs e Serviços → Biblioteca → busque por ela → Ativar)",
+      "Vá em APIs e Serviços → Credenciais → Criar credenciais → Chave de API",
+      "Copie a chave gerada e cole em Configurações → Música",
+    ],
+    link: "https://console.cloud.google.com/apis/library/youtube.googleapis.com",
+    note: "É uma chave de API simples (não precisa de OAuth/redirect URI). O Google dá uma cota diária gratuita, suficiente pro uso normal do time.",
+  },
 ];
 
 export default function TutoriaisPage() {
