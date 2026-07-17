@@ -78,19 +78,21 @@ export async function searchYoutube(
   if (!apiKey) return { error: "Nenhuma chave da API do YouTube configurada (Configurações → Música)" };
   if (!query.trim()) return { results: [] };
 
-  const url = new URL("https://www.googleapis.com/youtube/v3/search");
-  url.searchParams.set("part", "snippet");
-  url.searchParams.set("type", "video");
-  url.searchParams.set("videoCategoryId", "10"); // categoria "Música"
-  url.searchParams.set("maxResults", "12");
-  url.searchParams.set("q", query);
-  url.searchParams.set("key", apiKey);
+  const searchUrl = new URL("https://www.googleapis.com/youtube/v3/search");
+  searchUrl.searchParams.set("part", "snippet");
+  searchUrl.searchParams.set("type", "video");
+  searchUrl.searchParams.set("videoCategoryId", "10"); // categoria "Música"
+  // Busca mais que o necessário porque parte vai ser descartada no filtro de
+  // embeddable abaixo — sem isso a lista final fica curta demais.
+  searchUrl.searchParams.set("maxResults", "25");
+  searchUrl.searchParams.set("q", query);
+  searchUrl.searchParams.set("key", apiKey);
 
-  const res = await fetch(url.toString());
-  const data = await res.json();
+  const searchRes = await fetch(searchUrl.toString());
+  const searchData = await searchRes.json();
 
-  if (!res.ok) {
-    return { error: data?.error?.message ?? "Falha ao buscar no YouTube" };
+  if (!searchRes.ok) {
+    return { error: searchData?.error?.message ?? "Falha ao buscar no YouTube" };
   }
 
   type YoutubeSearchItem = {
@@ -98,12 +100,37 @@ export async function searchYoutube(
     snippet: { title: string; channelTitle: string; thumbnails: { medium?: { url: string }; default?: { url: string } } };
   };
 
-  const results: YoutubeSearchResult[] = ((data.items ?? []) as YoutubeSearchItem[]).map((item) => ({
-    videoId: item.id.videoId,
-    title: item.snippet.title,
-    channelTitle: item.snippet.channelTitle,
-    thumbnailUrl: item.snippet.thumbnails.medium?.url ?? item.snippet.thumbnails.default?.url ?? "",
-  }));
+  const items = (searchData.items ?? []) as YoutubeSearchItem[];
+  if (!items.length) return { results: [] };
+
+  // A busca não informa se o dono do vídeo permite incorporação — um
+  // segundo request em videos.list traz esse status (campo embeddable),
+  // pra já descartar os que dariam erro "não permite tocar fora do YouTube".
+  const videosUrl = new URL("https://www.googleapis.com/youtube/v3/videos");
+  videosUrl.searchParams.set("part", "status");
+  videosUrl.searchParams.set("id", items.map((item) => item.id.videoId).join(","));
+  videosUrl.searchParams.set("key", apiKey);
+
+  const videosRes = await fetch(videosUrl.toString());
+  const videosData = await videosRes.json();
+
+  const embeddableIds = new Set<string>(
+    videosRes.ok
+      ? ((videosData.items ?? []) as { id: string; status?: { embeddable?: boolean } }[])
+          .filter((v) => v.status?.embeddable !== false)
+          .map((v) => v.id)
+      : items.map((item) => item.id.videoId), // se essa checagem falhar, não bloqueia a busca inteira
+  );
+
+  const results: YoutubeSearchResult[] = items
+    .filter((item) => embeddableIds.has(item.id.videoId))
+    .slice(0, 12)
+    .map((item) => ({
+      videoId: item.id.videoId,
+      title: item.snippet.title,
+      channelTitle: item.snippet.channelTitle,
+      thumbnailUrl: item.snippet.thumbnails.medium?.url ?? item.snippet.thumbnails.default?.url ?? "",
+    }));
 
   return { results };
 }
