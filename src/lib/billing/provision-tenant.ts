@@ -140,7 +140,7 @@ export async function provisionTenantFromCheckout(
     .update({ status: "completed", anthropic_api_key: null })
     .eq("id", pending.id);
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://http://45.149.153.20";
   try {
     await sendWelcomeEmail({
       to: user.email!,
