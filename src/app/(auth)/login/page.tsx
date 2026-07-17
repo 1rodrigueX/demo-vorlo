@@ -18,11 +18,10 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
       <div className="w-full max-w-sm rounded-lg border border-gray-200 bg-panel p-8 shadow-sm">
-        <Link
-          href="/"
-          className="mb-4 inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700"
-        >
-          <Home size={14} /> Início
+        <Link href="/" className="mb-5 inline-block">
+          <Button type="button" variant="primary" size="sm" className="rounded-full">
+            <Home size={14} /> Início
+          </Button>
         </Link>
         <h1 className="mb-1 text-xl font-semibold text-gray-900">Entrar</h1>
         <p className="mb-6 text-sm text-gray-500">Acesse o CRM da equipe.</p>

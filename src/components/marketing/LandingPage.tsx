@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CheckCircle2, KeyRound, Bot, Send, Sparkles as SparklesIcon } from "lucide-react";
+import { CheckCircle2, KeyRound, Bot, Send, Sparkles as SparklesIcon, Crown, PlugZap } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { formatCentsBrl } from "@/lib/billing/pricing";
@@ -138,6 +138,27 @@ export function LandingPage({ plans }: { plans: BillingPlan[] }) {
           </div>
           <div className="order-1 lg:order-2">
             <AutomationMockup />
+          </div>
+        </div>
+      </section>
+
+      {/* ALTERNANDO TEXTO + MOCKUP — conta, plano e integrações */}
+      <section className="py-16">
+        <div className="mx-auto grid max-w-5xl items-center gap-10 px-4 lg:grid-cols-2">
+          <AccountMockup />
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-indigo-600">Sua conta</p>
+            <h2 className="mt-2 text-2xl font-bold text-gray-900">
+              Equipe, plano e integrações — tudo sob seu controle
+            </h2>
+            <p className="mt-3 text-sm text-gray-600">
+              Convide vendedores e gestores com permissões próprias, acompanhe o plano atual da sua empresa e
+              conecte Bling, WhatsApp, e-mail e Power BI direto pelas configurações — sem precisar chamar
+              suporte técnico.
+            </p>
+            <Link href="/signup" className="mt-5 inline-block">
+              <Button>Criar conta grátis</Button>
+            </Link>
           </div>
         </div>
       </section>
@@ -332,6 +353,64 @@ function ChatMockup() {
       <div className="mt-3 flex items-center gap-2 rounded-full border border-gray-200 px-3 py-1.5">
         <span className="flex-1 text-xs text-gray-300">Mensagem...</span>
         <Send size={14} className="text-indigo-600" />
+      </div>
+    </div>
+  );
+}
+
+/** Prévia estilizada da tela de conta: equipe, plano atual e integrações conectadas. */
+function AccountMockup() {
+  const team = [
+    { initials: "MO", name: "Marcos", role: "Owner" },
+    { initials: "AG", name: "Ana", role: "Gestora" },
+    { initials: "JV", name: "João", role: "Vendedor" },
+  ];
+  const integrations = [
+    { name: "WhatsApp", tone: "emerald" },
+    { name: "Bling", tone: "amber" },
+    { name: "E-mail", tone: "indigo" },
+    { name: "Power BI", tone: "sky" },
+  ] as const;
+  const toneClasses = {
+    emerald: "bg-emerald-50 text-emerald-700",
+    amber: "bg-amber-50 text-amber-700",
+    indigo: "bg-indigo-50 text-indigo-700",
+    sky: "bg-sky-50 text-sky-700",
+  };
+
+  return (
+    <div className="mx-auto w-full max-w-sm overflow-hidden rounded-2xl border border-gray-200 bg-panel shadow-xl shadow-indigo-900/10">
+      <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
+        <p className="text-xs font-semibold text-gray-900">Sua equipe</p>
+        <span className="flex items-center gap-1 rounded-full bg-indigo-50 px-2 py-0.5 text-[11px] font-medium text-indigo-700">
+          <Crown size={11} /> Plano Pro
+        </span>
+      </div>
+      <div className="space-y-2.5 px-4 py-3">
+        {team.map((m) => (
+          <div key={m.name} className="flex items-center gap-2.5">
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-[10px] font-semibold text-white">
+              {m.initials}
+            </div>
+            <p className="flex-1 text-xs font-medium text-gray-800">{m.name}</p>
+            <span className="text-[11px] text-gray-400">{m.role}</span>
+          </div>
+        ))}
+      </div>
+      <div className="border-t border-gray-100 px-4 py-3">
+        <p className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold text-gray-500">
+          <PlugZap size={12} /> Integrações conectadas
+        </p>
+        <div className="flex flex-wrap gap-1.5">
+          {integrations.map((i) => (
+            <span
+              key={i.name}
+              className={`rounded-full px-2.5 py-1 text-[11px] font-medium ${toneClasses[i.tone]}`}
+            >
+              {i.name}
+            </span>
+          ))}
+        </div>
       </div>
     </div>
   );
