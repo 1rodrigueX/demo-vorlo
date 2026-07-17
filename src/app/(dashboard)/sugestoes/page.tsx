@@ -32,7 +32,7 @@ export default async function SugestoesPage() {
               {s.response && (
                 <div className="rounded-lg bg-gray-50 px-3 py-2 text-sm text-gray-700">
                   <p className="mb-0.5 text-[11px] font-semibold uppercase tracking-wide text-gray-400">
-                    Resposta do FALA AI
+                    Resposta do Suporte
                   </p>
                   {s.response}
                 </div>
