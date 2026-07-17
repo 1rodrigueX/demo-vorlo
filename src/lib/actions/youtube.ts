@@ -25,7 +25,7 @@ export async function saveYoutubeApiKey(_prevState: ActionState, formData: FormD
   const { error } = await supabase.from("tenants").update({ youtube_api_key: apiKey }).eq("id", tenantId);
   if (error) return { error: "Só o dono ou gestor pode alterar essas configurações" };
 
-  revalidatePath("/settings");
+  revalidatePath("/settings/integracoes");
   return null;
 }
 
@@ -42,7 +42,7 @@ export async function removeYoutubeApiKey(): Promise<ActionState> {
   const { error } = await supabase.from("tenants").update({ youtube_api_key: null }).eq("id", tenantId);
   if (error) return { error: "Só o dono ou gestor pode alterar essas configurações" };
 
-  revalidatePath("/settings");
+  revalidatePath("/settings/integracoes");
   return null;
 }
 

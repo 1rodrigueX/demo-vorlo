@@ -14,7 +14,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ prov
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
 
   if (!isOAuthProviderKey(provider)) {
-    return NextResponse.redirect(`${siteUrl}/settings?integration=error`);
+    return NextResponse.redirect(`${siteUrl}/settings/integracoes?integration=error`);
   }
 
   const code = searchParams.get("code");
@@ -24,7 +24,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ prov
   const expectedState = cookieStore.get(`${provider}_oauth_state`)?.value;
 
   if (!code || !state || !expectedState || state !== expectedState) {
-    return NextResponse.redirect(`${siteUrl}/settings?integration=error&provider=${provider}`);
+    return NextResponse.redirect(`${siteUrl}/settings/integracoes?integration=error&provider=${provider}`);
   }
 
   const supabase = await createClient();
@@ -38,7 +38,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ prov
 
   const tenantId = await requireTenantId(supabase, user.id);
   if (!tenantId) {
-    return NextResponse.redirect(`${siteUrl}/settings?integration=error&provider=${provider}`);
+    return NextResponse.redirect(`${siteUrl}/settings/integracoes?integration=error&provider=${provider}`);
   }
 
   const redirectUri = `${siteUrl}/api/integrations/${provider}/callback`;
@@ -47,10 +47,10 @@ export async function GET(request: Request, { params }: { params: Promise<{ prov
     await exchangeOAuthCode(provider, tenantId, code, redirectUri);
   } catch (err) {
     console.error(`${provider}: falha ao trocar código por token`, err);
-    return NextResponse.redirect(`${siteUrl}/settings?integration=error&provider=${provider}`);
+    return NextResponse.redirect(`${siteUrl}/settings/integracoes?integration=error&provider=${provider}`);
   }
 
-  const response = NextResponse.redirect(`${siteUrl}/settings?integration=connected&provider=${provider}`);
+  const response = NextResponse.redirect(`${siteUrl}/settings/integracoes?integration=connected&provider=${provider}`);
   response.cookies.delete(`${provider}_oauth_state`);
   return response;
 }

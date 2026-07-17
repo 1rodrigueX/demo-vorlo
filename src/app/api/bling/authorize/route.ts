@@ -21,12 +21,12 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${siteUrl}/login`);
   }
   if (!connectionId) {
-    return NextResponse.redirect(`${siteUrl}/settings?bling=error`);
+    return NextResponse.redirect(`${siteUrl}/settings/integracoes?bling=error`);
   }
 
   const tenantId = await requireTenantId(supabase, user.id);
   if (!tenantId) {
-    return NextResponse.redirect(`${siteUrl}/settings?bling=error`);
+    return NextResponse.redirect(`${siteUrl}/settings/integracoes?bling=error`);
   }
 
   // Confere, com o client comum (RLS), que essa conexão é mesmo deste tenant.
@@ -38,7 +38,7 @@ export async function GET(request: Request) {
     .maybeSingle();
 
   if (!connection) {
-    return NextResponse.redirect(`${siteUrl}/settings?bling=error`);
+    return NextResponse.redirect(`${siteUrl}/settings/integracoes?bling=error`);
   }
 
   const redirectUri = `${siteUrl}/api/bling/callback`;
@@ -46,7 +46,7 @@ export async function GET(request: Request) {
 
   const authorizeUrl = await getBlingAuthorizeUrl(connectionId, state, redirectUri);
   if (!authorizeUrl) {
-    return NextResponse.redirect(`${origin}/settings?bling=not_configured`);
+    return NextResponse.redirect(`${siteUrl}/settings/integracoes?bling=not_configured`);
   }
 
   const response = NextResponse.redirect(authorizeUrl);

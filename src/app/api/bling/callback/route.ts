@@ -19,7 +19,7 @@ export async function GET(request: Request) {
   const connectionId = cookieStore.get("bling_oauth_connection_id")?.value;
 
   if (!code || !state || !expectedState || state !== expectedState || !connectionId) {
-    return NextResponse.redirect(`${siteUrl}/settings?bling=error`);
+    return NextResponse.redirect(`${siteUrl}/settings/integracoes?bling=error`);
   }
 
   const supabase = await createClient();
@@ -33,7 +33,7 @@ export async function GET(request: Request) {
 
   const tenantId = await requireTenantId(supabase, user.id);
   if (!tenantId) {
-    return NextResponse.redirect(`${siteUrl}/settings?bling=error`);
+    return NextResponse.redirect(`${siteUrl}/settings/integracoes?bling=error`);
   }
 
   // Confere de novo que a conexão é deste tenant antes de gravar o token.
@@ -45,7 +45,7 @@ export async function GET(request: Request) {
     .maybeSingle();
 
   if (!connection) {
-    return NextResponse.redirect(`${siteUrl}/settings?bling=error`);
+    return NextResponse.redirect(`${siteUrl}/settings/integracoes?bling=error`);
   }
 
   try {
@@ -63,10 +63,10 @@ export async function GET(request: Request) {
       .eq("id", connectionId);
   } catch (err) {
     console.error("Bling: falha ao trocar código por token", err);
-    return NextResponse.redirect(`${siteUrl}/settings?bling=error`);
+    return NextResponse.redirect(`${siteUrl}/settings/integracoes?bling=error`);
   }
 
-  const response = NextResponse.redirect(`${siteUrl}/settings?bling=connected`);
+  const response = NextResponse.redirect(`${siteUrl}/settings/integracoes?bling=connected`);
   response.cookies.delete("bling_oauth_state");
   response.cookies.delete("bling_oauth_connection_id");
   return response;

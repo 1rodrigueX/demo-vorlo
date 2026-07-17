@@ -63,7 +63,7 @@ export function Sidebar({
               style={isActive ? { backgroundColor: brandColor } : undefined}
               className={cn(
                 "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-                isActive ? "text-white shadow-sm" : "text-gray-600 hover:bg-gray-100 hover:text-gray-900",
+                isActive ? "text-white shadow-sm" : "text-gray-600 hover:bg-[var(--sidebar-hover)] hover:text-gray-900",
               )}
             >
               <Icon size={18} strokeWidth={isActive ? 2.25 : 2} />

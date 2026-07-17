@@ -39,6 +39,17 @@ function isBorderRadiusKey(value: string): value is BorderRadiusKey {
   return value in BORDER_RADIUS_OPTIONS;
 }
 
+/** Converte #RRGGBB pra "r, g, b" — usado pra montar rgba() com opacidade baixa (hover). */
+function hexToRgbParts(hex: string): string {
+  const match = /^#?([0-9a-fA-F]{6})$/.exec(hex);
+  if (!match) return "79, 70, 229"; // fallback = DEFAULT_BRAND_COLOR em rgb
+  const value = match[1];
+  const r = parseInt(value.slice(0, 2), 16);
+  const g = parseInt(value.slice(2, 4), 16);
+  const b = parseInt(value.slice(4, 6), 16);
+  return `${r}, ${g}, ${b}`;
+}
+
 const TenantThemeContext = createContext<{ brandColor: string }>({
   brandColor: DEFAULT_BRAND_COLOR,
 });
@@ -60,13 +71,14 @@ export function TenantThemeProvider({
   textColor?: string | null;
   children: React.ReactNode;
 }) {
+  const resolvedBrandColor = brandColor || DEFAULT_BRAND_COLOR;
   const fontKey = brandFont && isFontKey(brandFont) ? brandFont : "default";
   const sizeKey = textSize ?? "medium";
   const radiusKey = borderRadius && isBorderRadiusKey(borderRadius) ? borderRadius : "default";
   const radius = BORDER_RADIUS_OPTIONS[radiusKey];
 
   return (
-    <TenantThemeContext.Provider value={{ brandColor: brandColor || DEFAULT_BRAND_COLOR }}>
+    <TenantThemeContext.Provider value={{ brandColor: resolvedBrandColor }}>
       <style>{`
         html { font-size: ${TEXT_SIZE_OPTIONS[sizeKey].rootPx}px; }
         body { font-family: ${FONT_OPTIONS[fontKey].stack}; }
@@ -74,6 +86,7 @@ export function TenantThemeProvider({
           --radius-lg: ${radius.lg};
           --radius-xl: ${radius.xl};
           --radius-2xl: ${radius.xxl};
+          --sidebar-hover: rgba(${hexToRgbParts(resolvedBrandColor)}, 0.15);
           ${backgroundColor ? `--background: ${backgroundColor}; --color-gray-50: ${backgroundColor}; --color-panel: ${backgroundColor};` : ""}
           ${textColor ? `--foreground: ${textColor}; --color-gray-900: ${textColor};` : ""}
         }

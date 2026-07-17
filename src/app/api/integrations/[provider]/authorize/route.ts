@@ -13,7 +13,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ prov
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
 
   if (!isOAuthProviderKey(provider)) {
-    return NextResponse.redirect(`${siteUrl}/settings?integration=error`);
+    return NextResponse.redirect(`${siteUrl}/settings/integracoes?integration=error`);
   }
 
   const supabase = await createClient();
@@ -27,7 +27,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ prov
 
   const tenantId = await requireTenantId(supabase, user.id);
   if (!tenantId) {
-    return NextResponse.redirect(`${siteUrl}/settings?integration=error&provider=${provider}`);
+    return NextResponse.redirect(`${siteUrl}/settings/integracoes?integration=error&provider=${provider}`);
   }
 
   const redirectUri = `${siteUrl}/api/integrations/${provider}/callback`;
@@ -35,7 +35,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ prov
 
   const authorizeUrl = getAuthorizeUrl(provider, state, redirectUri);
   if (!authorizeUrl) {
-    return NextResponse.redirect(`${siteUrl}/settings?integration=not_configured&provider=${provider}`);
+    return NextResponse.redirect(`${siteUrl}/settings/integracoes?integration=not_configured&provider=${provider}`);
   }
 
   const response = NextResponse.redirect(authorizeUrl);

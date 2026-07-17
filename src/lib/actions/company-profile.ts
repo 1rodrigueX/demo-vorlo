@@ -62,7 +62,7 @@ export async function saveCompanyProfile(_prevState: ActionState, formData: Form
 
   if (error) return { error: `Não foi possível salvar: ${error.message}` };
 
-  revalidatePath("/settings");
+  revalidatePath("/settings/empresa");
   return null;
 }
 
@@ -91,7 +91,7 @@ export async function uploadCatalog(_prevState: ActionState, formData: FormData)
   });
   if (error) return { error: `Não foi possível salvar: ${error.message}` };
 
-  revalidatePath("/settings");
+  revalidatePath("/settings/empresa");
   return null;
 }
 
@@ -123,7 +123,7 @@ export async function deleteCatalogFile(catalogId: string): Promise<ActionState>
     await deleteCompanyAsset(catalog.storage_path);
   }
 
-  revalidatePath("/settings");
+  revalidatePath("/settings/empresa");
   return null;
 }
 
@@ -159,7 +159,7 @@ export async function uploadProductPhoto(_prevState: ActionState, formData: Form
   });
   if (error) return { error: `Não foi possível salvar: ${error.message}` };
 
-  revalidatePath("/settings");
+  revalidatePath("/settings/empresa");
   return null;
 }
 
@@ -191,7 +191,7 @@ export async function deleteProductPhoto(photoId: string): Promise<ActionState> 
     await deleteCompanyAsset(photo.storage_path);
   }
 
-  revalidatePath("/settings");
+  revalidatePath("/settings/empresa");
   return null;
 }
 

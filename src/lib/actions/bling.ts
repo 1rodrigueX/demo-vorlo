@@ -49,7 +49,7 @@ export async function createBlingConnection(
     return { error: `Não foi possível criar a conexão: ${message}` };
   }
 
-  revalidatePath("/settings");
+  revalidatePath("/settings/integracoes");
   return null;
 }
 
@@ -87,7 +87,7 @@ export async function updateBlingCredentials(
     return { error: `Não foi possível salvar: ${error.message}` };
   }
 
-  revalidatePath("/settings");
+  revalidatePath("/settings/integracoes");
   return null;
 }
 
@@ -100,7 +100,7 @@ export async function setBlingConnectionTag(connectionId: string, tagId: string 
     return { error: message };
   }
 
-  revalidatePath("/settings");
+  revalidatePath("/settings/integracoes");
   return { error: undefined };
 }
 
@@ -124,7 +124,7 @@ export async function disconnectBlingConnection(connectionId: string): Promise<A
 
   if (error) return { error: "Não foi possível desconectar" };
 
-  revalidatePath("/settings");
+  revalidatePath("/settings/integracoes");
   return null;
 }
 
@@ -155,7 +155,7 @@ export async function setBlingConnectionSeller(
     { onConflict: "bling_connection_id,profile_id" },
   );
 
-  revalidatePath("/settings");
+  revalidatePath("/settings/integracoes");
   return { error: error?.message };
 }
 
@@ -167,6 +167,6 @@ export async function deleteBlingConnection(connectionId: string): Promise<Actio
     return { error: "Não foi possível excluir (a conexão padrão não pode ser removida)" };
   }
 
-  revalidatePath("/settings");
+  revalidatePath("/settings/integracoes");
   return null;
 }

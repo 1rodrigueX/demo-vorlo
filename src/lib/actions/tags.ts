@@ -37,14 +37,14 @@ export async function createTag(_prevState: ActionState, formData: FormData): Pr
     return { error: `Não foi possível criar a tag: ${message}` };
   }
 
-  revalidatePath("/settings");
+  revalidatePath("/settings/empresa");
   return null;
 }
 
 export async function deleteTag(tagId: string) {
   const supabase = await createClient();
   await supabase.from("tags").delete().eq("id", tagId);
-  revalidatePath("/settings");
+  revalidatePath("/settings/empresa");
 }
 
 export async function setContactTags(contactId: string, tagIds: string[]) {

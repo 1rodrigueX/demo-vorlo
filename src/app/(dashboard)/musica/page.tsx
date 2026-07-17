@@ -74,8 +74,8 @@ export default function MusicaPage() {
       {error && (
         <Card className="p-4 text-sm text-red-600">
           {error}{" "}
-          <Link href="/settings" className="font-medium underline">
-            Configurar em Configurações → Música
+          <Link href="/settings/integracoes" className="font-medium underline">
+            Configurar em Configurações → Integrações
           </Link>
         </Card>
       )}
