@@ -74,8 +74,8 @@ export function TenantThemeProvider({
           --radius-lg: ${radius.lg};
           --radius-xl: ${radius.xl};
           --radius-2xl: ${radius.xxl};
-          ${backgroundColor ? `--background: ${backgroundColor};` : ""}
-          ${textColor ? `--foreground: ${textColor};` : ""}
+          ${backgroundColor ? `--background: ${backgroundColor}; --color-gray-50: ${backgroundColor}; --color-panel: ${backgroundColor};` : ""}
+          ${textColor ? `--foreground: ${textColor}; --color-gray-900: ${textColor};` : ""}
         }
       `}</style>
       {children}
