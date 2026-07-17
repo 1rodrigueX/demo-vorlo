@@ -298,6 +298,53 @@ export async function executeAgentTool(
         return { content: guidance, isError: false };
       }
 
+      case "check_integration_status": {
+        if (!agent.is_fala_ai) return { content: "Só o FALA AI pode checar status de integrações.", isError: true };
+
+        const provider = String(input.provider ?? "");
+
+        if (provider === "bling") {
+          const { data: connections } = await supabase
+            .from("bling_connections")
+            .select("name, is_default, access_token, expires_at")
+            .eq("tenant_id", tenantId);
+
+          if (!connections?.length) return { content: "Bling: nenhuma conexão cadastrada ainda.", isError: false };
+
+          const summary = connections
+            .map((c) => {
+              const label = c.is_default ? "padrão" : "filial";
+              if (!c.access_token) return `${c.name} (${label}): desconectado`;
+              const expired = c.expires_at ? new Date(c.expires_at).getTime() < Date.now() : false;
+              return `${c.name} (${label}): ${expired ? "token expirado, precisa reconectar" : "conectado"}`;
+            })
+            .join("; ");
+          return { content: `Bling: ${summary}`, isError: false };
+        }
+
+        if (provider === "anthropic" || provider === "gmail" || provider === "outlook") {
+          const { data } = await supabase
+            .from("tenant_integrations")
+            .select("status, last_error, last_tested_at")
+            .eq("tenant_id", tenantId)
+            .eq("provider", provider)
+            .maybeSingle();
+
+          if (!data) return { content: `${provider}: nenhuma conexão cadastrada ainda.`, isError: false };
+
+          const label =
+            data.status === "connected"
+              ? "conectada"
+              : data.status === "error"
+                ? `com erro (${data.last_error ?? "motivo desconhecido"})`
+                : "desconectada";
+          const tested = data.last_tested_at ? `, último teste em ${data.last_tested_at}` : "";
+          return { content: `${provider}: ${label}${tested}`, isError: false };
+        }
+
+        return { content: `Integração desconhecida: ${provider}`, isError: true };
+      }
+
       default:
         return { content: `Ferramenta desconhecida: ${name}`, isError: true };
     }

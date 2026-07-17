@@ -164,6 +164,24 @@ export const AGENT_TOOL_REGISTRY: Record<string, Anthropic.Tool> = {
       required: ["provider"],
     },
   },
+  check_integration_status: {
+    name: "check_integration_status",
+    description:
+      "Consulta no banco se uma integração (Bling, Anthropic, Gmail, Outlook) está realmente conectada agora — " +
+      "token presente, válido e sem erro no último teste. Use isso pra responder se uma API 'está on ou não', em " +
+      "vez de dizer que não tem como saber. Não é um teste ao vivo, é o status salvo da última conexão/teste. Só o " +
+      "FALA AI pode chamar esta ferramenta.",
+    input_schema: {
+      type: "object",
+      properties: {
+        provider: {
+          type: "string",
+          enum: ["anthropic", "bling", "gmail", "outlook"],
+        },
+      },
+      required: ["provider"],
+    },
+  },
 };
 
 export function getToolsForAgent(toolKeys: string[]): Anthropic.Tool[] {

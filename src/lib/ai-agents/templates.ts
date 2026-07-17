@@ -19,6 +19,7 @@ export const FALA_AI_ONLY_TOOL_KEYS = [
   "toggle_agent_status",
   "delete_agent",
   "connect_integration",
+  "check_integration_status",
 ] as const;
 
 export const KNOWN_TOOL_KEYS = [...ALL_TOOL_KEYS, ...FALA_AI_ONLY_TOOL_KEYS] as const;
