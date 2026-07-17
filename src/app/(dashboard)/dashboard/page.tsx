@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { DollarSign, TrendingUp, Briefcase, Users, FileDown } from "lucide-react";
+import { DollarSign, TrendingUp, Briefcase, Users } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils/cn";
 import { PipelineValueCard } from "@/components/dashboard/PipelineValueCard";
@@ -98,13 +98,6 @@ export default async function DashboardPage({
     return qs ? `/dashboard?${qs}` : "/dashboard";
   }
 
-  const exportHref = `/api/dashboard/export?${new URLSearchParams({
-    period,
-    from: fromParam ?? toDateInputValue(from),
-    to: toParam ?? toDateInputValue(to),
-    ...(ownerId ? { owner: ownerId } : {}),
-  }).toString()}`;
-
   return (
     <div className="mx-auto max-w-6xl space-y-6">
       <div className="flex items-start justify-between gap-4">
@@ -113,15 +106,6 @@ export default async function DashboardPage({
           <p className="mt-1 text-sm text-gray-500">Visão geral do funil de vendas da equipe.</p>
         </div>
         <div className="flex items-center gap-2">
-          <a href={exportHref}>
-            <button
-              type="button"
-              className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-panel px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50"
-            >
-              <FileDown size={15} />
-              Exportar Excel
-            </button>
-          </a>
           {isAdmin && (
             <PowerBiExportButton
               apiKeys={apiKeys ?? []}

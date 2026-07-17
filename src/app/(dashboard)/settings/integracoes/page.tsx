@@ -7,6 +7,7 @@ import { BlingConnectionsCard } from "@/components/settings/BlingConnectionsCard
 import { AnthropicSettingsCard } from "@/components/settings/AnthropicSettingsCard";
 import { YoutubeSettingsCard } from "@/components/settings/YoutubeSettingsCard";
 import { EmailIntegrationsCard } from "@/components/settings/EmailIntegrationsCard";
+import { PowerBiExportButton } from "@/components/dashboard/PowerBiExportButton";
 
 function maskApiKey(apiKey: string): string {
   const tail = apiKey.slice(-4);
@@ -62,6 +63,7 @@ export default async function SettingsIntegracoesPage({
     { data: emailIntegrations },
     { data: tags },
     { data: sellerMappings },
+    { data: apiKeys },
   ] = await Promise.all([
     supabase.from("tenants").select("id, youtube_api_key").eq("id", current.profile.tenant_id).single(),
     supabase
@@ -95,6 +97,10 @@ export default async function SettingsIntegracoesPage({
       .from("bling_connection_sellers")
       .select("bling_connection_id, profile_id, bling_vendedor_id, bling_vendedor_name, bling_connection:bling_connections!inner(tenant_id)")
       .eq("bling_connection.tenant_id", current.profile.tenant_id),
+    supabase
+      .from("tenant_api_keys")
+      .select("id, name, key_prefix, created_at, last_used_at")
+      .order("created_at", { ascending: false }),
   ]);
 
   if (!tenant) redirect("/dashboard");
@@ -170,6 +176,17 @@ export default async function SettingsIntegracoesPage({
       <Card className="p-6">
         <h2 className="mb-4 text-sm font-semibold text-gray-900">Música</h2>
         <YoutubeSettingsCard apiKey={tenant.youtube_api_key} />
+      </Card>
+
+      <Card className="p-6">
+        <h2 className="mb-1 text-sm font-semibold text-gray-900">Power BI</h2>
+        <p className="mb-4 text-xs text-gray-500">
+          Conecte seus negócios e contatos direto no Power BI Desktop pra montar seus próprios relatórios.
+        </p>
+        <PowerBiExportButton
+          apiKeys={apiKeys ?? []}
+          siteUrl={process.env.NEXT_PUBLIC_SITE_URL ?? "http://45.149.153.20"}
+        />
       </Card>
     </>
   );
