@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { resolveHomeRouteFor } from "@/lib/auth/current-user";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -14,6 +15,16 @@ export async function GET(request: Request) {
     const supabase = await createClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
+      // "/dashboard" é um sentinel de "me leva pro meu CRM" — o slug do
+      // tenant só existe depois de autenticado, então resolve aqui em vez
+      // de confiar num "next" literal (que não pode saber o slug de antemão).
+      if (next === "/dashboard") {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        const homeRoute = user ? await resolveHomeRouteFor(supabase, user.id) : "/login";
+        return NextResponse.redirect(`${siteUrl}${homeRoute}`);
+      }
       return NextResponse.redirect(`${siteUrl}${next}`);
     }
   }
