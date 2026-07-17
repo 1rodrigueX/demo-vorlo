@@ -194,7 +194,7 @@ export default async function SettingsPage({
           <WhatsAppSettingsForm
             connection={whatsappConnection}
             tenantId={tenant.id}
-            siteUrl={process.env.NEXT_PUBLIC_SITE_URL ?? "http://http://45.149.153.20"}
+            siteUrl={process.env.NEXT_PUBLIC_SITE_URL ?? "http://45.149.153.20"}
           />
         </Card>
       )}
@@ -217,7 +217,7 @@ export default async function SettingsPage({
           tags={tags ?? []}
           members={members ?? []}
           sellerMappings={sellerMappings ?? []}
-          siteUrl={process.env.NEXT_PUBLIC_SITE_URL ?? "http://http://45.149.153.20"}
+          siteUrl={process.env.NEXT_PUBLIC_SITE_URL ?? "http://45.149.153.20"}
         />
       </Card>
 

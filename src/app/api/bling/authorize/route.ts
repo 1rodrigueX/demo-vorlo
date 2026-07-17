@@ -13,7 +13,7 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const connectionId = searchParams.get("connectionId");
   // Sempre usa NEXT_PUBLIC_SITE_URL, nunca o origin da requisição — atrás do
-  // Nginx, request.url reflete o bind interno (localhost:3000), não o host
+  // Nginx, request.url reflete o bind interno (45.149.153.20), não o host
   // público, e isso quebrava o redirect_uri enviado às integrações.
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
 

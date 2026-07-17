@@ -46,7 +46,7 @@ export async function startCheckout(_prevState: ActionState, formData: FormData)
   if (!plan) return { error: "Plano não encontrado. Escolha um plano válido." };
 
   const { totalCents } = calculateTotalCents(plan, parsed.data);
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://http://45.149.153.20";
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://45.149.153.20";
   const admin = createAdminClient();
 
   const { data: pendingCheckout, error: pendingError } = await admin
