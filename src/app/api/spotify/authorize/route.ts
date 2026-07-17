@@ -17,8 +17,12 @@ export async function GET() {
   const redirectUri = `${siteUrl}/api/spotify/callback`;
   const state = randomBytes(16).toString("hex");
 
+  console.log("[spotify authorize] siteUrl =", siteUrl, "| redirectUri =", redirectUri);
+
   const authorizeUrl = getSpotifyAuthorizeUrl(state, redirectUri);
   if (!authorizeUrl) return NextResponse.redirect(`${siteUrl}/musica?spotify=not_configured`);
+
+  console.log("[spotify authorize] authorizeUrl =", authorizeUrl);
 
   const response = NextResponse.redirect(authorizeUrl);
   response.cookies.set("spotify_oauth_state", state, {
