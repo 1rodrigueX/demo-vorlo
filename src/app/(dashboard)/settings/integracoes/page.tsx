@@ -5,7 +5,8 @@ import { Card } from "@/components/ui/Card";
 import { WhatsAppSettingsForm } from "@/components/settings/WhatsAppSettingsForm";
 import { BlingConnectionsCard } from "@/components/settings/BlingConnectionsCard";
 import { AnthropicSettingsCard } from "@/components/settings/AnthropicSettingsCard";
-import { YoutubeSettingsCard } from "@/components/settings/YoutubeSettingsCard";
+// Música desativada temporariamente (volta como atualização beta mais pra frente).
+// import { YoutubeSettingsCard } from "@/components/settings/YoutubeSettingsCard";
 import { EmailIntegrationsCard } from "@/components/settings/EmailIntegrationsCard";
 import { PowerBiExportButton } from "@/components/dashboard/PowerBiExportButton";
 
@@ -173,10 +174,16 @@ export default async function SettingsIntegracoesPage({
         />
       </Card>
 
-      <Card className="p-6">
-        <h2 className="mb-4 text-sm font-semibold text-gray-900">Música</h2>
-        <YoutubeSettingsCard apiKey={tenant.youtube_api_key} />
-      </Card>
+      {/*
+        Música desativada temporariamente — volta como atualização beta mais
+        pra frente. Pra reativar, descomenta o import do YoutubeSettingsCard
+        acima e esse card:
+
+        <Card className="p-6">
+          <h2 className="mb-4 text-sm font-semibold text-gray-900">Música</h2>
+          <YoutubeSettingsCard apiKey={tenant.youtube_api_key} />
+        </Card>
+      */}
 
       <Card className="p-6">
         <h2 className="mb-1 text-sm font-semibold text-gray-900">Power BI</h2>
