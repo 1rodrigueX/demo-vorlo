@@ -5,6 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 export const COMPANY_ASSETS_BUCKET = "company-assets";
 export const MAX_CATALOG_SIZE = 20 * 1024 * 1024;
 export const MAX_PRODUCT_PHOTO_SIZE = 10 * 1024 * 1024;
+export const MAX_SOUND_SIZE = 2 * 1024 * 1024;
 
 const DIACRITIC_MARKS_REGEX = new RegExp("[\\u0300-\\u036f]", "g");
 
@@ -28,7 +29,7 @@ function sanitizeStorageFileName(fileName: string): string {
 
 export async function uploadCompanyAsset(
   tenantId: string,
-  kind: "catalog" | "photos" | "logo",
+  kind: "catalog" | "photos" | "logo" | "sound",
   fileName: string,
   contentType: string,
   buffer: Buffer,

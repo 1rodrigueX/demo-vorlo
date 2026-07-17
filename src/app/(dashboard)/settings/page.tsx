@@ -126,10 +126,11 @@ export default async function SettingsPage({
 
   if (!tenant) redirect("/dashboard");
 
-  const [photoUrlByPath, catalogUrlByPath, logoUrl] = await Promise.all([
+  const [photoUrlByPath, catalogUrlByPath, logoUrl, clickSoundUrl] = await Promise.all([
     getCompanyAssetUrls(productPhotos ?? []),
     getCompanyAssetUrls(catalogs ?? []),
     tenant.logo_storage_path ? getCompanyAssetSignedUrl(tenant.logo_storage_path) : Promise.resolve(null),
+    tenant.click_sound_path ? getCompanyAssetSignedUrl(tenant.click_sound_path) : Promise.resolve(null),
   ]);
   const productPhotosWithUrl = (productPhotos ?? []).map((p) => ({
     ...p,
@@ -156,7 +157,7 @@ export default async function SettingsPage({
 
       <Card className="p-6">
         <h2 className="mb-4 text-sm font-semibold text-gray-900">Aparência</h2>
-        <TenantBrandingForm tenant={tenant} logoUrl={logoUrl} />
+        <TenantBrandingForm tenant={tenant} logoUrl={logoUrl} clickSoundUrl={clickSoundUrl} />
       </Card>
 
       <Card className="p-6">

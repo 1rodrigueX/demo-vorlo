@@ -5,6 +5,7 @@ import { Sidebar } from "@/components/layout/Sidebar";
 import { Topbar } from "@/components/layout/Topbar";
 import { TenantThemeProvider } from "@/lib/theme/TenantThemeContext";
 import { getCompanyAssetSignedUrl } from "@/lib/storage/companyAssets";
+import { ClickSoundListener } from "@/components/layout/ClickSoundListener";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const current = await getCurrentUser();
@@ -26,7 +27,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const supabase = await createClient();
   const { data: tenant } = await supabase
     .from("tenants")
-    .select("name, brand_color, brand_font, text_size, logo_storage_path")
+    .select(
+      "name, brand_color, brand_font, text_size, border_radius, background_color, text_color, logo_storage_path, click_sound_path",
+    )
     .eq("id", current.profile.tenant_id)
     .single();
 
@@ -36,10 +39,19 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const tenantName = tenant?.name ?? "CRM";
   const brandColor = tenant?.brand_color ?? "#4f46e5";
   const logoUrl = tenant?.logo_storage_path ? await getCompanyAssetSignedUrl(tenant.logo_storage_path) : null;
+  const clickSoundUrl = tenant?.click_sound_path ? await getCompanyAssetSignedUrl(tenant.click_sound_path) : null;
   const showSettings = current.profile.role === "owner" || current.profile.role === "manager";
 
   return (
-    <TenantThemeProvider brandColor={brandColor} brandFont={tenant?.brand_font} textSize={tenant?.text_size}>
+    <TenantThemeProvider
+      brandColor={brandColor}
+      brandFont={tenant?.brand_font}
+      textSize={tenant?.text_size}
+      borderRadius={tenant?.border_radius}
+      backgroundColor={tenant?.background_color}
+      textColor={tenant?.text_color}
+    >
+      {clickSoundUrl && <ClickSoundListener soundUrl={clickSoundUrl} />}
       <div className="flex min-h-screen">
         <Sidebar tenantName={tenantName} logoUrl={logoUrl} showSettings={showSettings} />
         <div className="flex flex-1 flex-col">

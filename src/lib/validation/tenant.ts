@@ -24,6 +24,13 @@ export const updateTenantBrandingSchema = z.object({
     .regex(/^#[0-9a-fA-F]{6}$/, "Use uma cor no formato #RRGGBB"),
   brandFont: z.enum(["default", "modern", "classic", "rounded"]),
   textSize: z.enum(["small", "medium", "large"]),
+  borderRadius: z.enum(["square", "default", "rounded", "pill"]),
+  backgroundColor: z
+    .union([z.literal(""), z.string().trim().regex(/^#[0-9a-fA-F]{6}$/, "Use uma cor no formato #RRGGBB")])
+    .optional(),
+  textColor: z
+    .union([z.literal(""), z.string().trim().regex(/^#[0-9a-fA-F]{6}$/, "Use uma cor no formato #RRGGBB")])
+    .optional(),
 });
 
 export type UpdateTenantBrandingInput = z.infer<typeof updateTenantBrandingSchema>;

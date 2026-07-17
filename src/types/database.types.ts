@@ -26,6 +26,10 @@ export interface Database {
           assistant_button_position: "bottom-left" | "bottom-right";
           logo_storage_path: string | null;
           text_size: "small" | "medium" | "large";
+          border_radius: "square" | "default" | "rounded" | "pill";
+          background_color: string | null;
+          text_color: string | null;
+          click_sound_path: string | null;
           billing_plan_id: string | null;
           stripe_customer_id: string | null;
           stripe_subscription_id: string | null;
@@ -43,6 +47,10 @@ export interface Database {
           assistant_button_position?: "bottom-left" | "bottom-right";
           logo_storage_path?: string | null;
           text_size?: "small" | "medium" | "large";
+          border_radius?: "square" | "default" | "rounded" | "pill";
+          background_color?: string | null;
+          text_color?: string | null;
+          click_sound_path?: string | null;
           billing_plan_id?: string | null;
           stripe_customer_id?: string | null;
           stripe_subscription_id?: string | null;
@@ -60,6 +68,10 @@ export interface Database {
           assistant_button_position?: "bottom-left" | "bottom-right";
           logo_storage_path?: string | null;
           text_size?: "small" | "medium" | "large";
+          border_radius?: "square" | "default" | "rounded" | "pill";
+          background_color?: string | null;
+          text_color?: string | null;
+          click_sound_path?: string | null;
           billing_plan_id?: string | null;
           stripe_customer_id?: string | null;
           stripe_subscription_id?: string | null;

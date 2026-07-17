@@ -5,7 +5,12 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireTenantId } from "@/lib/auth/current-user";
 import { updateTenantBrandingSchema, createTeamMemberSchema } from "@/lib/validation/tenant";
-import { uploadCompanyAsset, deleteCompanyAsset, MAX_PRODUCT_PHOTO_SIZE } from "@/lib/storage/companyAssets";
+import {
+  uploadCompanyAsset,
+  deleteCompanyAsset,
+  MAX_PRODUCT_PHOTO_SIZE,
+  MAX_SOUND_SIZE,
+} from "@/lib/storage/companyAssets";
 
 export type ActionState = { error?: string } | null;
 
@@ -18,6 +23,9 @@ export async function updateTenantBranding(
     brandColor: formData.get("brandColor"),
     brandFont: formData.get("brandFont"),
     textSize: formData.get("textSize"),
+    borderRadius: formData.get("borderRadius"),
+    backgroundColor: formData.get("backgroundColor"),
+    textColor: formData.get("textColor"),
   });
 
   if (!parsed.success) {
@@ -40,6 +48,9 @@ export async function updateTenantBranding(
       brand_color: parsed.data.brandColor,
       brand_font: parsed.data.brandFont,
       text_size: parsed.data.textSize,
+      border_radius: parsed.data.borderRadius,
+      background_color: parsed.data.backgroundColor || null,
+      text_color: parsed.data.textColor || null,
     })
     .eq("id", tenantId)
     .select("id")
@@ -119,6 +130,77 @@ export async function removeTenantLogo(): Promise<ActionState> {
   if (error) return { error: "Só o dono ou gestor pode alterar essas configurações" };
 
   await deleteCompanyAsset(current.logo_storage_path);
+
+  revalidatePath("/dashboard", "layout");
+  revalidatePath("/settings");
+  return null;
+}
+
+export async function uploadClickSound(_prevState: ActionState, formData: FormData): Promise<ActionState> {
+  const file = formData.get("sound");
+  if (!(file instanceof File) || file.size === 0) return { error: "Selecione um arquivo de áudio" };
+  if (file.size > MAX_SOUND_SIZE) return { error: "Arquivo muito grande (máx. 2MB)" };
+  if (!file.type.startsWith("audio/")) return { error: "Envie um arquivo de áudio" };
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Sessão expirada, faça login novamente" };
+
+  const tenantId = await requireTenantId(supabase, user.id);
+  if (!tenantId) return { error: "Tenant não encontrado" };
+
+  const { data: current } = await supabase
+    .from("tenants")
+    .select("click_sound_path")
+    .eq("id", tenantId)
+    .maybeSingle();
+
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const uploaded = await uploadCompanyAsset(tenantId, "sound", file.name, file.type, buffer);
+  if ("error" in uploaded) return { error: `Não foi possível enviar o áudio: ${uploaded.error}` };
+
+  const { error } = await supabase
+    .from("tenants")
+    .update({ click_sound_path: uploaded.storagePath })
+    .eq("id", tenantId);
+
+  if (error) {
+    await deleteCompanyAsset(uploaded.storagePath);
+    return { error: "Só o dono ou gestor pode alterar essas configurações" };
+  }
+
+  if (current?.click_sound_path) {
+    await deleteCompanyAsset(current.click_sound_path);
+  }
+
+  revalidatePath("/dashboard", "layout");
+  revalidatePath("/settings");
+  return null;
+}
+
+export async function removeClickSound(): Promise<ActionState> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Sessão expirada, faça login novamente" };
+
+  const tenantId = await requireTenantId(supabase, user.id);
+  if (!tenantId) return { error: "Tenant não encontrado" };
+
+  const { data: current } = await supabase
+    .from("tenants")
+    .select("click_sound_path")
+    .eq("id", tenantId)
+    .maybeSingle();
+  if (!current?.click_sound_path) return null;
+
+  const { error } = await supabase.from("tenants").update({ click_sound_path: null }).eq("id", tenantId);
+  if (error) return { error: "Só o dono ou gestor pode alterar essas configurações" };
+
+  await deleteCompanyAsset(current.click_sound_path);
 
   revalidatePath("/dashboard", "layout");
   revalidatePath("/settings");
