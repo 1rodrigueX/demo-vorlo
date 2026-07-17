@@ -8,6 +8,8 @@ import { getCompanyAssetSignedUrl } from "@/lib/storage/companyAssets";
 import { ClickSoundListener } from "@/components/layout/ClickSoundListener";
 import { MusicPlayerProvider } from "@/lib/music/MusicPlayerContext";
 import { MusicWidget } from "@/components/music/MusicWidget";
+import { SpotifyPlayerProvider } from "@/lib/spotify/SpotifyPlayerContext";
+import { getSpotifyStatus } from "@/lib/actions/spotify";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const current = await getCurrentUser();
@@ -43,6 +45,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const logoUrl = tenant?.logo_storage_path ? await getCompanyAssetSignedUrl(tenant.logo_storage_path) : null;
   const clickSoundUrl = tenant?.click_sound_path ? await getCompanyAssetSignedUrl(tenant.click_sound_path) : null;
   const showSettings = current.profile.role === "owner" || current.profile.role === "manager";
+  const spotifyStatus = await getSpotifyStatus();
 
   return (
     <TenantThemeProvider
@@ -55,22 +58,24 @@ export default async function DashboardLayout({ children }: { children: React.Re
     >
       {clickSoundUrl && <ClickSoundListener soundUrl={clickSoundUrl} />}
       <MusicPlayerProvider>
-        <div className="flex min-h-screen">
-          <Sidebar tenantName={tenantName} logoUrl={logoUrl} showSettings={showSettings} />
-          <div className="flex flex-1 flex-col">
-            <Topbar
-              name={name}
-              email={current.user.email ?? ""}
-              role={current.isDevViewing ? "dev" : current.profile.role}
-              tenantName={tenantName}
-              isDev={isDev}
-              isDevViewing={current.isDevViewing}
-              showSettings={showSettings}
-            />
-            <main className="flex-1 bg-gray-50 p-3 md:p-4">{children}</main>
+        <SpotifyPlayerProvider enabled={spotifyStatus.connected}>
+          <div className="flex min-h-screen">
+            <Sidebar tenantName={tenantName} logoUrl={logoUrl} showSettings={showSettings} />
+            <div className="flex flex-1 flex-col">
+              <Topbar
+                name={name}
+                email={current.user.email ?? ""}
+                role={current.isDevViewing ? "dev" : current.profile.role}
+                tenantName={tenantName}
+                isDev={isDev}
+                isDevViewing={current.isDevViewing}
+                showSettings={showSettings}
+              />
+              <main className="flex-1 bg-gray-50 p-3 md:p-4">{children}</main>
+            </div>
           </div>
-        </div>
-        <MusicWidget />
+          <MusicWidget />
+        </SpotifyPlayerProvider>
       </MusicPlayerProvider>
     </TenantThemeProvider>
   );

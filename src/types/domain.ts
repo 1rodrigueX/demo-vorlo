@@ -30,6 +30,7 @@ export type CompanyCatalog = Database["public"]["Tables"]["company_catalogs"]["R
 export type BlingConnectionSeller = Database["public"]["Tables"]["bling_connection_sellers"]["Row"];
 export type TenantApiKey = Database["public"]["Tables"]["tenant_api_keys"]["Row"];
 export type PlatformTutorialVideo = Database["public"]["Tables"]["platform_tutorial_videos"]["Row"];
+export type UserSpotifyConnection = Database["public"]["Tables"]["user_spotify_connections"]["Row"];
 export type Suggestion = Database["public"]["Tables"]["suggestions"]["Row"];
 
 export type ContactWithCompany = Contact & {

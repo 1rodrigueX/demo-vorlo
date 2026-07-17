@@ -48,6 +48,16 @@ const GUIDES = [
     link: "https://console.cloud.google.com/apis/library/youtube.googleapis.com",
     note: "É uma chave de API simples (não precisa de OAuth/redirect URI). O Google dá uma cota diária gratuita, suficiente pro uso normal do time.",
   },
+  {
+    title: "Música (Spotify) — configuração do dev, não dos clientes",
+    steps: [
+      "Crie um app em developer.spotify.com/dashboard",
+      "Cadastre a URL de redirecionamento: {URL do CRM}/api/spotify/callback",
+      "Copie o Client ID e Client Secret pras variáveis SPOTIFY_CLIENT_ID / SPOTIFY_CLIENT_SECRET no servidor",
+    ],
+    link: "https://developer.spotify.com/dashboard",
+    note: "É configurado uma vez só pela plataforma (não por CRM) — depois disso, cada usuário clica em \"Conectar Spotify\" na aba Música e loga com a própria conta. Exige HTTPS e conta Spotify Premium do usuário pra tocar a faixa completa.",
+  },
 ];
 
 export default function TutoriaisPage() {

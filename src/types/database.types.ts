@@ -411,6 +411,47 @@ export interface Database {
           },
         ];
       };
+      user_spotify_connections: {
+        Row: {
+          profile_id: string;
+          access_token: string;
+          refresh_token: string;
+          expires_at: string;
+          spotify_user_id: string | null;
+          product: string | null;
+          connected_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          profile_id: string;
+          access_token: string;
+          refresh_token: string;
+          expires_at: string;
+          spotify_user_id?: string | null;
+          product?: string | null;
+          connected_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          profile_id?: string;
+          access_token?: string;
+          refresh_token?: string;
+          expires_at?: string;
+          spotify_user_id?: string | null;
+          product?: string | null;
+          connected_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "user_spotify_connections_profile_id_fkey";
+            columns: ["profile_id"];
+            isOneToOne: true;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       dev_active_view: {
         Row: {
           dev_id: string;
