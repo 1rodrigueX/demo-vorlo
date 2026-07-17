@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState, useTransition } from "react";
+import { useActionState, useEffect, useRef, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Trash2, Upload, Play } from "lucide-react";
@@ -15,8 +15,6 @@ import {
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
-import { Select } from "@/components/ui/Select";
-import { FONT_OPTIONS, TEXT_SIZE_OPTIONS, BORDER_RADIUS_OPTIONS } from "@/lib/theme/TenantThemeContext";
 import type { Tenant } from "@/types/domain";
 
 export function TenantBrandingForm({
@@ -43,9 +41,6 @@ export function TenantBrandingForm({
   );
   const [isRemoving, startRemove] = useTransition();
   const [isRemovingSound, startRemoveSound] = useTransition();
-  const [color, setColor] = useState(tenant.brand_color);
-  const [backgroundColor, setBackgroundColor] = useState(tenant.background_color ?? "");
-  const [textColor, setTextColor] = useState(tenant.text_color ?? "");
   const wasPending = useRef(false);
   const wasLogoPending = useRef(false);
   const wasSoundPending = useRef(false);
@@ -110,113 +105,6 @@ export function TenantBrandingForm({
         <div>
           <Label htmlFor="name">Nome do CRM</Label>
           <Input id="name" name="name" required defaultValue={tenant.name} />
-        </div>
-
-        <div>
-          <Label htmlFor="brandColor">Cor da marca</Label>
-          <div className="flex items-center gap-3">
-            <input
-              type="color"
-              value={color}
-              onChange={(e) => setColor(e.target.value)}
-              className="h-10 w-14 shrink-0 cursor-pointer rounded-md border border-gray-300 bg-panel"
-              aria-label="Selecionar cor da marca"
-            />
-            <Input
-              id="brandColor"
-              name="brandColor"
-              value={color}
-              onChange={(e) => setColor(e.target.value)}
-              pattern="^#[0-9a-fA-F]{6}$"
-              placeholder="#4f46e5"
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div>
-            <Label htmlFor="backgroundColor">Cor de fundo (opcional)</Label>
-            <div className="flex items-center gap-3">
-              <input
-                type="color"
-                value={backgroundColor || "#13141a"}
-                onChange={(e) => setBackgroundColor(e.target.value)}
-                className="h-10 w-14 shrink-0 cursor-pointer rounded-md border border-gray-300 bg-panel"
-                aria-label="Selecionar cor de fundo"
-              />
-              <Input
-                name="backgroundColor"
-                value={backgroundColor}
-                onChange={(e) => setBackgroundColor(e.target.value)}
-                pattern="^#[0-9a-fA-F]{6}$"
-                placeholder="Padrão do tema"
-              />
-            </div>
-          </div>
-          <div>
-            <Label htmlFor="textColor">Cor das letras (opcional)</Label>
-            <div className="flex items-center gap-3">
-              <input
-                type="color"
-                value={textColor || "#f5f5f5"}
-                onChange={(e) => setTextColor(e.target.value)}
-                className="h-10 w-14 shrink-0 cursor-pointer rounded-md border border-gray-300 bg-panel"
-                aria-label="Selecionar cor das letras"
-              />
-              <Input
-                name="textColor"
-                value={textColor}
-                onChange={(e) => setTextColor(e.target.value)}
-                pattern="^#[0-9a-fA-F]{6}$"
-                placeholder="Padrão do tema"
-              />
-            </div>
-          </div>
-        </div>
-
-        {(backgroundColor || textColor) && (
-          <div
-            className="rounded-lg border border-gray-200 px-3 py-2 text-sm"
-            style={{
-              backgroundColor: backgroundColor || undefined,
-              color: textColor || undefined,
-            }}
-          >
-            Prévia: assim vai ficar o texto sobre o fundo escolhido.
-          </div>
-        )}
-
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <div>
-            <Label htmlFor="brandFont">Fonte</Label>
-            <Select id="brandFont" name="brandFont" defaultValue={tenant.brand_font || "default"}>
-              {Object.entries(FONT_OPTIONS).map(([key, opt]) => (
-                <option key={key} value={key}>
-                  {opt.label}
-                </option>
-              ))}
-            </Select>
-          </div>
-          <div>
-            <Label htmlFor="textSize">Tamanho do texto</Label>
-            <Select id="textSize" name="textSize" defaultValue={tenant.text_size}>
-              {Object.entries(TEXT_SIZE_OPTIONS).map(([key, opt]) => (
-                <option key={key} value={key}>
-                  {opt.label}
-                </option>
-              ))}
-            </Select>
-          </div>
-          <div>
-            <Label htmlFor="borderRadius">Estilo de borda</Label>
-            <Select id="borderRadius" name="borderRadius" defaultValue={tenant.border_radius}>
-              {Object.entries(BORDER_RADIUS_OPTIONS).map(([key, opt]) => (
-                <option key={key} value={key}>
-                  {opt.label}
-                </option>
-              ))}
-            </Select>
-          </div>
         </div>
 
         {state?.error && <p className="text-sm text-red-600">{state.error}</p>}

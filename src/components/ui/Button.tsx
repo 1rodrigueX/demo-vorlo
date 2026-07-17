@@ -8,7 +8,8 @@ type Variant = "primary" | "secondary" | "ghost" | "danger";
 type Size = "sm" | "md";
 
 const variantClasses: Record<Variant, string> = {
-  primary: "text-white shadow-sm hover:brightness-110 disabled:opacity-50 disabled:shadow-none",
+  primary:
+    "text-white shadow-sm hover:brightness-110 hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0 disabled:opacity-50 disabled:shadow-none disabled:hover:translate-y-0",
   secondary:
     "bg-panel text-gray-700 border border-gray-300 shadow-sm hover:bg-gray-50 hover:border-gray-400 disabled:text-gray-400",
   ghost: "bg-transparent text-gray-600 hover:bg-gray-100 disabled:text-gray-300",
@@ -39,7 +40,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         disabled={disabled || isLoading}
         style={variant === "primary" ? { backgroundColor: brandColor, ...style } : style}
         className={cn(
-          "inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors disabled:cursor-not-allowed",
+          "inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-all duration-150 disabled:cursor-not-allowed",
           variantClasses[variant],
           sizeClasses[size],
           className,

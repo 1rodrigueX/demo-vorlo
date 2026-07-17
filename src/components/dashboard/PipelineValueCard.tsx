@@ -24,7 +24,7 @@ export function PipelineValueCard({
   color?: keyof typeof colorClasses;
 }) {
   return (
-    <Card className="p-5">
+    <Card className="p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
       <div className="flex items-start justify-between">
         <p className="text-sm font-medium text-gray-500">{label}</p>
         <div className={cn("flex h-9 w-9 items-center justify-center rounded-lg", colorClasses[color])}>

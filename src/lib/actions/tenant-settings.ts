@@ -20,12 +20,6 @@ export async function updateTenantBranding(
 ): Promise<ActionState> {
   const parsed = updateTenantBrandingSchema.safeParse({
     name: formData.get("name"),
-    brandColor: formData.get("brandColor"),
-    brandFont: formData.get("brandFont"),
-    textSize: formData.get("textSize"),
-    borderRadius: formData.get("borderRadius"),
-    backgroundColor: formData.get("backgroundColor"),
-    textColor: formData.get("textColor"),
   });
 
   if (!parsed.success) {
@@ -43,15 +37,7 @@ export async function updateTenantBranding(
 
   const { data, error } = await supabase
     .from("tenants")
-    .update({
-      name: parsed.data.name,
-      brand_color: parsed.data.brandColor,
-      brand_font: parsed.data.brandFont,
-      text_size: parsed.data.textSize,
-      border_radius: parsed.data.borderRadius,
-      background_color: parsed.data.backgroundColor || null,
-      text_color: parsed.data.textColor || null,
-    })
+    .update({ name: parsed.data.name })
     .eq("id", tenantId)
     .select("id")
     .maybeSingle();
