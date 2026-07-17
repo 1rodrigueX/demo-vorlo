@@ -1,28 +1,26 @@
-import { listTutorialVideos } from "@/lib/actions/platform-videos";
 import { Card } from "@/components/ui/Card";
 import { toEmbedUrl } from "@/lib/utils/video";
+import type { PlatformTutorialVideo } from "@/types/domain";
 
-export default async function SuporteVideosPage() {
-  const videos = await listTutorialVideos();
-
+export function TutorialsTab({ videos }: { videos: PlatformTutorialVideo[] }) {
   if (!videos.length) {
-    return <p className="text-sm text-gray-500">Nenhum vídeo publicado ainda.</p>;
+    return (
+      <p className="py-12 text-center text-sm text-gray-500">
+        Ainda estamos gravando os tutoriais em vídeo — assim que sua conta for liberada, o FALA AI já te ajuda com
+        qualquer dúvida de como usar o CRM.
+      </p>
+    );
   }
 
   return (
-    <div className="grid h-full grid-cols-1 gap-4 overflow-y-auto pb-4 sm:grid-cols-2">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
       {videos.map((video) => {
         const embedUrl = toEmbedUrl(video.video_url);
         return (
           <Card key={video.id} className="overflow-hidden p-0">
             {embedUrl ? (
               <div className="aspect-video w-full">
-                <iframe
-                  src={embedUrl}
-                  title={video.title}
-                  className="h-full w-full"
-                  allowFullScreen
-                />
+                <iframe src={embedUrl} title={video.title} className="h-full w-full" allowFullScreen />
               </div>
             ) : (
               <a

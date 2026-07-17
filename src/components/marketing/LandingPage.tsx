@@ -1,61 +1,11 @@
 import Link from "next/link";
-import {
-  KanbanSquare,
-  MessageCircle,
-  Sparkles,
-  PlugZap,
-  UserPlus,
-  Bot,
-  Handshake,
-  CheckCircle2,
-  KeyRound,
-} from "lucide-react";
+import { CheckCircle2, KeyRound } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { formatCentsBrl } from "@/lib/billing/pricing";
 import { getPlanCopy } from "@/lib/billing/plan-copy";
+import { FEATURES, HOW_IT_WORKS } from "@/lib/marketing/content";
 import type { BillingPlan } from "@/types/domain";
-
-const FEATURES = [
-  {
-    icon: KanbanSquare,
-    title: "Pipeline de vendas",
-    description: "Kanban visual pra acompanhar cada negócio do primeiro contato até o fechamento.",
-  },
-  {
-    icon: MessageCircle,
-    title: "WhatsApp integrado",
-    description: "Converse com seus leads direto pelo CRM, via número próprio (Twilio) ou QR code pessoal.",
-  },
-  {
-    icon: Sparkles,
-    title: "FALA AI — agentes de IA",
-    description: "Crie SDR, atendente, financeiro e outros agentes de IA sob medida pra sua equipe, só conversando.",
-  },
-  {
-    icon: PlugZap,
-    title: "Integrações",
-    description: "Bling, Gmail, Outlook, Google Agenda e mais — cada empresa conecta suas próprias contas.",
-  },
-];
-
-const HOW_IT_WORKS = [
-  {
-    icon: UserPlus,
-    title: "Conecte seus canais",
-    description: "WhatsApp, Bling, Gmail ou Outlook — cada empresa liga suas próprias contas, sem número compartilhado.",
-  },
-  {
-    icon: Bot,
-    title: "A IA atende e qualifica",
-    description: "O SDR do FALA AI responde leads novos no WhatsApp na hora, qualifica e já registra tudo no pipeline.",
-  },
-  {
-    icon: Handshake,
-    title: "Sua equipe fecha",
-    description: "Vendedores e gestores acompanham tudo em um kanban só, com histórico completo de cada conversa.",
-  },
-];
 
 export function LandingPage({ plans }: { plans: BillingPlan[] }) {
   return (

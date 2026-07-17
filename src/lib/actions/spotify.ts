@@ -71,9 +71,9 @@ export async function searchSpotify(query: string): Promise<{ results: SpotifyTr
   url.searchParams.set("limit", "12");
 
   const res = await fetch(url.toString(), { headers: { Authorization: `Bearer ${token}` } });
-  const data = await res.json();
+  const data = await res.json().catch(() => null);
 
-  if (!res.ok) {
+  if (!res.ok || !data) {
     return { error: data?.error?.message ?? "Falha ao buscar no Spotify" };
   }
 
@@ -84,12 +84,15 @@ export async function searchSpotify(query: string): Promise<{ results: SpotifyTr
     album: { images: { url: string }[] };
   };
 
-  const results: SpotifyTrack[] = ((data.tracks?.items ?? []) as SpotifyTrackItem[]).map((item) => ({
-    uri: item.uri,
-    name: item.name,
-    artists: item.artists.map((a) => a.name).join(", "),
-    albumArt: item.album.images[item.album.images.length - 1]?.url ?? item.album.images[0]?.url ?? "",
-  }));
+  const results: SpotifyTrack[] = ((data.tracks?.items ?? []) as SpotifyTrackItem[]).map((item) => {
+    const images = item.album?.images ?? [];
+    return {
+      uri: item.uri,
+      name: item.name,
+      artists: (item.artists ?? []).map((a) => a.name).join(", "),
+      albumArt: images[images.length - 1]?.url ?? images[0]?.url ?? "",
+    };
+  });
 
   return { results };
 }

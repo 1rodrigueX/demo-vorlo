@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
 import { Badge } from "@/components/ui/Badge";
-import { UserMenu } from "@/components/layout/UserMenu";
 import { cn } from "@/lib/utils/cn";
 import { startCheckout, cancelPendingCheckout, type ActionState } from "@/lib/actions/checkout";
 import { calculateTotalCents, formatCentsBrl } from "@/lib/billing/pricing";
@@ -54,7 +53,7 @@ function Stepper({
   );
 }
 
-function ActiveCheckoutNotice() {
+export function ActiveCheckoutNotice() {
   const router = useRouter();
   const [isCancelling, startCancel] = useTransition();
 
@@ -82,15 +81,11 @@ function ActiveCheckoutNotice() {
 export function ChoosePlanForm({
   plans,
   preselectedPlanId,
-  hasActiveCheckout,
   ownerName,
-  email,
 }: {
   plans: BillingPlan[];
   preselectedPlanId?: string;
-  hasActiveCheckout: boolean;
   ownerName: string | null;
-  email: string;
 }) {
   const [state, formAction, isPending] = useActionState<ActionState, FormData>(startCheckout, null);
   const defaultPlan = plans.find((p) => p.id === preselectedPlanId) ?? plans.find((p) => p.is_default) ?? plans[0];
@@ -106,45 +101,23 @@ export function ChoosePlanForm({
     return calculateTotalCents(selectedPlan, { extraSellers, extraManagers, extraAgents, extraIntegrations });
   }, [selectedPlan, extraSellers, extraManagers, extraAgents, extraIntegrations]);
 
-  const userMenu = <UserMenu name={ownerName || email || "Usuário"} email={email} />;
-
-  if (hasActiveCheckout) {
-    return (
-      <div className="min-h-screen bg-gray-50 px-4 py-6">
-        <header className="mx-auto flex max-w-4xl items-center justify-between pb-10">
-          <span className="text-sm font-semibold text-gray-900">FALA AI CRM</span>
-          {userMenu}
-        </header>
-        <div className="flex items-center justify-center">
-          <ActiveCheckoutNotice />
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-gray-50 px-4 py-12">
-      <div className="mx-auto max-w-4xl">
-        <header className="mb-8 flex items-center justify-between">
-          <span className="text-sm font-semibold text-gray-900">FALA AI CRM</span>
-          {userMenu}
-        </header>
+    <div className="mx-auto max-w-4xl">
+      <div className="text-center">
+        <h1 className="text-2xl font-bold text-gray-900">
+          {ownerName ? `Falta pouco, ${ownerName.split(" ")[0]}!` : "Falta pouco!"}
+        </h1>
+        <p className="mt-2 text-sm text-gray-500">Escolha o plano da sua equipe pra liberar o CRM.</p>
+      </div>
 
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900">
-            {ownerName ? `Falta pouco, ${ownerName.split(" ")[0]}!` : "Falta pouco!"}
-          </h1>
-          <p className="mt-2 text-sm text-gray-500">Escolha o plano da sua equipe pra liberar o CRM.</p>
-        </div>
-
-        {plans.length === 0 ? (
-          <p className="mt-8 text-center text-sm text-red-600">
-            Não foi possível carregar os planos agora. Tente novamente em instantes.
-          </p>
-        ) : (
-          <>
-            <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
-              {plans.map((plan) => {
+      {plans.length === 0 ? (
+        <p className="mt-8 text-center text-sm text-red-600">
+          Não foi possível carregar os planos agora. Tente novamente em instantes.
+        </p>
+      ) : (
+        <>
+          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
+            {plans.map((plan) => {
                 const copy = getPlanCopy(plan.name);
                 const isSelected = plan.id === selectedPlanId;
                 return (
@@ -260,9 +233,8 @@ export function ChoosePlanForm({
                 </Button>
               </form>
             </div>
-          </>
-        )}
-      </div>
+        </>
+      )}
     </div>
   );
 }

@@ -91,15 +91,23 @@ export async function getValidSpotifyAccessToken(profileId: string): Promise<str
   const expiresInMs = new Date(data.expires_at).getTime() - Date.now();
   if (expiresInMs > 60_000) return data.access_token;
 
-  const token = await requestToken({ grant_type: "refresh_token", refresh_token: data.refresh_token });
-  await admin
-    .from("user_spotify_connections")
-    .update({
-      access_token: token.access_token,
-      refresh_token: token.refresh_token ?? data.refresh_token,
-      expires_at: new Date(Date.now() + token.expires_in * 1000).toISOString(),
-    })
-    .eq("profile_id", profileId);
+  // Se a renovação falhar (refresh_token revogado, Spotify fora do ar, etc.),
+  // não deixa a Server Action inteira estourar pro usuário — trata como
+  // "não conectado", que os chamadores já sabem mostrar como mensagem amigável.
+  try {
+    const token = await requestToken({ grant_type: "refresh_token", refresh_token: data.refresh_token });
+    await admin
+      .from("user_spotify_connections")
+      .update({
+        access_token: token.access_token,
+        refresh_token: token.refresh_token ?? data.refresh_token,
+        expires_at: new Date(Date.now() + token.expires_in * 1000).toISOString(),
+      })
+      .eq("profile_id", profileId);
 
-  return token.access_token;
+    return token.access_token;
+  } catch (err) {
+    console.error("getValidSpotifyAccessToken: falha ao renovar o token", err);
+    return null;
+  }
 }

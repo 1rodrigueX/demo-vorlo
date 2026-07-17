@@ -170,6 +170,39 @@ export interface Database {
           },
         ];
       };
+      platform_feedback: {
+        Row: {
+          id: string;
+          user_id: string | null;
+          email: string;
+          message: string;
+          status: "new" | "answered";
+          response: string | null;
+          responded_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id?: string | null;
+          email: string;
+          message: string;
+          status?: "new" | "answered";
+          response?: string | null;
+          responded_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string | null;
+          email?: string;
+          message?: string;
+          status?: "new" | "answered";
+          response?: string | null;
+          responded_at?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       whatsapp_connections: {
         Row: {
           tenant_id: string;

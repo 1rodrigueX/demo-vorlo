@@ -2,7 +2,10 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isCurrentUserDev } from "@/lib/auth/current-user";
-import { ChoosePlanForm } from "@/components/billing/ChoosePlanForm";
+import { ActiveCheckoutNotice } from "@/components/billing/ChoosePlanForm";
+import { OnboardingTabs } from "@/components/onboarding/OnboardingTabs";
+import { listTutorialVideos } from "@/lib/actions/platform-videos";
+import { UserMenu } from "@/components/layout/UserMenu";
 
 const STALE_CHECKOUT_MS = 30 * 60 * 1000;
 
@@ -42,14 +45,32 @@ export default async function ChoosePlanPage({
 
   const { data: plans } = await supabase.from("billing_plans").select("*").order("base_price_cents");
   const { plan: preselectedPlanId } = await searchParams;
+  const ownerName = (user.user_metadata?.full_name as string | undefined) ?? null;
+  const email = user.email ?? "";
+
+  if (activeCheckout) {
+    return (
+      <div className="min-h-screen bg-gray-50 px-4 py-6">
+        <header className="mx-auto flex max-w-4xl items-center justify-between pb-10">
+          <span className="text-sm font-semibold text-gray-900">FALA AI CRM</span>
+          <UserMenu name={ownerName || email || "Usuário"} email={email} />
+        </header>
+        <div className="flex items-center justify-center">
+          <ActiveCheckoutNotice />
+        </div>
+      </div>
+    );
+  }
+
+  const videos = await listTutorialVideos();
 
   return (
-    <ChoosePlanForm
+    <OnboardingTabs
       plans={plans ?? []}
+      videos={videos}
       preselectedPlanId={preselectedPlanId}
-      hasActiveCheckout={!!activeCheckout}
-      ownerName={(user.user_metadata?.full_name as string | undefined) ?? null}
-      email={user.email ?? ""}
+      ownerName={ownerName}
+      email={email}
     />
   );
 }
