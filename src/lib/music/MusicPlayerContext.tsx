@@ -5,7 +5,7 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState } f
 declare global {
   interface Window {
     YT?: {
-      Player: new (elementId: string, options: Record<string, unknown>) => YTPlayer;
+      Player: new (element: string | HTMLElement, options: Record<string, unknown>) => YTPlayer;
       PlayerState: { PLAYING: number; PAUSED: number; ENDED: number };
     };
     onYouTubeIframeAPIReady?: () => void;
@@ -92,9 +92,28 @@ export function MusicPlayerProvider({ children }: { children: React.ReactNode })
   }, []);
 
   useEffect(() => {
+    // O YT.Player substitui essa div por um <iframe> por fora do React. Se
+    // ela fosse renderizada via JSX, todo re-render do provider (isPlaying,
+    // title, etc mudam o tempo todo) faria o React tentar reconciliar essa
+    // div contra o DOM real (já virado iframe) e quebrava a comunicação
+    // com o player (postMessage falhando, erro de hydration #418). Por
+    // isso ela é criada uma única vez, direto no document.body, fora da
+    // árvore que o React controla.
+    const container = document.createElement("div");
+    container.id = "music-player-host";
+    Object.assign(container.style, {
+      position: "fixed",
+      left: "-9999px",
+      top: "-9999px",
+      width: "200px",
+      height: "200px",
+      overflow: "hidden",
+    });
+    document.body.appendChild(container);
+
     function createPlayer() {
       if (!window.YT) return;
-      playerRef.current = new window.YT.Player("music-player-host", {
+      playerRef.current = new window.YT.Player(container, {
         height: "200",
         width: "200",
         playerVars: { autoplay: 0, playsinline: 1 },
@@ -139,6 +158,7 @@ export function MusicPlayerProvider({ children }: { children: React.ReactNode })
 
     return () => {
       playerRef.current?.destroy?.();
+      container.remove();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -165,11 +185,6 @@ export function MusicPlayerProvider({ children }: { children: React.ReactNode })
     <MusicContext.Provider
       value={{ isReady, isPlaying, title, volume, error, loadFromUrl, togglePlay, setVolume, stop }}
     >
-      <div
-        id="music-player-host"
-        className="fixed h-[200px] w-[200px] overflow-hidden"
-        style={{ left: "-9999px", top: "-9999px" }}
-      />
       {children}
     </MusicContext.Provider>
   );
