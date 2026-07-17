@@ -33,6 +33,6 @@ export function calculateTotalCents(plan: BillingPlan, selection: PlanSelection)
   };
 }
 
-export function formatCentsUsd(cents: number): string {
-  return (cents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" });
+export function formatCentsBrl(cents: number): string {
+  return (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }

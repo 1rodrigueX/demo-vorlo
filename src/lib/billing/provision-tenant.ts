@@ -3,6 +3,8 @@ import { randomBytes } from "crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendWelcomeEmail } from "@/lib/email/resend";
 import { testAnthropicApiKey } from "@/lib/anthropic/client";
+import { calculateTotalCents } from "@/lib/billing/pricing";
+import { addOneMonth } from "@/lib/billing/cycle";
 
 const DEFAULT_STAGES = [
   { name: "Novo", position: 1, color: "#6366f1", is_won: false, is_lost: false },
@@ -27,14 +29,14 @@ function slugify(name: string): string {
 
 export type ProvisionTenantParams = {
   pendingCheckoutId: string;
-  stripeCustomerId: string | null;
-  stripeSubscriptionId: string | null;
+  mpPaymentId: string | null;
+  mpPayerId: string | null;
 };
 
 /**
  * Transforma um usuário já autenticado (cadastro via Google ou e-mail/senha,
  * sem tenant ainda) num dono de CRM, a partir de um checkout já pago
- * (chamado só pelo webhook do Stripe, depois da assinatura verificada —
+ * (chamado só pelo webhook do Mercado Pago, depois do pagamento aprovado —
  * nunca exposto como Server Action pública). O usuário e a intenção de
  * compra (empresa, plano, extras, chave da Anthropic opcional) já existem
  * antes de chegar aqui — ver src/lib/actions/checkout.ts. Não faz rollback
@@ -65,6 +67,14 @@ export async function provisionTenantFromCheckout(
   const { data: plan } = await admin.from("billing_plans").select("*").eq("id", pending.plan_id).maybeSingle();
   const includedSellers = plan?.included_sellers ?? 0;
   const includedManagers = plan?.included_managers ?? 0;
+  const monthlyAmountCents = plan
+    ? calculateTotalCents(plan, {
+        extraSellers: pending.extra_sellers,
+        extraManagers: pending.extra_managers,
+        extraAgents: pending.extra_agents,
+        extraIntegrations: pending.extra_integrations,
+      }).totalCents
+    : 0;
 
   const baseSlug = slugify(pending.company_name);
   let tenantId: string | null = null;
@@ -80,8 +90,10 @@ export async function provisionTenantFromCheckout(
         seller_limit: includedSellers + pending.extra_sellers,
         manager_limit: includedManagers + pending.extra_managers,
         billing_plan_id: pending.plan_id,
-        stripe_customer_id: params.stripeCustomerId,
-        stripe_subscription_id: params.stripeSubscriptionId,
+        mp_payer_id: params.mpPayerId,
+        last_payment_id: params.mpPaymentId,
+        monthly_amount_cents: monthlyAmountCents,
+        next_billing_at: addOneMonth(new Date()).toISOString(),
       })
       .select("id")
       .single();

@@ -32,10 +32,16 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const { data: tenant } = await supabase
     .from("tenants")
     .select(
-      "name, brand_color, brand_font, text_size, border_radius, background_color, text_color, logo_storage_path, click_sound_path",
+      "name, status, brand_color, brand_font, text_size, border_radius, background_color, text_color, logo_storage_path, click_sound_path",
     )
     .eq("id", current.profile.tenant_id)
     .single();
+
+  // Dev "visitando" um tenant (suporte) não é bloqueado por inadimplência —
+  // só o próprio dono/equipe do CRM é.
+  if (tenant?.status === "suspended" && !current.isDevViewing) {
+    redirect("/billing-pendente");
+  }
 
   const name = current.isDevViewing
     ? `Dev (${current.user.email})`
@@ -71,7 +77,15 @@ export default async function DashboardLayout({ children }: { children: React.Re
                 isDevViewing={current.isDevViewing}
                 showSettings={showSettings}
               />
-              <main className="flex-1 bg-gray-50 p-3 md:p-4">{children}</main>
+              <main className="flex-1 bg-gray-50 p-3 md:p-4">
+                {tenant?.status === "past_due" && !current.isDevViewing && (
+                  <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm text-amber-800">
+                    A mensalidade está pendente. Confira o e-mail de cobrança pra regularizar antes da suspensão do
+                    acesso.
+                  </div>
+                )}
+                {children}
+              </main>
             </div>
           </div>
           <MusicWidget />

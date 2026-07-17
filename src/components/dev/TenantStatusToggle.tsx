@@ -11,7 +11,7 @@ export function TenantStatusToggle({
   status,
 }: {
   tenantId: string;
-  status: "active" | "suspended";
+  status: "active" | "past_due" | "suspended";
 }) {
   const [isPending, startTransition] = useTransition();
   const isActive = status === "active";

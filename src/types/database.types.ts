@@ -18,7 +18,7 @@ export interface Database {
           id: string;
           name: string;
           slug: string;
-          status: "active" | "suspended";
+          status: "active" | "past_due" | "suspended";
           seller_limit: number;
           manager_limit: number;
           brand_color: string;
@@ -32,15 +32,18 @@ export interface Database {
           click_sound_path: string | null;
           youtube_api_key: string | null;
           billing_plan_id: string | null;
-          stripe_customer_id: string | null;
-          stripe_subscription_id: string | null;
+          mp_payer_id: string | null;
+          last_payment_id: string | null;
+          monthly_amount_cents: number | null;
+          next_billing_at: string | null;
+          pending_payment_url: string | null;
           created_at: string;
         };
         Insert: {
           id?: string;
           name: string;
           slug: string;
-          status?: "active" | "suspended";
+          status?: "active" | "past_due" | "suspended";
           seller_limit?: number;
           manager_limit?: number;
           brand_color?: string;
@@ -54,15 +57,18 @@ export interface Database {
           click_sound_path?: string | null;
           youtube_api_key?: string | null;
           billing_plan_id?: string | null;
-          stripe_customer_id?: string | null;
-          stripe_subscription_id?: string | null;
+          mp_payer_id?: string | null;
+          last_payment_id?: string | null;
+          monthly_amount_cents?: number | null;
+          next_billing_at?: string | null;
+          pending_payment_url?: string | null;
           created_at?: string;
         };
         Update: {
           id?: string;
           name?: string;
           slug?: string;
-          status?: "active" | "suspended";
+          status?: "active" | "past_due" | "suspended";
           seller_limit?: number;
           manager_limit?: number;
           brand_color?: string;
@@ -76,8 +82,11 @@ export interface Database {
           click_sound_path?: string | null;
           youtube_api_key?: string | null;
           billing_plan_id?: string | null;
-          stripe_customer_id?: string | null;
-          stripe_subscription_id?: string | null;
+          mp_payer_id?: string | null;
+          last_payment_id?: string | null;
+          monthly_amount_cents?: number | null;
+          next_billing_at?: string | null;
+          pending_payment_url?: string | null;
           created_at?: string;
         };
         Relationships: [
@@ -1246,7 +1255,7 @@ export interface Database {
         };
         Relationships: [];
       };
-      stripe_webhook_events: {
+      mercadopago_webhook_events: {
         Row: { id: string; created_at: string };
         Insert: { id: string; created_at?: string };
         Update: { id?: string; created_at?: string };
@@ -1369,7 +1378,7 @@ export interface Database {
           extra_agents: number;
           extra_integrations: number;
           anthropic_api_key: string | null;
-          stripe_session_id: string | null;
+          mp_preference_id: string | null;
           created_at: string;
         };
         Insert: {
@@ -1383,7 +1392,7 @@ export interface Database {
           extra_agents?: number;
           extra_integrations?: number;
           anthropic_api_key?: string | null;
-          stripe_session_id?: string | null;
+          mp_preference_id?: string | null;
           created_at?: string;
         };
         Update: {
@@ -1397,7 +1406,7 @@ export interface Database {
           extra_agents?: number;
           extra_integrations?: number;
           anthropic_api_key?: string | null;
-          stripe_session_id?: string | null;
+          mp_preference_id?: string | null;
           created_at?: string;
         };
         Relationships: [

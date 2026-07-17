@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/Badge";
 import { UserMenu } from "@/components/layout/UserMenu";
 import { cn } from "@/lib/utils/cn";
 import { startCheckout, cancelPendingCheckout, type ActionState } from "@/lib/actions/checkout";
-import { calculateTotalCents, formatCentsUsd } from "@/lib/billing/pricing";
+import { calculateTotalCents, formatCentsBrl } from "@/lib/billing/pricing";
 import { getPlanCopy } from "@/lib/billing/plan-copy";
 import type { BillingPlan } from "@/types/domain";
 
@@ -164,7 +164,7 @@ export function ChoosePlanForm({
                       {plan.is_default && <Badge className="bg-indigo-50 text-indigo-700">Recomendado</Badge>}
                     </div>
                     <p className="mt-1 text-2xl font-bold text-gray-900">
-                      {formatCentsUsd(plan.base_price_cents)}
+                      {formatCentsBrl(plan.base_price_cents)}
                       <span className="text-sm font-normal text-gray-500">/mês</span>
                     </p>
                     <p className="mt-2 text-xs text-gray-500">{copy.tagline}</p>
@@ -217,7 +217,7 @@ export function ChoosePlanForm({
                   <Stepper
                     label="Vendedores extras"
                     hint={
-                      selectedPlan ? `+${formatCentsUsd(selectedPlan.price_per_extra_seller_cents)}/mês cada` : ""
+                      selectedPlan ? `+${formatCentsBrl(selectedPlan.price_per_extra_seller_cents)}/mês cada` : ""
                     }
                     value={extraSellers}
                     onChange={setExtraSellers}
@@ -225,21 +225,21 @@ export function ChoosePlanForm({
                   <Stepper
                     label="Gestores extras"
                     hint={
-                      selectedPlan ? `+${formatCentsUsd(selectedPlan.price_per_extra_manager_cents)}/mês cada` : ""
+                      selectedPlan ? `+${formatCentsBrl(selectedPlan.price_per_extra_manager_cents)}/mês cada` : ""
                     }
                     value={extraManagers}
                     onChange={setExtraManagers}
                   />
                   <Stepper
                     label="Agentes de IA extras"
-                    hint={selectedPlan ? `+${formatCentsUsd(selectedPlan.price_per_agent_cents)}/mês cada` : ""}
+                    hint={selectedPlan ? `+${formatCentsBrl(selectedPlan.price_per_agent_cents)}/mês cada` : ""}
                     value={extraAgents}
                     onChange={setExtraAgents}
                   />
                   <Stepper
                     label="Integrações extras"
                     hint={
-                      selectedPlan ? `+${formatCentsUsd(selectedPlan.price_per_integration_cents)}/mês cada` : ""
+                      selectedPlan ? `+${formatCentsBrl(selectedPlan.price_per_integration_cents)}/mês cada` : ""
                     }
                     value={extraIntegrations}
                     onChange={setExtraIntegrations}
@@ -249,7 +249,7 @@ export function ChoosePlanForm({
                 <div className="flex items-center justify-between rounded-lg bg-gray-50 px-4 py-3">
                   <span className="text-sm font-medium text-gray-700">Total mensal estimado</span>
                   <span className="text-xl font-bold text-gray-900">
-                    {breakdown ? formatCentsUsd(breakdown.totalCents) : "—"}
+                    {breakdown ? formatCentsBrl(breakdown.totalCents) : "—"}
                   </span>
                 </div>
 

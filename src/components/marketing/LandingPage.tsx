@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
-import { formatCentsUsd } from "@/lib/billing/pricing";
+import { formatCentsBrl } from "@/lib/billing/pricing";
 import { getPlanCopy } from "@/lib/billing/plan-copy";
 import type { BillingPlan } from "@/types/domain";
 
@@ -162,7 +162,7 @@ export function LandingPage({ plans }: { plans: BillingPlan[] }) {
                     {plan.is_default && <Badge className="bg-indigo-50 text-indigo-700">Recomendado</Badge>}
                   </div>
                   <p className="mt-2 text-3xl font-bold text-gray-900">
-                    {formatCentsUsd(plan.base_price_cents)}
+                    {formatCentsBrl(plan.base_price_cents)}
                     <span className="text-sm font-normal text-gray-500">/mês</span>
                   </p>
                   <p className="mt-2 text-sm text-gray-500">{copy.tagline}</p>

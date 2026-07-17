@@ -11,8 +11,9 @@ export const config = {
      * Match all request paths except:
      * - static assets, image optimization, favicon
      * - the Twilio webhook (no user session; authenticated via signature instead)
-     * - webhooks under api/webhooks/ (ex: Stripe — autenticado via assinatura, sem sessão)
+     * - webhooks under api/webhooks/ (ex: Mercado Pago — autenticado via assinatura, sem sessão)
+     * - api/cron/ (autenticado via segredo compartilhado, chamado pelo crontab da VPS)
      */
-    "/((?!_next/static|_next/image|favicon.ico|api/whatsapp/webhook/|api/webhooks/|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|api/whatsapp/webhook/|api/webhooks/|api/cron/|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

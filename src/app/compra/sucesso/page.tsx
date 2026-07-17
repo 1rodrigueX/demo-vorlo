@@ -50,8 +50,8 @@ export default function CheckoutSuccessPage() {
         {timedOut ? (
           <>
             <p className="mt-2 text-sm text-gray-600">
-              Está demorando mais que o esperado pra liberar seu CRM. Isso pode acontecer em raros casos — atualize
-              a página em alguns instantes.
+              Se você pagou com cartão, atualize a página em alguns instantes. Se pagou com boleto ou PIX, a
+              confirmação pode levar mais tempo — você vai receber um e-mail assim que o pagamento cair.
             </p>
             <button
               onClick={() => window.location.reload()}
