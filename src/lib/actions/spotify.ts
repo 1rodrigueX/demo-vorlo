@@ -65,10 +65,12 @@ export async function searchSpotify(query: string): Promise<{ results: SpotifyTr
   if (!token) return { error: "Conecte sua conta do Spotify primeiro" };
   if (!query.trim()) return { results: [] };
 
+  // Apps do Spotify em "Development Mode" (sem quota estendida aprovada)
+  // recusam limit acima de 10 no /search com "Invalid limit" — 11 já falha.
   const url = new URL(`${SPOTIFY_API_BASE}/search`);
   url.searchParams.set("q", query);
   url.searchParams.set("type", "track");
-  url.searchParams.set("limit", "12");
+  url.searchParams.set("limit", "10");
 
   const res = await fetch(url.toString(), { headers: { Authorization: `Bearer ${token}` } });
   const data = await res.json().catch(() => null);
