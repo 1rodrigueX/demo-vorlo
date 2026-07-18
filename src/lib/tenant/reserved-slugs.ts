@@ -11,6 +11,9 @@ export const RESERVED_SLUGS = new Set([
   "_next",
   "favicon.ico",
   "public",
+  "app",
+  "comprar-transportadora",
+  "downloads",
 ]);
 
 export function isReservedSlug(slug: string): boolean {

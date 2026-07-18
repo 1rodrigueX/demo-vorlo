@@ -97,8 +97,21 @@ export async function resolveHomeRouteFor(
     .eq("id", userId)
     .maybeSingle();
   if (profile) {
-    const slug = await getTenantSlug(supabase, profile.tenant_id);
-    return slug ? `/${slug}/dashboard` : "/login";
+    const { data: tenant } = await supabase
+      .from("tenants")
+      .select("slug, billing_plan_id")
+      .eq("id", profile.tenant_id)
+      .maybeSingle();
+
+    // billing_plan_id (não só "profile existe") é o sinal de "tem CRM": desde
+    // a Transportadora, um tenant pode existir só com esse produto — nesse
+    // caso não tem dashboard nenhum pra mandar, manda pro app.
+    if (tenant?.billing_plan_id) {
+      return tenant.slug ? `/${tenant.slug}/dashboard` : "/login";
+    }
+
+    const { data: hasTransportadora } = await supabase.rpc("current_tenant_has_transportadora");
+    return hasTransportadora ? "/app/download" : "/comprar-transportadora";
   }
 
   const { data: dev } = await supabase

@@ -1,0 +1,40 @@
+import { redirect } from "next/navigation";
+import { Download } from "lucide-react";
+import { createClient } from "@/lib/supabase/server";
+import { Button } from "@/components/ui/Button";
+
+/** Gate de acesso pro download do APK — mesma checagem que o RLS do app usa (current_tenant_has_transportadora). */
+export default async function AppDownloadPage() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const { data: hasAccess } = await supabase.rpc("current_tenant_has_transportadora");
+  if (!hasAccess) redirect("/comprar-transportadora");
+
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
+      <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-panel p-8 text-center shadow-sm">
+        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-indigo-50 text-indigo-600">
+          <Download size={28} />
+        </div>
+        <h1 className="text-xl font-semibold text-gray-900">Baixe o FALA AI Transportadora</h1>
+        <p className="mt-2 text-sm text-gray-600">
+          Depois de instalar, abra o app e entre com o mesmo e-mail e senha (ou Google) que você usa aqui no
+          site.
+        </p>
+
+        <a href="/downloads/frete-app-latest.apk" download>
+          <Button className="mt-6 w-full">Baixar APK (Android)</Button>
+        </a>
+
+        <p className="mt-4 text-xs text-gray-400">
+          O Android pode avisar que o app é de &quot;fonte desconhecida&quot; — isso é normal fora da Play Store,
+          é só confirmar a instalação.
+        </p>
+      </div>
+    </div>
+  );
+}

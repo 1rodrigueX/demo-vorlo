@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isCurrentUserDev, resolveHomeRoute } from "@/lib/auth/current-user";
@@ -65,12 +66,20 @@ export default async function ChoosePlanPage({
   const videos = await listTutorialVideos();
 
   return (
-    <OnboardingTabs
-      plans={plans ?? []}
-      videos={videos}
-      preselectedPlanId={preselectedPlanId}
-      ownerName={ownerName}
-      email={email}
-    />
+    <>
+      <OnboardingTabs
+        plans={plans ?? []}
+        videos={videos}
+        preselectedPlanId={preselectedPlanId}
+        ownerName={ownerName}
+        email={email}
+      />
+      <p className="pb-10 text-center text-sm text-gray-500">
+        Só precisa do app de gestão de fretes?{" "}
+        <Link href="/comprar-transportadora" className="font-medium text-indigo-600 hover:underline">
+          Assine a Transportadora
+        </Link>
+      </p>
+    </>
   );
 }

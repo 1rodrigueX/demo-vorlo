@@ -107,5 +107,101 @@ export async function POST(request: Request) {
     suspended++;
   }
 
-  return NextResponse.json({ charged, suspended });
+  // Mesmo ciclo de cobrança/carência da Transportadora, só que em
+  // tenant_products (product='transportadora') em vez de tenants — os dois
+  // produtos têm status independentes pro mesmo tenant.
+  const { data: dueTransportadora } = await admin
+    .from("tenant_products")
+    .select("tenant_id, monthly_amount_cents")
+    .eq("product", "transportadora")
+    .eq("status", "active")
+    .lte("next_billing_at", now.toISOString());
+
+  let transportadoraCharged = 0;
+  for (const row of dueTransportadora ?? []) {
+    const { data: tenant } = await admin.from("tenants").select("name").eq("id", row.tenant_id).maybeSingle();
+    const tenantName = tenant?.name ?? "Transportadora";
+    const ownerEmail = await getTenantOwnerEmail(admin, row.tenant_id);
+    if (!ownerEmail) {
+      console.error("billing-cycle: tenant sem dono encontrado (transportadora)", row.tenant_id);
+      continue;
+    }
+
+    try {
+      const preference = new Preference(getMercadoPagoConfig());
+      const result = await preference.create({
+        body: {
+          items: [
+            {
+              id: row.tenant_id,
+              title: `Mensalidade FALA AI Transportadora — ${tenantName}`,
+              quantity: 1,
+              currency_id: "BRL",
+              unit_price: (row.monthly_amount_cents ?? 0) / 100,
+            },
+          ],
+          payer: { email: ownerEmail },
+          external_reference: `transportadora_renewal:${row.tenant_id}`,
+          notification_url: `${siteUrl}/api/webhooks/mercadopago`,
+          back_urls: {
+            success: `${siteUrl}/app/download`,
+            pending: `${siteUrl}/app/download`,
+            failure: `${siteUrl}/app/download`,
+          },
+        },
+      });
+
+      if (!result.init_point) throw new Error("Preference sem init_point");
+
+      await admin
+        .from("tenant_products")
+        .update({ status: "past_due", pending_payment_url: result.init_point })
+        .eq("tenant_id", row.tenant_id)
+        .eq("product", "transportadora");
+
+      await sendBillingEmail({
+        to: ownerEmail,
+        subject: `Sua mensalidade da Transportadora já está disponível — ${tenantName}`,
+        heading: "Hora de renovar sua assinatura",
+        message: `A mensalidade da <strong>Transportadora</strong> já pode ser paga. Você tem ${GRACE_PERIOD_DAYS} dias antes do acesso no app ser suspenso.`,
+        ctaLabel: "Pagar agora",
+        ctaUrl: result.init_point,
+      });
+
+      transportadoraCharged++;
+    } catch (err) {
+      console.error("billing-cycle: falha ao gerar cobrança da transportadora pro tenant", row.tenant_id, err);
+    }
+  }
+
+  const { data: overdueTransportadora } = await admin
+    .from("tenant_products")
+    .select("tenant_id")
+    .eq("product", "transportadora")
+    .eq("status", "past_due")
+    .lte("next_billing_at", graceDeadline.toISOString());
+
+  let transportadoraSuspended = 0;
+  for (const row of overdueTransportadora ?? []) {
+    const { data: tenant } = await admin.from("tenants").select("name").eq("id", row.tenant_id).maybeSingle();
+    const tenantName = tenant?.name ?? "Transportadora";
+    await admin
+      .from("tenant_products")
+      .update({ status: "suspended" })
+      .eq("tenant_id", row.tenant_id)
+      .eq("product", "transportadora");
+
+    const ownerEmail = await getTenantOwnerEmail(admin, row.tenant_id);
+    if (ownerEmail) {
+      await sendBillingEmail({
+        to: ownerEmail,
+        subject: `Acesso ao app suspenso por falta de pagamento — ${tenantName}`,
+        heading: "Seu acesso à Transportadora foi suspenso",
+        message: `Não recebemos a confirmação do pagamento da <strong>Transportadora</strong> dentro do prazo. O acesso ao app foi suspenso até a regularização.`,
+      }).catch((err) => console.error("billing-cycle: e-mail de suspensão (transportadora) falhou", row.tenant_id, err));
+    }
+    transportadoraSuspended++;
+  }
+
+  return NextResponse.json({ charged, suspended, transportadoraCharged, transportadoraSuspended });
 }

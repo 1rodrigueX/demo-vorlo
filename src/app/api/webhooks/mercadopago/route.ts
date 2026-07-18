@@ -3,6 +3,7 @@ import { Payment, WebhookSignatureValidator, InvalidWebhookSignatureError } from
 import { getMercadoPagoConfig } from "@/lib/mercadopago/client";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { provisionTenantFromCheckout } from "@/lib/billing/provision-tenant";
+import { provisionTransportadoraFromCheckout } from "@/lib/billing/provision-transportadora";
 import { addOneMonth } from "@/lib/billing/cycle";
 import { getTenantOwnerEmail } from "@/lib/billing/tenant-owner";
 import { sendBillingEmail } from "@/lib/email/resend";
@@ -96,6 +97,46 @@ export async function POST(request: Request) {
           heading: "Pagamento confirmado ✅",
           message: `A mensalidade da <strong>${tenant.name}</strong> foi confirmada. Seu CRM continua liberado normalmente.`,
         }).catch((err) => console.error("Mercado Pago webhook: e-mail de confirmação falhou", err));
+      }
+    }
+  } else if (externalReference.startsWith("transportadora_checkout:")) {
+    const pendingCheckoutId = externalReference.slice("transportadora_checkout:".length);
+    const result = await provisionTransportadoraFromCheckout({
+      pendingCheckoutId,
+      mpPaymentId: String(paymentData.id),
+      mpPayerId: payerId,
+    });
+    if ("error" in result) {
+      console.error(
+        "Mercado Pago webhook: provisionamento da Transportadora falhou pro pagamento",
+        paymentId,
+        result.error,
+      );
+    }
+  } else if (externalReference.startsWith("transportadora_renewal:")) {
+    const tenantId = externalReference.slice("transportadora_renewal:".length);
+    const { data: tenant } = await admin.from("tenants").select("name").eq("id", tenantId).maybeSingle();
+
+    await admin
+      .from("tenant_products")
+      .update({
+        status: "active",
+        next_billing_at: addOneMonth(new Date()).toISOString(),
+        last_payment_id: String(paymentData.id),
+        pending_payment_url: null,
+      })
+      .eq("tenant_id", tenantId)
+      .eq("product", "transportadora");
+
+    if (tenant) {
+      const ownerEmail = await getTenantOwnerEmail(admin, tenantId);
+      if (ownerEmail) {
+        await sendBillingEmail({
+          to: ownerEmail,
+          subject: `Pagamento confirmado — Transportadora (${tenant.name})`,
+          heading: "Pagamento confirmado ✅",
+          message: `A mensalidade da <strong>Transportadora</strong> foi confirmada. O app continua liberado normalmente.`,
+        }).catch((err) => console.error("Mercado Pago webhook: e-mail de confirmação (transportadora) falhou", err));
       }
     }
   }

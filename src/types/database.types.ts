@@ -1682,6 +1682,325 @@ export interface Database {
           },
         ];
       };
+      transportadora_plans: {
+        Row: {
+          id: string;
+          name: string;
+          is_default: boolean;
+          monthly_price_cents: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          is_default?: boolean;
+          monthly_price_cents: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          is_default?: boolean;
+          monthly_price_cents?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      tenant_products: {
+        Row: {
+          tenant_id: string;
+          product: "transportadora";
+          status: "active" | "past_due" | "suspended";
+          plan_id: string | null;
+          mp_payer_id: string | null;
+          last_payment_id: string | null;
+          monthly_amount_cents: number | null;
+          next_billing_at: string | null;
+          pending_payment_url: string | null;
+          activated_at: string;
+        };
+        Insert: {
+          tenant_id: string;
+          product: "transportadora";
+          status?: "active" | "past_due" | "suspended";
+          plan_id?: string | null;
+          mp_payer_id?: string | null;
+          last_payment_id?: string | null;
+          monthly_amount_cents?: number | null;
+          next_billing_at?: string | null;
+          pending_payment_url?: string | null;
+          activated_at?: string;
+        };
+        Update: {
+          tenant_id?: string;
+          product?: "transportadora";
+          status?: "active" | "past_due" | "suspended";
+          plan_id?: string | null;
+          mp_payer_id?: string | null;
+          last_payment_id?: string | null;
+          monthly_amount_cents?: number | null;
+          next_billing_at?: string | null;
+          pending_payment_url?: string | null;
+          activated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "tenant_products_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "tenant_products_plan_id_fkey";
+            columns: ["plan_id"];
+            isOneToOne: false;
+            referencedRelation: "transportadora_plans";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      transportadora_pending_checkouts: {
+        Row: {
+          id: string;
+          user_id: string;
+          status: "pending" | "completed";
+          tenant_id: string | null;
+          company_name: string | null;
+          plan_id: string;
+          mp_preference_id: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          status?: "pending" | "completed";
+          tenant_id?: string | null;
+          company_name?: string | null;
+          plan_id: string;
+          mp_preference_id?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          status?: "pending" | "completed";
+          tenant_id?: string | null;
+          company_name?: string | null;
+          plan_id?: string;
+          mp_preference_id?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "transportadora_pending_checkouts_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "transportadora_pending_checkouts_plan_id_fkey";
+            columns: ["plan_id"];
+            isOneToOne: false;
+            referencedRelation: "transportadora_plans";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      transportadora_clientes: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          nome: string;
+          telefone: string;
+          documento: string;
+          endereco: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          nome: string;
+          telefone?: string;
+          documento?: string;
+          endereco?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          nome?: string;
+          telefone?: string;
+          documento?: string;
+          endereco?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "transportadora_clientes_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      transportadora_motoristas: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          nome: string;
+          telefone: string;
+          cnh: string;
+          placa_veiculo: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          nome: string;
+          telefone?: string;
+          cnh?: string;
+          placa_veiculo?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          nome?: string;
+          telefone?: string;
+          cnh?: string;
+          placa_veiculo?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "transportadora_motoristas_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      transportadora_fretes: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          cliente_id: string;
+          motorista_id: string;
+          origem: string;
+          destino: string;
+          data: string;
+          distancia_km: number;
+          valor_por_km: number;
+          margem_lucro_percentual: number;
+          valor_frete: number;
+          calcular_por_km: boolean;
+          status: "cotacao" | "em_andamento" | "concluido" | "perdido";
+          numero_nf: string;
+          observacoes: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          cliente_id: string;
+          motorista_id: string;
+          origem: string;
+          destino: string;
+          data: string;
+          distancia_km?: number;
+          valor_por_km?: number;
+          margem_lucro_percentual?: number;
+          valor_frete?: number;
+          calcular_por_km?: boolean;
+          status?: "cotacao" | "em_andamento" | "concluido" | "perdido";
+          numero_nf?: string;
+          observacoes?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          cliente_id?: string;
+          motorista_id?: string;
+          origem?: string;
+          destino?: string;
+          data?: string;
+          distancia_km?: number;
+          valor_por_km?: number;
+          margem_lucro_percentual?: number;
+          valor_frete?: number;
+          calcular_por_km?: boolean;
+          status?: "cotacao" | "em_andamento" | "concluido" | "perdido";
+          numero_nf?: string;
+          observacoes?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "transportadora_fretes_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "transportadora_fretes_cliente_id_fkey";
+            columns: ["cliente_id"];
+            isOneToOne: false;
+            referencedRelation: "transportadora_clientes";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "transportadora_fretes_motorista_id_fkey";
+            columns: ["motorista_id"];
+            isOneToOne: false;
+            referencedRelation: "transportadora_motoristas";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      transportadora_configuracoes: {
+        Row: {
+          tenant_id: string;
+          fator_imposto: number;
+          updated_at: string;
+        };
+        Insert: {
+          tenant_id: string;
+          fator_imposto?: number;
+          updated_at?: string;
+        };
+        Update: {
+          tenant_id?: string;
+          fator_imposto?: number;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "transportadora_configuracoes_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: true;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
