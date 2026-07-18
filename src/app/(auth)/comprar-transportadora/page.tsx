@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { resolveHomeRoute } from "@/lib/auth/current-user";
 import {
   TransportadoraCheckoutForm,
   ActiveTransportadoraCheckoutNotice,
@@ -55,6 +56,10 @@ export default async function ComprarTransportadoraPage() {
     .maybeSingle();
 
   const ownerName = (user.user_metadata?.full_name as string | undefined) ?? null;
+  // Sem tenant: manda pra /choose-plan (resolveHomeRoute cai nesse caso
+  // sozinho). Já tem CRM: manda de volta pro dashboard de onde provavelmente
+  // veio.
+  const laterHref = await resolveHomeRoute();
 
   if (activeCheckout) {
     return (
@@ -82,6 +87,7 @@ export default async function ComprarTransportadoraPage() {
         monthlyPriceCents={plan.monthly_price_cents}
         hasExistingTenant={hasExistingTenant}
         ownerName={ownerName}
+        laterHref={laterHref}
       />
     </div>
   );

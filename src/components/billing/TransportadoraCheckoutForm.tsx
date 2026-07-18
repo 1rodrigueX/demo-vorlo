@@ -2,6 +2,7 @@
 
 import { useActionState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
@@ -43,12 +44,14 @@ export function TransportadoraCheckoutForm({
   monthlyPriceCents,
   hasExistingTenant,
   ownerName,
+  laterHref,
 }: {
   planId: string;
   planName: string;
   monthlyPriceCents: number;
   hasExistingTenant: boolean;
   ownerName: string | null;
+  laterHref: string;
 }) {
   const [state, formAction, isPending] = useActionState<ActionState, FormData>(
     startTransportadoraCheckout,
@@ -90,6 +93,12 @@ export function TransportadoraCheckoutForm({
           </Button>
         </form>
       </div>
+
+      <p className="mt-4 text-center text-sm text-gray-500">
+        <Link href={laterHref} className="font-medium text-gray-600 hover:underline">
+          Agora não, talvez depois
+        </Link>
+      </p>
     </div>
   );
 }
