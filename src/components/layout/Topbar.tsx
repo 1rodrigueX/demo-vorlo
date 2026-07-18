@@ -10,6 +10,7 @@ const baseLinks = [
   { href: "/dashboard", label: "Dashboard" },
   { href: "/pipeline", label: "Pipeline" },
   { href: "/companies", label: "Empresas" },
+  { href: "/contacts", label: "Contatos" },
   { href: "/whatsapp", label: "Leads" },
 ];
 

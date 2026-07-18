@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, KanbanSquare, Building2, MessageCircle, Mail, Sparkles, Lightbulb, Settings } from "lucide-react";
+import { LayoutDashboard, KanbanSquare, Building2, Users, MessageCircle, Mail, Sparkles, Lightbulb, Settings } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { useTenantTheme } from "@/lib/theme/TenantThemeContext";
 import { useTenantSlug } from "@/lib/tenant/useTenantSlug";
@@ -11,6 +11,7 @@ const baseLinks = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/pipeline", label: "Pipeline", icon: KanbanSquare },
   { href: "/companies", label: "Empresas", icon: Building2 },
+  { href: "/contacts", label: "Contatos", icon: Users },
   { href: "/whatsapp", label: "Leads", icon: MessageCircle },
   { href: "/emails", label: "E-mails", icon: Mail },
   { href: "/suporte", label: "Suporte", icon: Sparkles },
