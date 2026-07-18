@@ -39,11 +39,24 @@ void main() {
     expect(restaurado.observacoes, frete.observacoes);
   });
 
+  test('dbValue usa snake_case (constraint do banco), não o .name do enum', () {
+    expect(FreteStatus.emAndamento.dbValue, 'em_andamento');
+    expect(FreteStatus.cotacao.dbValue, 'cotacao');
+    expect(FreteStatus.concluido.dbValue, 'concluido');
+    expect(FreteStatus.perdido.dbValue, 'perdido');
+  });
+
+  test('fromDbValue faz o caminho inverso de dbValue pra todos os status', () {
+    for (final status in FreteStatus.values) {
+      expect(FreteStatus.fromDbValue(status.dbValue), status);
+    }
+  });
+
   test('fromMap usa status cotação quando o valor salvo é desconhecido', () {
     final map = {
       'id': 'x',
-      'clienteId': 'c',
-      'motoristaId': 'm',
+      'cliente_id': 'c',
+      'motorista_id': 'm',
       'origem': 'A',
       'destino': 'B',
       'data': DateTime(2026, 1, 1).toIso8601String(),

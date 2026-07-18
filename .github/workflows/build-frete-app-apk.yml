@@ -1,0 +1,59 @@
+name: Build Frete App APK
+
+# Manual só por enquanto (botão "Run workflow" no GitHub Actions) — builda o
+# app Flutter (apps/frete-app) num runner Linux (não precisa de Android SDK
+# local) e publica o APK direto na VPS, pronto pra baixar em
+# https://falaai.cloud/downloads/frete-app-latest.apk (servido como arquivo
+# estático pelo Next.js, sem precisar de rebuild/restart do site).
+on:
+  workflow_dispatch: {}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/frete-app
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      # URL/chave "publishable" do Supabase — feitas pra ir no app público,
+      # protegidas por RLS no banco, não por sigilo da chave em si (mesmos
+      # valores que já aparecem no JS do site). Não é GitHub Secret de
+      # propósito: não tem nada aqui que precise ficar fora do repo.
+      - name: Create env.json
+        run: |
+          cat > env.json <<'EOF'
+          {
+            "SUPABASE_URL": "https://ngczkxagctzlrrfrfffq.supabase.co",
+            "SUPABASE_ANON_KEY": "sb_publishable_dUc7EbEQuEc1oS0qpw2W9w_Gh4f9NG8"
+          }
+          EOF
+
+      - run: flutter pub get
+      - run: flutter build apk --release --dart-define-from-file=env.json
+
+      - name: Renomeia o artefato pra um nome fixo
+        run: cp build/app/outputs/flutter-apk/app-release.apk frete-app-latest.apk
+
+      - name: Garante que a pasta de destino existe na VPS
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: mkdir -p /opt/crm/public/downloads
+
+      - name: Envia o APK pra VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          source: "apps/frete-app/frete-app-latest.apk"
+          target: "/opt/crm/public/downloads/"
+          strip_components: 2

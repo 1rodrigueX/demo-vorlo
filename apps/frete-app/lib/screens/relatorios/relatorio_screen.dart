@@ -4,6 +4,7 @@ import 'package:printing/printing.dart';
 import '../../data/cliente_repository.dart';
 import '../../data/configuracoes_repository.dart';
 import '../../data/frete_repository.dart';
+import '../../models/cliente.dart';
 import '../../models/frete.dart';
 import '../../services/relatorio_pdf_service.dart';
 import '../../utils/formatters.dart';
@@ -61,19 +62,29 @@ class _RelatorioScreenState extends State<RelatorioScreen> {
     return !dia.isBefore(inicio) && !dia.isAfter(fim);
   }
 
-  List<Frete> _fretesFiltrados() {
-    return widget.freteRepository
-        .getAll()
+  Future<List<Frete>> _fretesFiltrados() async {
+    final todos = await widget.freteRepository.getAll();
+    return todos
         .where((f) => _dentroDoPeriodo(f.data))
         .where((f) => _filtroStatus == null || f.status == _filtroStatus)
         .toList();
+  }
+
+  Future<(List<Frete>, Map<String, Cliente>)> _carregarDados() async {
+    final resultados = await Future.wait([
+      _fretesFiltrados(),
+      widget.clienteRepository.getAll(),
+    ]);
+    final fretes = resultados[0] as List<Frete>;
+    final clientes = resultados[1] as List<Cliente>;
+    return (fretes, {for (final c in clientes) c.id: c});
   }
 
   Future<void> _compartilharPdf() async {
     setState(() => _gerandoPdf = true);
     try {
       final bytes = await RelatorioPdfService().gerar(
-        fretes: _fretesFiltrados(),
+        fretes: await _fretesFiltrados(),
         clienteRepository: widget.clienteRepository,
         configuracoesRepository: widget.configuracoesRepository,
         inicio: _periodo.start,
@@ -118,141 +129,153 @@ class _RelatorioScreenState extends State<RelatorioScreen> {
         ],
       ),
       body: ValueListenableBuilder(
-        valueListenable: widget.configuracoesRepository.listenable(),
+        valueListenable: widget.configuracoesRepository.version,
         builder: (context, _, _) {
           return ValueListenableBuilder(
-            valueListenable: widget.freteRepository.listenable(),
+            valueListenable: widget.freteRepository.version,
             builder: (context, _, _) {
-              final fretes = _fretesFiltrados();
+              return FutureBuilder(
+                future: _carregarDados(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState != ConnectionState.done) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (snapshot.hasError) {
+                    return Center(child: Text('Erro ao carregar relatório: ${snapshot.error}'));
+                  }
 
-              final totalNF = fretes.fold(0.0, (soma, f) => soma + f.valorFrete);
-              final totalAReceber = fretes.fold(
-                0.0,
-                (soma, f) =>
-                    soma + widget.configuracoesRepository.calcularValorAReceber(f.valorFrete),
-              );
+                  final (fretes, clientesPorId) =
+                      snapshot.data ?? (<Frete>[], <String, Cliente>{});
 
-              return Column(
-                children: [
-                  Card(
-                    margin: const EdgeInsets.all(12),
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                '${formatDate(_periodo.start)} - ${formatDate(_periodo.end)}',
-                                style: Theme.of(context).textTheme.titleMedium,
-                              ),
-                              TextButton.icon(
-                                onPressed: _selecionarPeriodo,
-                                icon: const Icon(Icons.date_range),
-                                label: const Text('Alterar período'),
-                              ),
-                            ],
-                          ),
-                          const Divider(),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Text('Total NF'),
-                              Text(formatCurrency(totalNF)),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'Total a receber (fator ${widget.configuracoesRepository.fatorImposto})',
-                              ),
-                              Text(
-                                formatCurrency(totalAReceber),
-                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.green,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: [
-                          ChoiceChip(
-                            label: const Text('Todos'),
-                            selected: _filtroStatus == null,
-                            onSelected: (_) => setState(() => _filtroStatus = null),
-                          ),
-                          const SizedBox(width: 8),
-                          for (final status in FreteStatus.values) ...[
-                            ChoiceChip(
-                              label: Text(status.label),
-                              selected: _filtroStatus == status,
-                              onSelected: (_) => setState(() => _filtroStatus = status),
-                            ),
-                            const SizedBox(width: 8),
-                          ],
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Expanded(
-                    child: fretes.isEmpty
-                        ? const EmptyState(
-                            icon: Icons.receipt_long_outlined,
-                            message: 'Nenhum frete encontrado nesse período.',
-                          )
-                        : ListView.separated(
-                            itemCount: fretes.length,
-                            separatorBuilder: (_, _) => const Divider(height: 1),
-                            itemBuilder: (context, index) {
-                              final frete = fretes[index];
-                              final cliente =
-                                  widget.clienteRepository.getById(frete.clienteId);
-                              final valorAReceber = widget.configuracoesRepository
-                                  .calcularValorAReceber(frete.valorFrete);
+                  final totalNF = fretes.fold(0.0, (soma, f) => soma + f.valorFrete);
+                  final totalAReceber = fretes.fold(
+                    0.0,
+                    (soma, f) => soma +
+                        widget.configuracoesRepository.calcularValorAReceber(f.valorFrete),
+                  );
 
-                              return ListTile(
-                                title: Text('${frete.origem} → ${frete.destino}'),
-                                subtitle: Text(
-                                  '${cliente?.nome ?? 'Cliente removido'} • '
-                                  '${formatDate(frete.data)}'
-                                  '${frete.numeroNF.isNotEmpty ? ' • NF ${frete.numeroNF}' : ''}',
-                                ),
-                                trailing: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    Text('NF: ${formatCurrency(frete.valorFrete)}'),
-                                    Text(
-                                      'Receber: ${formatCurrency(valorAReceber)}',
-                                      style: const TextStyle(
-                                        color: Colors.green,
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                  return Column(
+                    children: [
+                      Card(
+                        margin: const EdgeInsets.all(12),
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    '${formatDate(_periodo.start)} - ${formatDate(_periodo.end)}',
+                                    style: Theme.of(context).textTheme.titleMedium,
+                                  ),
+                                  TextButton.icon(
+                                    onPressed: _selecionarPeriodo,
+                                    icon: const Icon(Icons.date_range),
+                                    label: const Text('Alterar período'),
+                                  ),
+                                ],
+                              ),
+                              const Divider(),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  const Text('Total NF'),
+                                  Text(formatCurrency(totalNF)),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'Total a receber (fator ${widget.configuracoesRepository.fatorImposto})',
+                                  ),
+                                  Text(
+                                    formatCurrency(totalAReceber),
+                                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.green,
                                     ),
-                                    const SizedBox(height: 4),
-                                    StatusChip(status: frete.status),
-                                  ],
-                                ),
-                                isThreeLine: false,
-                              );
-                            },
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
-                  ),
-                ],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: [
+                              ChoiceChip(
+                                label: const Text('Todos'),
+                                selected: _filtroStatus == null,
+                                onSelected: (_) => setState(() => _filtroStatus = null),
+                              ),
+                              const SizedBox(width: 8),
+                              for (final status in FreteStatus.values) ...[
+                                ChoiceChip(
+                                  label: Text(status.label),
+                                  selected: _filtroStatus == status,
+                                  onSelected: (_) => setState(() => _filtroStatus = status),
+                                ),
+                                const SizedBox(width: 8),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Expanded(
+                        child: fretes.isEmpty
+                            ? const EmptyState(
+                                icon: Icons.receipt_long_outlined,
+                                message: 'Nenhum frete encontrado nesse período.',
+                              )
+                            : ListView.separated(
+                                itemCount: fretes.length,
+                                separatorBuilder: (_, _) => const Divider(height: 1),
+                                itemBuilder: (context, index) {
+                                  final frete = fretes[index];
+                                  final cliente = clientesPorId[frete.clienteId];
+                                  final valorAReceber = widget.configuracoesRepository
+                                      .calcularValorAReceber(frete.valorFrete);
+
+                                  return ListTile(
+                                    title: Text('${frete.origem} → ${frete.destino}'),
+                                    subtitle: Text(
+                                      '${cliente?.nome ?? 'Cliente removido'} • '
+                                      '${formatDate(frete.data)}'
+                                      '${frete.numeroNF.isNotEmpty ? ' • NF ${frete.numeroNF}' : ''}',
+                                    ),
+                                    trailing: Column(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      crossAxisAlignment: CrossAxisAlignment.end,
+                                      children: [
+                                        Text('NF: ${formatCurrency(frete.valorFrete)}'),
+                                        Text(
+                                          'Receber: ${formatCurrency(valorAReceber)}',
+                                          style: const TextStyle(
+                                            color: Colors.green,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        StatusChip(status: frete.status),
+                                      ],
+                                    ),
+                                    isThreeLine: false,
+                                  );
+                                },
+                              ),
+                      ),
+                    ],
+                  );
+                },
               );
             },
           );

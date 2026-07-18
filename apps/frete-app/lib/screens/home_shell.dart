@@ -22,11 +22,30 @@ class _HomeShellState extends State<HomeShell> {
   final _motoristaRepository = MotoristaRepository();
   final _freteRepository = FreteRepository();
   final _configuracoesRepository = ConfiguracoesRepository();
+  late final Future<void> _carregandoConfiguracoes;
 
   int _index = 0;
 
   @override
+  void initState() {
+    super.initState();
+    _carregandoConfiguracoes = _configuracoesRepository.carregar();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    return FutureBuilder<void>(
+      future: _carregandoConfiguracoes,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const Scaffold(body: Center(child: CircularProgressIndicator()));
+        }
+        return _buildShell(context);
+      },
+    );
+  }
+
+  Widget _buildShell(BuildContext context) {
     final telas = [
       DashboardScreen(
         freteRepository: _freteRepository,

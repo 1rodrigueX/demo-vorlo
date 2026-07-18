@@ -4,6 +4,7 @@ import '../../data/cliente_repository.dart';
 import '../../data/configuracoes_repository.dart';
 import '../../data/frete_repository.dart';
 import '../../data/motorista_repository.dart';
+import '../../models/cliente.dart';
 import '../../models/frete.dart';
 import '../../utils/formatters.dart';
 import '../../widgets/empty_state.dart';
@@ -50,6 +51,16 @@ class _FretesListScreenState extends State<FretesListScreen> {
     final inicio = DateUtils.dateOnly(_filtroData!.start);
     final fim = DateUtils.dateOnly(_filtroData!.end);
     return !dia.isBefore(inicio) && !dia.isAfter(fim);
+  }
+
+  Future<(List<Frete>, Map<String, Cliente>)> _carregarDados() async {
+    final resultados = await Future.wait([
+      widget.repository.getAll(),
+      widget.clienteRepository.getAll(),
+    ]);
+    final fretes = resultados[0] as List<Frete>;
+    final clientes = resultados[1] as List<Cliente>;
+    return (fretes, {for (final c in clientes) c.id: c});
   }
 
   @override
@@ -104,52 +115,65 @@ class _FretesListScreenState extends State<FretesListScreen> {
           ),
           Expanded(
             child: ValueListenableBuilder(
-              valueListenable: widget.repository.listenable(),
+              valueListenable: widget.repository.version,
               builder: (context, _, _) {
-                final fretes = widget.repository
-                    .getAll()
-                    .where((f) => _filtro == null || f.status == _filtro)
-                    .where((f) => _dentroDoFiltroData(f.data))
-                    .toList();
+                return FutureBuilder(
+                  future: _carregarDados(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState != ConnectionState.done) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    if (snapshot.hasError) {
+                      return Center(child: Text('Erro ao carregar fretes: ${snapshot.error}'));
+                    }
 
-                if (fretes.isEmpty) {
-                  return const EmptyState(
-                    icon: Icons.local_shipping_outlined,
-                    message: 'Nenhum frete encontrado.\nToque em "+" para adicionar.',
-                  );
-                }
+                    final (todosFretes, clientesPorId) =
+                        snapshot.data ?? (<Frete>[], <String, Cliente>{});
+                    final fretes = todosFretes
+                        .where((f) => _filtro == null || f.status == _filtro)
+                        .where((f) => _dentroDoFiltroData(f.data))
+                        .toList();
 
-                return ListView.separated(
-                  itemCount: fretes.length,
-                  separatorBuilder: (_, _) => const Divider(height: 1),
-                  itemBuilder: (context, index) {
-                    final frete = fretes[index];
-                    final cliente = widget.clienteRepository.getById(frete.clienteId);
-                    return ListTile(
-                      title: Text('${frete.origem} → ${frete.destino}'),
-                      subtitle: Text(
-                        '${cliente?.nome ?? 'Cliente removido'} • ${formatDate(frete.data)}',
-                      ),
-                      trailing: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text(formatCurrency(frete.valorFrete)),
-                          const SizedBox(height: 4),
-                          StatusChip(status: frete.status),
-                        ],
-                      ),
-                      onTap: () => Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => FreteFormScreen(
-                            repository: widget.repository,
-                            clienteRepository: widget.clienteRepository,
-                            motoristaRepository: widget.motoristaRepository,
-                            configuracoesRepository: widget.configuracoesRepository,
-                            frete: frete,
+                    if (fretes.isEmpty) {
+                      return const EmptyState(
+                        icon: Icons.local_shipping_outlined,
+                        message: 'Nenhum frete encontrado.\nToque em "+" para adicionar.',
+                      );
+                    }
+
+                    return ListView.separated(
+                      itemCount: fretes.length,
+                      separatorBuilder: (_, _) => const Divider(height: 1),
+                      itemBuilder: (context, index) {
+                        final frete = fretes[index];
+                        final cliente = clientesPorId[frete.clienteId];
+                        return ListTile(
+                          title: Text('${frete.origem} → ${frete.destino}'),
+                          subtitle: Text(
+                            '${cliente?.nome ?? 'Cliente removido'} • ${formatDate(frete.data)}',
                           ),
-                        ),
-                      ),
+                          trailing: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(formatCurrency(frete.valorFrete)),
+                              const SizedBox(height: 4),
+                              StatusChip(status: frete.status),
+                            ],
+                          ),
+                          onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => FreteFormScreen(
+                                repository: widget.repository,
+                                clienteRepository: widget.clienteRepository,
+                                motoristaRepository: widget.motoristaRepository,
+                                configuracoesRepository: widget.configuracoesRepository,
+                                frete: frete,
+                              ),
+                            ),
+                          ),
+                        );
+                      },
                     );
                   },
                 );

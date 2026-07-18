@@ -4,7 +4,9 @@ import '../../data/cliente_repository.dart';
 import '../../data/configuracoes_repository.dart';
 import '../../data/frete_repository.dart';
 import '../../data/motorista_repository.dart';
+import '../../models/cliente.dart';
 import '../../models/frete.dart';
+import '../../models/motorista.dart';
 import '../../services/distance_service.dart';
 import '../../utils/formatters.dart';
 
@@ -51,11 +53,16 @@ class _FreteFormScreenState extends State<FreteFormScreen> {
   late FreteStatus _status;
   bool _calculandoDistancia = false;
 
+  late final Future<void> _carregandoListas;
+  List<Cliente> _clientes = [];
+  List<Motorista> _motoristas = [];
+
   bool get _isEditing => widget.frete != null;
 
   @override
   void initState() {
     super.initState();
+    _carregandoListas = _carregarListas();
     final frete = widget.frete;
     _origemController = TextEditingController(text: frete?.origem ?? '');
     _destinoController = TextEditingController(text: frete?.destino ?? '');
@@ -106,6 +113,18 @@ class _FreteFormScreenState extends State<FreteFormScreen> {
     _origemFocusNode.dispose();
     _destinoFocusNode.dispose();
     super.dispose();
+  }
+
+  Future<void> _carregarListas() async {
+    final resultados = await Future.wait([
+      widget.clienteRepository.getAll(),
+      widget.motoristaRepository.getAll(),
+    ]);
+    if (!mounted) return;
+    setState(() {
+      _clientes = resultados[0] as List<Cliente>;
+      _motoristas = resultados[1] as List<Motorista>;
+    });
   }
 
   void _atualizarValorCalculado() => setState(() {});
@@ -220,10 +239,6 @@ class _FreteFormScreenState extends State<FreteFormScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final clientes = widget.clienteRepository.getAll();
-    final motoristas = widget.motoristaRepository.getAll();
-    final nfObrigatoria = _status == FreteStatus.concluido;
-
     return Scaffold(
       appBar: AppBar(
         title: Text(_isEditing ? 'Editar frete' : 'Novo frete'),
@@ -236,11 +251,28 @@ class _FreteFormScreenState extends State<FreteFormScreen> {
             ),
         ],
       ),
-      body: Form(
-        key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
+      body: FutureBuilder<void>(
+        future: _carregandoListas,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState != ConnectionState.done) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          return _buildForm(context);
+        },
+      ),
+    );
+  }
+
+  Widget _buildForm(BuildContext context) {
+    final clientes = _clientes;
+    final motoristas = _motoristas;
+    final nfObrigatoria = _status == FreteStatus.concluido;
+
+    return Form(
+      key: _formKey,
+      child: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
             if (clientes.isEmpty || motoristas.isEmpty)
               Card(
                 color: Theme.of(context).colorScheme.errorContainer,
@@ -456,7 +488,9 @@ class _FreteFormScreenState extends State<FreteFormScreen> {
             ),
           ],
         ),
-      ),
-    );
+      );
   }
 }
+
+
+

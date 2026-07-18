@@ -31,6 +31,28 @@ enum FreteStatus {
         return Colors.red;
     }
   }
+
+  /// Valor salvo no banco (check constraint de transportadora_fretes.status
+  /// usa snake_case, diferente do .name do enum em Dart).
+  String get dbValue {
+    switch (this) {
+      case FreteStatus.cotacao:
+        return 'cotacao';
+      case FreteStatus.emAndamento:
+        return 'em_andamento';
+      case FreteStatus.concluido:
+        return 'concluido';
+      case FreteStatus.perdido:
+        return 'perdido';
+    }
+  }
+
+  static FreteStatus fromDbValue(String? value) {
+    return FreteStatus.values.firstWhere(
+      (s) => s.dbValue == value,
+      orElse: () => FreteStatus.cotacao,
+    );
+  }
 }
 
 class Frete {
@@ -102,18 +124,18 @@ class Frete {
   Map<String, dynamic> toMap() {
     return {
       'id': id,
-      'clienteId': clienteId,
-      'motoristaId': motoristaId,
+      'cliente_id': clienteId,
+      'motorista_id': motoristaId,
       'origem': origem,
       'destino': destino,
       'data': data.toIso8601String(),
-      'distanciaKm': distanciaKm,
-      'valorPorKm': valorPorKm,
-      'margemLucroPercentual': margemLucroPercentual,
-      'valorFrete': valorFrete,
-      'calcularPorKm': calcularPorKm,
-      'status': status.name,
-      'numeroNF': numeroNF,
+      'distancia_km': distanciaKm,
+      'valor_por_km': valorPorKm,
+      'margem_lucro_percentual': margemLucroPercentual,
+      'valor_frete': valorFrete,
+      'calcular_por_km': calcularPorKm,
+      'status': status.dbValue,
+      'numero_nf': numeroNF,
       'observacoes': observacoes,
     };
   }
@@ -121,21 +143,18 @@ class Frete {
   factory Frete.fromMap(Map<dynamic, dynamic> map) {
     return Frete(
       id: map['id'] as String,
-      clienteId: map['clienteId'] as String,
-      motoristaId: map['motoristaId'] as String,
+      clienteId: map['cliente_id'] as String,
+      motoristaId: map['motorista_id'] as String,
       origem: map['origem'] as String,
       destino: map['destino'] as String,
       data: DateTime.parse(map['data'] as String),
-      distanciaKm: (map['distanciaKm'] as num?)?.toDouble() ?? 0,
-      valorPorKm: (map['valorPorKm'] as num?)?.toDouble() ?? 0,
-      margemLucroPercentual: (map['margemLucroPercentual'] as num?)?.toDouble() ?? 0,
-      valorFrete: (map['valorFrete'] as num?)?.toDouble() ?? 0,
-      calcularPorKm: map['calcularPorKm'] as bool? ?? false,
-      status: FreteStatus.values.firstWhere(
-        (s) => s.name == map['status'],
-        orElse: () => FreteStatus.cotacao,
-      ),
-      numeroNF: map['numeroNF'] as String? ?? '',
+      distanciaKm: (map['distancia_km'] as num?)?.toDouble() ?? 0,
+      valorPorKm: (map['valor_por_km'] as num?)?.toDouble() ?? 0,
+      margemLucroPercentual: (map['margem_lucro_percentual'] as num?)?.toDouble() ?? 0,
+      valorFrete: (map['valor_frete'] as num?)?.toDouble() ?? 0,
+      calcularPorKm: map['calcular_por_km'] as bool? ?? false,
+      status: FreteStatus.fromDbValue(map['status'] as String?),
+      numeroNF: map['numero_nf'] as String? ?? '',
       observacoes: map['observacoes'] as String? ?? '',
     );
   }

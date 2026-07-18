@@ -19,42 +19,54 @@ class _ClientesListScreenState extends State<ClientesListScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Clientes')),
       body: ValueListenableBuilder(
-        valueListenable: widget.repository.listenable(),
+        valueListenable: widget.repository.version,
         builder: (context, _, _) {
-          final clientes = widget.repository.getAll();
+          return FutureBuilder(
+            future: widget.repository.getAll(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState != ConnectionState.done) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (snapshot.hasError) {
+                return Center(child: Text('Erro ao carregar clientes: ${snapshot.error}'));
+              }
 
-          if (clientes.isEmpty) {
-            return const EmptyState(
-              icon: Icons.people_outline,
-              message: 'Nenhum cliente cadastrado.\nToque em "+" para adicionar.',
-            );
-          }
+              final clientes = snapshot.data ?? [];
 
-          return ListView.separated(
-            itemCount: clientes.length,
-            separatorBuilder: (_, _) => const Divider(height: 1),
-            itemBuilder: (context, index) {
-              final cliente = clientes[index];
-              return ListTile(
-                leading: CircleAvatar(
-                  child: Text(
-                    cliente.nome.isNotEmpty ? cliente.nome[0].toUpperCase() : '?',
-                  ),
-                ),
-                title: Text(cliente.nome),
-                subtitle: Text(
-                  [cliente.telefone, cliente.documento]
-                      .where((s) => s.isNotEmpty)
-                      .join(' • '),
-                ),
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => ClienteFormScreen(
-                      repository: widget.repository,
-                      cliente: cliente,
+              if (clientes.isEmpty) {
+                return const EmptyState(
+                  icon: Icons.people_outline,
+                  message: 'Nenhum cliente cadastrado.\nToque em "+" para adicionar.',
+                );
+              }
+
+              return ListView.separated(
+                itemCount: clientes.length,
+                separatorBuilder: (_, _) => const Divider(height: 1),
+                itemBuilder: (context, index) {
+                  final cliente = clientes[index];
+                  return ListTile(
+                    leading: CircleAvatar(
+                      child: Text(
+                        cliente.nome.isNotEmpty ? cliente.nome[0].toUpperCase() : '?',
+                      ),
                     ),
-                  ),
-                ),
+                    title: Text(cliente.nome),
+                    subtitle: Text(
+                      [cliente.telefone, cliente.documento]
+                          .where((s) => s.isNotEmpty)
+                          .join(' • '),
+                    ),
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => ClienteFormScreen(
+                          repository: widget.repository,
+                          cliente: cliente,
+                        ),
+                      ),
+                    ),
+                  );
+                },
               );
             },
           );

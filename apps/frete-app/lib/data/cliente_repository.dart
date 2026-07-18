@@ -1,25 +1,26 @@
 import 'package:flutter/foundation.dart';
-import 'package:hive_flutter/hive_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
 import '../models/cliente.dart';
-import 'hive_boxes.dart';
+import 'tenant_context.dart';
 
 class ClienteRepository {
-  final Box<Map> _box = Hive.box<Map>(HiveBoxes.clientes);
+  final _client = Supabase.instance.client;
   static const _uuid = Uuid();
 
-  ValueListenable<Box<Map>> listenable() => _box.listenable();
+  /// Incrementa a cada escrita — telas escutam isso pra saber quando
+  /// re-buscar a lista (substitui o Box.listenable() do Hive).
+  final ValueNotifier<int> version = ValueNotifier(0);
 
-  List<Cliente> getAll() {
-    final clientes = _box.values.map((m) => Cliente.fromMap(m)).toList();
-    clientes.sort((a, b) => a.nome.compareTo(b.nome));
-    return clientes;
+  Future<List<Cliente>> getAll() async {
+    final rows = await _client.from('transportadora_clientes').select().order('nome');
+    return rows.map((row) => Cliente.fromMap(row)).toList();
   }
 
-  Cliente? getById(String id) {
-    final map = _box.get(id);
-    return map == null ? null : Cliente.fromMap(map);
+  Future<Cliente?> getById(String id) async {
+    final row = await _client.from('transportadora_clientes').select().eq('id', id).maybeSingle();
+    return row == null ? null : Cliente.fromMap(row);
   }
 
   Future<Cliente> add({
@@ -35,15 +36,21 @@ class ClienteRepository {
       documento: documento,
       endereco: endereco,
     );
-    await _box.put(cliente.id, cliente.toMap());
+    await _client.from('transportadora_clientes').insert({
+      ...cliente.toMap(),
+      'tenant_id': TenantContext.instance.tenantId,
+    });
+    version.value++;
     return cliente;
   }
 
   Future<void> update(Cliente cliente) async {
-    await _box.put(cliente.id, cliente.toMap());
+    await _client.from('transportadora_clientes').update(cliente.toMap()).eq('id', cliente.id);
+    version.value++;
   }
 
   Future<void> delete(String id) async {
-    await _box.delete(id);
+    await _client.from('transportadora_clientes').delete().eq('id', id);
+    version.value++;
   }
 }

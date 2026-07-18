@@ -1,25 +1,27 @@
 import 'package:flutter/foundation.dart';
-import 'package:hive_flutter/hive_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
 import '../models/frete.dart';
-import 'hive_boxes.dart';
+import 'tenant_context.dart';
 
 class FreteRepository {
-  final Box<Map> _box = Hive.box<Map>(HiveBoxes.fretes);
+  final _client = Supabase.instance.client;
   static const _uuid = Uuid();
 
-  ValueListenable<Box<Map>> listenable() => _box.listenable();
+  final ValueNotifier<int> version = ValueNotifier(0);
 
-  List<Frete> getAll() {
-    final fretes = _box.values.map((m) => Frete.fromMap(m)).toList();
-    fretes.sort((a, b) => b.data.compareTo(a.data));
-    return fretes;
+  Future<List<Frete>> getAll() async {
+    final rows = await _client
+        .from('transportadora_fretes')
+        .select()
+        .order('data', ascending: false);
+    return rows.map((row) => Frete.fromMap(row)).toList();
   }
 
-  Frete? getById(String id) {
-    final map = _box.get(id);
-    return map == null ? null : Frete.fromMap(map);
+  Future<Frete?> getById(String id) async {
+    final row = await _client.from('transportadora_fretes').select().eq('id', id).maybeSingle();
+    return row == null ? null : Frete.fromMap(row);
   }
 
   Future<Frete> add(Frete frete) async {
@@ -32,32 +34,38 @@ class FreteRepository {
       data: frete.data,
       distanciaKm: frete.distanciaKm,
       valorPorKm: frete.valorPorKm,
+      margemLucroPercentual: frete.margemLucroPercentual,
       valorFrete: frete.valorFrete,
       calcularPorKm: frete.calcularPorKm,
       status: frete.status,
+      numeroNF: frete.numeroNF,
       observacoes: frete.observacoes,
     );
-    await _box.put(novoFrete.id, novoFrete.toMap());
+    await _client.from('transportadora_fretes').insert({
+      ...novoFrete.toMap(),
+      'tenant_id': TenantContext.instance.tenantId,
+    });
+    version.value++;
     return novoFrete;
   }
 
   Future<void> update(Frete frete) async {
-    await _box.put(frete.id, frete.toMap());
+    await _client.from('transportadora_fretes').update(frete.toMap()).eq('id', frete.id);
+    version.value++;
   }
 
   Future<void> delete(String id) async {
-    await _box.delete(id);
+    await _client.from('transportadora_fretes').delete().eq('id', id);
+    version.value++;
   }
 
-  double valorTotal({Iterable<FreteStatus>? statusPermitidos}) {
-    return getAll()
-        .where(
-          (f) => statusPermitidos == null || statusPermitidos.contains(f.status),
-        )
+  double valorTotal(List<Frete> fretes, {Iterable<FreteStatus>? statusPermitidos}) {
+    return fretes
+        .where((f) => statusPermitidos == null || statusPermitidos.contains(f.status))
         .fold(0.0, (soma, f) => soma + f.valorFrete);
   }
 
-  int contarPorStatus(FreteStatus status) {
-    return getAll().where((f) => f.status == status).length;
+  int contarPorStatus(List<Frete> fretes, FreteStatus status) {
+    return fretes.where((f) => f.status == status).length;
   }
 }

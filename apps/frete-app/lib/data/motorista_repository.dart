@@ -1,25 +1,24 @@
 import 'package:flutter/foundation.dart';
-import 'package:hive_flutter/hive_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
 import '../models/motorista.dart';
-import 'hive_boxes.dart';
+import 'tenant_context.dart';
 
 class MotoristaRepository {
-  final Box<Map> _box = Hive.box<Map>(HiveBoxes.motoristas);
+  final _client = Supabase.instance.client;
   static const _uuid = Uuid();
 
-  ValueListenable<Box<Map>> listenable() => _box.listenable();
+  final ValueNotifier<int> version = ValueNotifier(0);
 
-  List<Motorista> getAll() {
-    final motoristas = _box.values.map((m) => Motorista.fromMap(m)).toList();
-    motoristas.sort((a, b) => a.nome.compareTo(b.nome));
-    return motoristas;
+  Future<List<Motorista>> getAll() async {
+    final rows = await _client.from('transportadora_motoristas').select().order('nome');
+    return rows.map((row) => Motorista.fromMap(row)).toList();
   }
 
-  Motorista? getById(String id) {
-    final map = _box.get(id);
-    return map == null ? null : Motorista.fromMap(map);
+  Future<Motorista?> getById(String id) async {
+    final row = await _client.from('transportadora_motoristas').select().eq('id', id).maybeSingle();
+    return row == null ? null : Motorista.fromMap(row);
   }
 
   Future<Motorista> add({
@@ -35,15 +34,21 @@ class MotoristaRepository {
       cnh: cnh,
       placaVeiculo: placaVeiculo,
     );
-    await _box.put(motorista.id, motorista.toMap());
+    await _client.from('transportadora_motoristas').insert({
+      ...motorista.toMap(),
+      'tenant_id': TenantContext.instance.tenantId,
+    });
+    version.value++;
     return motorista;
   }
 
   Future<void> update(Motorista motorista) async {
-    await _box.put(motorista.id, motorista.toMap());
+    await _client.from('transportadora_motoristas').update(motorista.toMap()).eq('id', motorista.id);
+    version.value++;
   }
 
   Future<void> delete(String id) async {
-    await _box.delete(id);
+    await _client.from('transportadora_motoristas').delete().eq('id', id);
+    version.value++;
   }
 }

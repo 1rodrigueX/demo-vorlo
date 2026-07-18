@@ -2,13 +2,14 @@ import 'package:device_preview/device_preview.dart';
 import 'package:flutter/foundation.dart' show kReleaseMode;
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'data/hive_boxes.dart';
-import 'screens/home_shell.dart';
+import 'config/env.dart';
+import 'screens/auth/auth_gate.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await HiveBoxes.init();
+  await Supabase.initialize(url: Env.supabaseUrl, publishableKey: Env.supabaseAnonKey);
   await initializeDateFormatting('pt_BR');
   runApp(
     DevicePreview(
@@ -32,7 +33,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const HomeShell(),
+      home: const AuthGate(),
     );
   }
 }

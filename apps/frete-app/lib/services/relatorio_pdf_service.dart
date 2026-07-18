@@ -18,6 +18,8 @@ class RelatorioPdfService {
   }) async {
     final doc = pw.Document();
     final fator = configuracoesRepository.fatorImposto;
+    final clientes = await clienteRepository.getAll();
+    final clientesPorId = {for (final c in clientes) c.id: c};
 
     final totalNF = fretes.fold(0.0, (soma, f) => soma + f.valorFrete);
     final totalAReceber = fretes.fold(
@@ -51,7 +53,7 @@ class RelatorioPdfService {
               'A receber',
             ],
             data: fretes.map((frete) {
-              final cliente = clienteRepository.getById(frete.clienteId);
+              final cliente = clientesPorId[frete.clienteId];
               return [
                 formatDate(frete.data),
                 '${frete.origem} -> ${frete.destino}',

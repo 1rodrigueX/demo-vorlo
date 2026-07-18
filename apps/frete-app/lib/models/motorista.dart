@@ -34,7 +34,7 @@ class Motorista {
       'nome': nome,
       'telefone': telefone,
       'cnh': cnh,
-      'placaVeiculo': placaVeiculo,
+      'placa_veiculo': placaVeiculo,
     };
   }
 
@@ -44,7 +44,7 @@ class Motorista {
       nome: map['nome'] as String,
       telefone: map['telefone'] as String? ?? '',
       cnh: map['cnh'] as String? ?? '',
-      placaVeiculo: map['placaVeiculo'] as String? ?? '',
+      placaVeiculo: map['placa_veiculo'] as String? ?? '',
     );
   }
 }

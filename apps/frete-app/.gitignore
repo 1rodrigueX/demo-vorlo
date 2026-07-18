@@ -43,3 +43,8 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Config com a URL/chave anônima do Supabase (mesmos valores públicos do
+# site, mas por padrão de segurança não commitamos segredos de config).
+# Veja env.example.json.
+env.json
