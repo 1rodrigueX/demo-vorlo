@@ -39,10 +39,10 @@ export default async function AppDownloadPage() {
           <div className="h-px flex-1 bg-gray-200" />
         </div>
 
-        {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- /app-web/ é o build
-            estático do Flutter (public/app-web/), fora do app router; <Link/> tentaria
+        {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- /app-web/index.html é o
+            build estático do Flutter (public/app-web/), fora do app router; <Link/> tentaria
             navegação client-side pra uma rota que o Next não conhece. */}
-        <a href="/app-web/">
+        <a href="/app-web/index.html">
           <Button variant="secondary" className="w-full">
             <Globe size={16} />
             Usar direto no navegador

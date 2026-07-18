@@ -12,5 +12,7 @@ export default async function AppWebRedirectPage() {
   const { data: hasAccess } = await supabase.rpc("current_tenant_has_transportadora");
   if (!hasAccess) redirect("/comprar-transportadora");
 
-  redirect("/app-web/");
+  // Next.js só serve arquivos exatos de public/ — não resolve "/app-web/"
+  // pra "/app-web/index.html" sozinho como um servidor de arquivos comum.
+  redirect("/app-web/index.html");
 }
