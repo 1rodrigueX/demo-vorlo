@@ -12,6 +12,7 @@ export const RESERVED_SLUGS = new Set([
   "favicon.ico",
   "public",
   "app",
+  "app-web",
   "comprar-transportadora",
   "downloads",
 ]);
