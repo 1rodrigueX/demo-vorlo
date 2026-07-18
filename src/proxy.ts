@@ -13,6 +13,9 @@ export const config = {
      * - the Twilio webhook (no user session; authenticated via signature instead)
      * - webhooks under api/webhooks/ (ex: Mercado Pago — autenticado via assinatura, sem sessão)
      * - api/cron/ (autenticado via segredo compartilhado, chamado pelo crontab da VPS)
+     * - api/public/ (ex: captura de lead por webhook externo — autenticado
+     *   pelo token no próprio path, chamado por um servidor de fora sem
+     *   cookie de sessão nenhum)
      * - .apk em public/downloads/ (o APK do app Transportadora — o gate de
      *   acesso já acontece na página /app/download antes de linkar pra cá,
      *   não faz sentido o middleware also exigir sessão pro arquivo em si)
@@ -23,6 +26,6 @@ export const config = {
      *   senão o Next normaliza "/app-web/" pra "/app-web" e isso volta a
      *   cair no gate de sessão.
      */
-    "/((?!_next/static|_next/image|favicon.ico|api/whatsapp/webhook/|api/webhooks/|api/cron/|app-web|.*\\.(?:svg|png|jpg|jpeg|gif|webp|apk)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|api/whatsapp/webhook/|api/webhooks/|api/cron/|api/public/|app-web|.*\\.(?:svg|png|jpg|jpeg|gif|webp|apk)$).*)",
   ],
 };
