@@ -2001,6 +2001,107 @@ export interface Database {
           },
         ];
       };
+      automation_jobs: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          job_type: "lead_webhook_welcome";
+          run_at: string;
+          status: "pending" | "processing" | "done" | "failed";
+          attempts: number;
+          payload: Json;
+          error: string | null;
+          created_at: string;
+          processed_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          job_type: "lead_webhook_welcome";
+          run_at?: string;
+          status?: "pending" | "processing" | "done" | "failed";
+          attempts?: number;
+          payload?: Json;
+          error?: string | null;
+          created_at?: string;
+          processed_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          job_type?: "lead_webhook_welcome";
+          run_at?: string;
+          status?: "pending" | "processing" | "done" | "failed";
+          attempts?: number;
+          payload?: Json;
+          error?: string | null;
+          created_at?: string;
+          processed_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "automation_jobs_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      lead_webhooks: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          name: string;
+          token: string;
+          target_stage_id: string | null;
+          welcome_message: string | null;
+          is_active: boolean;
+          leads_received: number;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          name: string;
+          token?: string;
+          target_stage_id?: string | null;
+          welcome_message?: string | null;
+          is_active?: boolean;
+          leads_received?: number;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          name?: string;
+          token?: string;
+          target_stage_id?: string | null;
+          welcome_message?: string | null;
+          is_active?: boolean;
+          leads_received?: number;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "lead_webhooks_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "lead_webhooks_target_stage_id_fkey";
+            columns: ["target_stage_id"];
+            isOneToOne: false;
+            referencedRelation: "pipeline_stages";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
