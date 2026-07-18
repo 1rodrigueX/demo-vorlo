@@ -154,6 +154,10 @@ export async function getAccountServices(): Promise<{
     .eq("id", user.id)
     .maybeSingle();
 
+  // billing_plan_id é o sinal de "tem CRM" — fica null pros tenants que só
+  // compraram a Transportadora (profile existe, mas sem CRM nenhum). O
+  // painel dev também precisa setar isso ao criar um CRM (ver tenants.ts),
+  // senão um CRM criado por lá cairia aqui como "não assinado" por engano.
   let crmActive = false;
   let crmSlug: string | null = null;
   if (profile) {

@@ -35,6 +35,11 @@ export async function createTenant(_prevState: ActionState, formData: FormData):
 
   const admin = createAdminClient();
 
+  // billing_plan_id é o sinal de "esse tenant tem CRM" usado em getAccountServices
+  // (central de contas) — sem isso, um CRM criado por aqui (sem cobrança,
+  // acesso vitalício) apareceria como "não assinado" pro dono dele.
+  const { data: defaultPlan } = await admin.from("billing_plans").select("id").eq("is_default", true).maybeSingle();
+
   const { data: tenant, error: tenantError } = await admin
     .from("tenants")
     .insert({
@@ -42,6 +47,7 @@ export async function createTenant(_prevState: ActionState, formData: FormData):
       slug: parsed.data.slug,
       seller_limit: parsed.data.sellerLimit,
       manager_limit: parsed.data.managerLimit,
+      billing_plan_id: defaultPlan?.id ?? null,
     })
     .select("id")
     .single();
