@@ -1,11 +1,11 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentUser, resolveHomeRoute } from "@/lib/auth/current-user";
+import { getCurrentUser } from "@/lib/auth/current-user";
 
 export default async function BillingPendentePage() {
   const current = await getCurrentUser();
   if (!current) redirect("/login");
-  if (!current.profile) redirect("/choose-plan");
+  if (!current.profile) redirect("/central");
 
   const supabase = await createClient();
   const { data: tenant } = await supabase
@@ -14,7 +14,7 @@ export default async function BillingPendentePage() {
     .eq("id", current.profile.tenant_id)
     .single();
 
-  if (tenant?.status !== "suspended") redirect(tenant ? `/${tenant.slug}/dashboard` : await resolveHomeRoute());
+  if (tenant?.status !== "suspended") redirect("/central");
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">

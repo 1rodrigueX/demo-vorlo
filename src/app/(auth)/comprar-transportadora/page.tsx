@@ -56,9 +56,8 @@ export default async function ComprarTransportadoraPage() {
     .maybeSingle();
 
   const ownerName = (user.user_metadata?.full_name as string | undefined) ?? null;
-  // Sem tenant: manda pra /choose-plan (resolveHomeRoute cai nesse caso
-  // sozinho). Já tem CRM: manda de volta pro dashboard de onde provavelmente
-  // veio.
+  // resolveHomeRoute sempre cai na central de contas — de lá o usuário
+  // decide se entra no CRM (se tiver) ou assina outra coisa depois.
   const laterHref = await resolveHomeRoute();
 
   if (activeCheckout) {

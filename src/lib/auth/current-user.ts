@@ -79,11 +79,13 @@ export async function getTenantSlug(
 }
 
 /**
- * Decide pra onde mandar um usuário já autenticado: dono/gestor/vendedor de
- * um CRM cai no dashboard do tenant; dev com um CRM aberto retoma de onde
- * parou; dev sem CRM aberto cai no painel dev; sem profile e sem ser dev
- * (cadastro via Google/e-mail-senha que ainda não pagou nenhum plano) cai na
- * escolha de plano. Recebe o client e o userId prontos pra poder ser
+ * Decide pra onde mandar um usuário já autenticado. FALA AI é uma central
+ * com vários produtos independentes (CRM, Transportadora, e futuramente
+ * mais) — quem tem profile (cliente "normal", com ou sem produto ativo) cai
+ * sempre na central de contas, de onde escolhe qual acessar ou assina um
+ * novo. Dev com um CRM aberto pra visualizar retoma de onde parou; dev sem
+ * CRM aberto cai no painel dev — esse fluxo é de suporte/impersonation, não
+ * passa pela central. Recebe o client e o userId prontos pra poder ser
  * chamada tanto de Server Components/Actions quanto do middleware (que usa
  * um client montado sobre os cookies da request, não o de next/headers).
  */
@@ -93,33 +95,17 @@ export async function resolveHomeRouteFor(
 ): Promise<string> {
   const { data: profile } = await supabase
     .from("profiles")
-    .select("tenant_id")
+    .select("id")
     .eq("id", userId)
     .maybeSingle();
-  if (profile) {
-    const { data: tenant } = await supabase
-      .from("tenants")
-      .select("slug, billing_plan_id")
-      .eq("id", profile.tenant_id)
-      .maybeSingle();
-
-    // billing_plan_id (não só "profile existe") é o sinal de "tem CRM": desde
-    // a Transportadora, um tenant pode existir só com esse produto — nesse
-    // caso não tem dashboard nenhum pra mandar, manda pro app.
-    if (tenant?.billing_plan_id) {
-      return tenant.slug ? `/${tenant.slug}/dashboard` : "/login";
-    }
-
-    const { data: hasTransportadora } = await supabase.rpc("current_tenant_has_transportadora");
-    return hasTransportadora ? "/app/download" : "/comprar-transportadora";
-  }
+  if (profile) return "/central";
 
   const { data: dev } = await supabase
     .from("dev_users")
     .select("id")
     .eq("id", userId)
     .maybeSingle();
-  if (!dev) return "/choose-plan";
+  if (!dev) return "/central";
 
   const { data: view } = await supabase
     .from("dev_active_view")
@@ -141,6 +127,67 @@ export async function resolveHomeRoute(): Promise<string> {
   if (!user) return "/login";
 
   return resolveHomeRouteFor(supabase, user.id);
+}
+
+export type AccountService = {
+  key: "crm" | "transportadora";
+  name: string;
+  description: string;
+  active: boolean;
+  href: string;
+};
+
+/** Produtos da conta pra tela /central — cada um resolve seu próprio status e destino, sem depender um do outro. */
+export async function getAccountServices(): Promise<{
+  services: AccountService[];
+  ownerName: string | null;
+}> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { services: [], ownerName: null };
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("tenant_id")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  let crmActive = false;
+  let crmSlug: string | null = null;
+  if (profile) {
+    const { data: tenant } = await supabase
+      .from("tenants")
+      .select("slug, billing_plan_id")
+      .eq("id", profile.tenant_id)
+      .maybeSingle();
+    crmActive = !!tenant?.billing_plan_id;
+    crmSlug = tenant?.slug ?? null;
+  }
+
+  const { data: hasTransportadora } = await supabase.rpc("current_tenant_has_transportadora");
+  const ownerName = (user.user_metadata?.full_name as string | undefined) ?? null;
+
+  return {
+    ownerName,
+    services: [
+      {
+        key: "crm",
+        name: "CRM",
+        description: "Gestão de clientes, vendas e atendimento com agentes de IA.",
+        active: crmActive,
+        href: crmActive && crmSlug ? `/${crmSlug}/dashboard` : "/choose-plan",
+      },
+      {
+        key: "transportadora",
+        name: "Transportadora",
+        description: "App de gestão de fretes, clientes e motoristas.",
+        active: !!hasTransportadora,
+        href: hasTransportadora ? "/app/download" : "/comprar-transportadora",
+      },
+    ],
+  };
 }
 
 /** Busca o tenant_id do usuário logado — usado pelas server actions antes de inserir dados. */
