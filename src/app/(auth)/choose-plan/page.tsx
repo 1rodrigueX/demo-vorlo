@@ -1,5 +1,4 @@
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isCurrentUserDev, resolveHomeRoute } from "@/lib/auth/current-user";
@@ -45,6 +44,11 @@ export default async function ChoosePlanPage({
     .maybeSingle();
 
   const { data: plans } = await supabase.from("billing_plans").select("*").order("base_price_cents");
+  const { data: transportadoraPlan } = await supabase
+    .from("transportadora_plans")
+    .select("id, name, monthly_price_cents")
+    .eq("is_default", true)
+    .maybeSingle();
   const { plan: preselectedPlanId } = await searchParams;
   const ownerName = (user.user_metadata?.full_name as string | undefined) ?? null;
   const email = user.email ?? "";
@@ -66,20 +70,13 @@ export default async function ChoosePlanPage({
   const videos = await listTutorialVideos();
 
   return (
-    <>
-      <OnboardingTabs
-        plans={plans ?? []}
-        videos={videos}
-        preselectedPlanId={preselectedPlanId}
-        ownerName={ownerName}
-        email={email}
-      />
-      <p className="pb-10 text-center text-sm text-gray-500">
-        Só precisa do app de gestão de fretes?{" "}
-        <Link href="/comprar-transportadora" className="font-medium text-indigo-600 hover:underline">
-          Assine a Transportadora
-        </Link>
-      </p>
-    </>
+    <OnboardingTabs
+      plans={plans ?? []}
+      transportadoraPlan={transportadoraPlan ?? null}
+      videos={videos}
+      preselectedPlanId={preselectedPlanId}
+      ownerName={ownerName}
+      email={email}
+    />
   );
 }

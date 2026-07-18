@@ -23,12 +23,14 @@ type TabId = (typeof TABS)[number]["id"];
 
 export function OnboardingTabs({
   plans,
+  transportadoraPlan,
   videos,
   preselectedPlanId,
   ownerName,
   email,
 }: {
   plans: BillingPlan[];
+  transportadoraPlan: { id: string; name: string; monthly_price_cents: number } | null;
   videos: PlatformTutorialVideo[];
   preselectedPlanId?: string;
   ownerName: string | null;
@@ -81,7 +83,12 @@ export function OnboardingTabs({
           {activeTab === "duvidas" && <FaqTab />}
           {activeTab === "feedback" && <FeedbackTab email={email} />}
           {activeTab === "planos" && (
-            <ChoosePlanForm plans={plans} preselectedPlanId={preselectedPlanId} ownerName={ownerName} />
+            <ChoosePlanForm
+              plans={plans}
+              transportadoraPlan={transportadoraPlan}
+              preselectedPlanId={preselectedPlanId}
+              ownerName={ownerName}
+            />
           )}
         </div>
       </div>

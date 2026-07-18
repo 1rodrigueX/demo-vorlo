@@ -2,16 +2,19 @@
 
 import { useActionState, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, Minus, Plus } from "lucide-react";
+import { CheckCircle2, Minus, Plus, Truck } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
 import { Badge } from "@/components/ui/Badge";
 import { cn } from "@/lib/utils/cn";
 import { startCheckout, cancelPendingCheckout, type ActionState } from "@/lib/actions/checkout";
+import { startTransportadoraCheckout } from "@/lib/actions/transportadora-checkout";
 import { calculateTotalCents, formatCentsBrl } from "@/lib/billing/pricing";
 import { getPlanCopy } from "@/lib/billing/plan-copy";
 import type { BillingPlan } from "@/types/domain";
+
+type TransportadoraPlan = { id: string; name: string; monthly_price_cents: number };
 
 function Stepper({
   label,
@@ -80,20 +83,37 @@ export function ActiveCheckoutNotice() {
 
 export function ChoosePlanForm({
   plans,
+  transportadoraPlan,
   preselectedPlanId,
   ownerName,
 }: {
   plans: BillingPlan[];
+  transportadoraPlan: TransportadoraPlan | null;
   preselectedPlanId?: string;
   ownerName: string | null;
 }) {
   const [state, formAction, isPending] = useActionState<ActionState, FormData>(startCheckout, null);
+  const [transportadoraState, transportadoraFormAction, isTransportadoraPending] = useActionState(
+    startTransportadoraCheckout,
+    null,
+  );
   const defaultPlan = plans.find((p) => p.id === preselectedPlanId) ?? plans.find((p) => p.is_default) ?? plans[0];
   const [selectedPlanId, setSelectedPlanId] = useState(defaultPlan?.id ?? "");
+  const [transportadoraSelected, setTransportadoraSelected] = useState(false);
   const [extraSellers, setExtraSellers] = useState(0);
   const [extraManagers, setExtraManagers] = useState(0);
   const [extraAgents, setExtraAgents] = useState(0);
   const [extraIntegrations, setExtraIntegrations] = useState(0);
+
+  function selecionarPlanoCrm(planId: string) {
+    setSelectedPlanId(planId);
+    setTransportadoraSelected(false);
+  }
+
+  function selecionarTransportadora() {
+    setTransportadoraSelected(true);
+    setSelectedPlanId("");
+  }
 
   const selectedPlan = plans.find((p) => p.id === selectedPlanId) ?? null;
   const breakdown = useMemo(() => {
@@ -116,15 +136,15 @@ export function ChoosePlanForm({
         </p>
       ) : (
         <>
-          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {plans.map((plan) => {
                 const copy = getPlanCopy(plan.name);
-                const isSelected = plan.id === selectedPlanId;
+                const isSelected = !transportadoraSelected && plan.id === selectedPlanId;
                 return (
                   <button
                     key={plan.id}
                     type="button"
-                    onClick={() => setSelectedPlanId(plan.id)}
+                    onClick={() => selecionarPlanoCrm(plan.id)}
                     className={cn(
                       "rounded-2xl border p-5 text-left transition-colors",
                       isSelected
@@ -156,8 +176,76 @@ export function ChoosePlanForm({
                   </button>
                 );
               })}
+
+              {transportadoraPlan && (
+                <button
+                  type="button"
+                  onClick={selecionarTransportadora}
+                  className={cn(
+                    "rounded-2xl border p-5 text-left transition-colors",
+                    transportadoraSelected
+                      ? "border-indigo-500 bg-panel ring-2 ring-indigo-500"
+                      : "border-gray-200 bg-panel hover:border-gray-300",
+                  )}
+                >
+                  <div className="flex items-center gap-2">
+                    <Truck size={16} className="text-indigo-600" />
+                    <h3 className="text-base font-semibold text-gray-900">{transportadoraPlan.name}</h3>
+                    <Badge className="bg-indigo-50 text-indigo-700">Add-on</Badge>
+                  </div>
+                  <p className="mt-1 text-2xl font-bold text-gray-900">
+                    {formatCentsBrl(transportadoraPlan.monthly_price_cents)}
+                    <span className="text-sm font-normal text-gray-500">/mês</span>
+                  </p>
+                  <p className="mt-2 text-xs text-gray-500">
+                    App de gestão de fretes pra transportadoras — não é o CRM.
+                  </p>
+                  <ul className="mt-3 space-y-1.5">
+                    {[
+                      "App Android de clientes, motoristas e fretes",
+                      "Cálculo automático de valor a receber (imposto)",
+                      "Relatórios em PDF por período",
+                    ].map((bullet) => (
+                      <li key={bullet} className="flex items-start gap-1.5 text-xs text-gray-600">
+                        <CheckCircle2 size={14} className="mt-0.5 shrink-0 text-emerald-600" />
+                        {bullet}
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="mt-3 text-xs text-gray-400">
+                    Pode assinar junto com o CRM ou sozinho, sem precisar do CRM.
+                  </p>
+                </button>
+              )}
             </div>
 
+            {transportadoraSelected ? (
+              <div className="mt-8 rounded-2xl border border-gray-200 bg-panel p-6 sm:p-8">
+                <form action={transportadoraFormAction} className="space-y-6">
+                  <input type="hidden" name="planId" value={transportadoraPlan?.id ?? ""} />
+
+                  <div>
+                    <Label htmlFor="transportadoraCompanyName">Nome da empresa</Label>
+                    <Input id="transportadoraCompanyName" name="companyName" required />
+                  </div>
+
+                  <div className="flex items-center justify-between rounded-lg bg-gray-50 px-4 py-3">
+                    <span className="text-sm font-medium text-gray-700">Total mensal</span>
+                    <span className="text-xl font-bold text-gray-900">
+                      {transportadoraPlan ? formatCentsBrl(transportadoraPlan.monthly_price_cents) : "—"}
+                    </span>
+                  </div>
+
+                  {transportadoraState?.error && (
+                    <p className="text-sm text-red-600">{transportadoraState.error}</p>
+                  )}
+
+                  <Button type="submit" className="w-full" isLoading={isTransportadoraPending}>
+                    Continuar para pagamento
+                  </Button>
+                </form>
+              </div>
+            ) : (
             <div className="mt-8 rounded-2xl border border-gray-200 bg-panel p-6 sm:p-8">
               <form action={formAction} className="space-y-6">
                 <input type="hidden" name="planId" value={selectedPlanId} />
@@ -233,6 +321,7 @@ export function ChoosePlanForm({
                 </Button>
               </form>
             </div>
+            )}
         </>
       )}
     </div>

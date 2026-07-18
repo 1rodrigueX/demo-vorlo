@@ -1,10 +1,12 @@
-name: Build Frete App APK
+name: Build Frete App (APK + Web)
 
 # Manual só por enquanto (botão "Run workflow" no GitHub Actions) — builda o
 # app Flutter (apps/frete-app) num runner Linux (não precisa de Android SDK
-# local) e publica o APK direto na VPS, pronto pra baixar em
-# https://falaai.cloud/downloads/frete-app-latest.apk (servido como arquivo
-# estático pelo Next.js, sem precisar de rebuild/restart do site).
+# local) e publica direto na VPS:
+#   - APK em https://falaai.cloud/downloads/frete-app-latest.apk
+#   - versão web em https://falaai.cloud/app-web/
+# Ambos servidos como arquivos estáticos pelo Next.js, sem rebuild/restart do
+# site. Nenhum dos dois é commitado no git (mesmo tratamento de node_modules).
 on:
   workflow_dispatch: {}
 
@@ -35,18 +37,23 @@ jobs:
           EOF
 
       - run: flutter pub get
-      - run: flutter build apk --release --dart-define-from-file=env.json
 
+      - run: flutter build apk --release --dart-define-from-file=env.json
       - name: Renomeia o artefato pra um nome fixo
         run: cp build/app/outputs/flutter-apk/app-release.apk frete-app-latest.apk
 
-      - name: Garante que a pasta de destino existe na VPS
+      - run: flutter build web --release --dart-define-from-file=env.json --base-href /app-web/
+
+      - name: Garante que as pastas de destino existem na VPS
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
-          script: mkdir -p /opt/crm/public/downloads
+          script: |
+            mkdir -p /opt/crm/public/downloads
+            rm -rf /opt/crm/public/app-web
+            mkdir -p /opt/crm/public/app-web
 
       - name: Envia o APK pra VPS
         uses: appleboy/scp-action@v0.1.7
@@ -57,3 +64,13 @@ jobs:
           source: "apps/frete-app/frete-app-latest.apk"
           target: "/opt/crm/public/downloads/"
           strip_components: 2
+
+      - name: Envia a versão web pra VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          source: "apps/frete-app/build/web/*"
+          target: "/opt/crm/public/app-web/"
+          strip_components: 4

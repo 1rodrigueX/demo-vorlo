@@ -24,6 +24,17 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+            <!-- Callback do login com Google (Supabase OAuth) — volta pro app
+                 depois do usuário confirmar no navegador/Google. Precisa
+                 cadastrar "com.falaai.frete_app://login-callback/" como
+                 Redirect URL no painel do Supabase (Authentication > URL
+                 Configuration), senão o Google recusa o redirect. -->
+            <intent-filter android:autoVerify="false">
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="com.falaai.frete_app" android:host="login-callback"/>
+            </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->

@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+/// Deep link de volta pro app depois do login com Google. Precisa estar
+/// cadastrado como Redirect URL no painel do Supabase (Authentication > URL
+/// Configuration) e casa com o intent-filter no AndroidManifest.xml.
+const _googleRedirectUrl = 'com.falaai.frete_app://login-callback';
+
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -14,6 +19,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
 
   bool _entrando = false;
+  bool _entrandoComGoogle = false;
   String? _erro;
 
   @override
@@ -43,6 +49,28 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() => _erro = 'Não foi possível entrar. Verifique sua conexão e tente de novo.');
     } finally {
       if (mounted) setState(() => _entrando = false);
+    }
+  }
+
+  Future<void> _entrarComGoogle() async {
+    setState(() {
+      _entrandoComGoogle = true;
+      _erro = null;
+    });
+
+    try {
+      // Abre o navegador/app do Google; ao concluir, o Android traz o
+      // usuário de volta via deep link e o AuthGate reage sozinho.
+      await Supabase.instance.client.auth.signInWithOAuth(
+        OAuthProvider.google,
+        redirectTo: _googleRedirectUrl,
+      );
+    } on AuthException catch (e) {
+      setState(() => _erro = e.message);
+    } catch (e) {
+      setState(() => _erro = 'Não foi possível abrir o login do Google. Tente de novo.');
+    } finally {
+      if (mounted) setState(() => _entrandoComGoogle = false);
     }
   }
 
@@ -78,6 +106,32 @@ class _LoginScreenState extends State<LoginScreen> {
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
                   const SizedBox(height: 32),
+                  OutlinedButton.icon(
+                    onPressed: _entrandoComGoogle ? null : _entrarComGoogle,
+                    icon: _entrandoComGoogle
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.g_mobiledata, size: 24),
+                    label: const Text('Continuar com Google'),
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    children: [
+                      const Expanded(child: Divider()),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        child: Text(
+                          'ou com e-mail',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ),
+                      const Expanded(child: Divider()),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
                   TextFormField(
                     controller: _emailController,
                     decoration: const InputDecoration(labelText: 'E-mail'),

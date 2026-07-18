@@ -49,3 +49,7 @@ next-env.d.ts
 
 # claude code internal
 .claude/
+
+# build web gerado do app Flutter (apps/frete-app) — nunca commitado, vai
+# direto pra VPS via GitHub Actions (mesmo esquema do APK), igual node_modules
+/public/app-web/

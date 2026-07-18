@@ -12,6 +12,13 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Build gerado do app Flutter, copiado pra public/ pra ser servido como
+    // estático — não é código-fonte do site (main.dart.js sozinho já é
+    // minificado/enorme e sozinho gera milhares de falsos positivos).
+    "public/app-web/**",
+    // apps/frete-app é um projeto Flutter/Dart à parte, com tooling próprio
+    // (dart analyze) — nunca deve ser varrido pelo ESLint do Next.js.
+    "apps/**",
   ]),
 ]);
 
