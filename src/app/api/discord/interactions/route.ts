@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { verifyKey, InteractionType, InteractionResponseType } from "discord-interactions";
 import { getPlatformStats } from "@/lib/discord/stats";
 import { getDiscordConfig } from "@/lib/discord/config";
+import { buildStatusMessage } from "@/lib/discord/statusEmbed";
 
 /**
  * Endpoint de Interactions do Discord — configurado direto no painel do app
@@ -35,21 +36,10 @@ export async function POST(request: Request) {
     const commandName = interaction.data?.name;
 
     if (commandName === "status") {
-      const stats = await getPlatformStats();
-      const pendingTotal = stats.newSuggestions + stats.newFeedback + stats.newBugs;
-      const content = [
-        "🟢 **FALA AI está no ar**",
-        "",
-        `📊 ${stats.crmCount} CRM${stats.crmCount === 1 ? "" : "s"} · ${stats.transportadoraCount} Transportadora${stats.transportadoraCount === 1 ? "" : "s"} · ${stats.userCount} usuário${stats.userCount === 1 ? "" : "s"}`,
-        `📥 ${pendingTotal} pendente${pendingTotal === 1 ? "" : "s"} (${stats.newSuggestions} sugestão, ${stats.newFeedback} feedback, ${stats.newBugs} bug)`,
-        stats.failedJobsLast24h > 0
-          ? `⚠️ ${stats.failedJobsLast24h} job${stats.failedJobsLast24h === 1 ? "" : "s"} falhou nas últimas 24h`
-          : "✅ Sem falhas na fila nas últimas 24h",
-      ].join("\n");
-
+      const message = await buildStatusMessage();
       return NextResponse.json({
         type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-        data: { content },
+        data: message,
       });
     }
 
