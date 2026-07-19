@@ -12,5 +12,8 @@ export async function register() {
     for (const connection of connections ?? []) {
       void startBaileysConnection(connection.tenant_id);
     }
+
+    const { ensureDiscordGatewayConnected } = await import("@/lib/discord/gatewayClient");
+    void ensureDiscordGatewayConnected();
   }
 }

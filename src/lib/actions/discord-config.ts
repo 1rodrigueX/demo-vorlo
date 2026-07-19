@@ -6,6 +6,7 @@ import { isCurrentUserDev } from "@/lib/auth/current-user";
 import { discordConfigSchema } from "@/lib/validation/discord-config";
 import { getDiscordConfig } from "@/lib/discord/config";
 import { sendDiscordMessage } from "@/lib/discord/send";
+import { reconnectDiscordGateway } from "@/lib/discord/gatewayClient";
 
 export type ActionState = { error?: string } | null;
 
@@ -50,6 +51,7 @@ export async function saveDiscordConfig(_prevState: ActionState, formData: FormD
   const result = await persistDiscordConfig(formData);
   if (result?.error) return result;
 
+  await reconnectDiscordGateway();
   revalidatePath("/dev/discord");
   return null;
 }
@@ -62,6 +64,7 @@ export async function saveAndTestDiscordConfig(_prevState: ActionState, formData
 
   const saveResult = await persistDiscordConfig(formData);
   if (saveResult?.error) return saveResult;
+  await reconnectDiscordGateway();
   revalidatePath("/dev/discord");
 
   const testResult = await sendDiscordMessage({
