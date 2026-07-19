@@ -55,7 +55,7 @@ function SignupForm() {
               </div>
               <div>
                 <Label htmlFor="password">Senha</Label>
-                <PasswordInput id="password" name="password" required autoComplete="new-password" />
+                <PasswordInput id="password" name="password" required autoComplete="new-password" showStrength />
               </div>
               <div>
                 <Label htmlFor="confirmPassword">Confirmar senha</Label>

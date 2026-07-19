@@ -36,7 +36,7 @@ export function TeamMemberForm({ onSaved }: { onSaved?: () => void }) {
       </div>
       <div>
         <Label htmlFor="password">Senha inicial</Label>
-        <PasswordInput id="password" name="password" minLength={8} required />
+        <PasswordInput id="password" name="password" minLength={8} required showStrength />
       </div>
       <div>
         <Label htmlFor="role">Função</Label>

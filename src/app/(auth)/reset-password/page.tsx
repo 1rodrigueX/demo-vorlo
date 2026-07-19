@@ -19,7 +19,7 @@ export default function ResetPasswordPage() {
         <form action={formAction} className="space-y-4">
           <div>
             <Label htmlFor="password">Nova senha</Label>
-            <PasswordInput id="password" name="password" required autoComplete="new-password" />
+            <PasswordInput id="password" name="password" required autoComplete="new-password" showStrength />
           </div>
           <div>
             <Label htmlFor="confirmPassword">Confirmar senha</Label>

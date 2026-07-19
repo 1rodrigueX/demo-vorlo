@@ -56,7 +56,7 @@ export function TenantForm({ onSaved }: { onSaved?: () => void }) {
           </div>
           <div>
             <Label htmlFor="ownerPassword">Senha inicial</Label>
-            <PasswordInput id="ownerPassword" name="ownerPassword" minLength={8} required />
+            <PasswordInput id="ownerPassword" name="ownerPassword" minLength={8} required showStrength />
           </div>
         </div>
       </div>

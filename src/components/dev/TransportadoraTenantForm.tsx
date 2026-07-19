@@ -44,7 +44,7 @@ export function TransportadoraTenantForm({ onSaved }: { onSaved?: () => void }) 
           </div>
           <div>
             <Label htmlFor="t-ownerPassword">Senha inicial</Label>
-            <PasswordInput id="t-ownerPassword" name="ownerPassword" minLength={8} required />
+            <PasswordInput id="t-ownerPassword" name="ownerPassword" minLength={8} required showStrength />
           </div>
         </div>
       </div>
