@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isCurrentUserDev } from "@/lib/auth/current-user";
 import { createTransportadoraTenantSchema } from "@/lib/validation/tenant";
+import { notifyNewTransportadoraTenant } from "@/lib/discord/notify";
 
 export type ActionState = { error?: string } | null;
 
@@ -85,6 +86,8 @@ export async function createTransportadoraTenant(
 
   // fator_imposto default (0.85) — o app Flutter espera essa linha existir no primeiro login.
   await admin.from("transportadora_configuracoes").upsert({ tenant_id: tenant.id }, { onConflict: "tenant_id" });
+
+  void notifyNewTransportadoraTenant(parsed.data.name, parsed.data.slug);
 
   revalidatePath("/dev");
   return null;

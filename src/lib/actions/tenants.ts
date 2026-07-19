@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isCurrentUserDev } from "@/lib/auth/current-user";
 import { createTenantSchema } from "@/lib/validation/tenant";
+import { notifyNewCrmTenant } from "@/lib/discord/notify";
 
 export type ActionState = { error?: string } | null;
 
@@ -76,6 +77,8 @@ export async function createTenant(_prevState: ActionState, formData: FormData):
   await admin
     .from("pipeline_stages")
     .insert(DEFAULT_STAGES.map((stage) => ({ ...stage, tenant_id: tenant.id })));
+
+  void notifyNewCrmTenant(parsed.data.name, parsed.data.slug);
 
   revalidatePath("/dev");
   return null;

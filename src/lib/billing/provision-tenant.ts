@@ -6,6 +6,7 @@ import { testAnthropicApiKey } from "@/lib/anthropic/client";
 import { calculateTotalCents } from "@/lib/billing/pricing";
 import { addOneMonth } from "@/lib/billing/cycle";
 import { isReservedSlug } from "@/lib/tenant/reserved-slugs";
+import { notifyNewCrmTenant } from "@/lib/discord/notify";
 
 const DEFAULT_STAGES = [
   { name: "Novo", position: 1, color: "#6366f1", is_won: false, is_lost: false },
@@ -79,6 +80,7 @@ export async function provisionTenantFromCheckout(
 
   const baseSlug = slugify(pending.company_name);
   let tenantId: string | null = null;
+  let tenantSlug: string | null = null;
   let lastError: string | undefined;
 
   for (let attempt = 0; attempt < 5 && !tenantId; attempt++) {
@@ -102,6 +104,7 @@ export async function provisionTenantFromCheckout(
 
     if (tenant) {
       tenantId = tenant.id;
+      tenantSlug = slug;
     } else if (error?.code === "23505") {
       lastError = error.message;
       continue;
@@ -153,6 +156,8 @@ export async function provisionTenantFromCheckout(
     .from("pending_checkouts")
     .update({ status: "completed", anthropic_api_key: null })
     .eq("id", pending.id);
+
+  void notifyNewCrmTenant(pending.company_name, tenantSlug ?? baseSlug);
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://45.149.153.20";
   try {

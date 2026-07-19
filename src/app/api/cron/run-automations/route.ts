@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendWhatsAppMessage } from "@/lib/whatsapp/send";
+import { notifyJobFailure } from "@/lib/discord/notify";
 
 const BATCH_SIZE = 20;
 
@@ -91,6 +92,7 @@ export async function POST(request: Request) {
         .eq("id", job.id);
       failed++;
       console.error("run-automations: job falhou", job.id, job.job_type, message);
+      void notifyJobFailure(job.job_type, job.tenant_id, message);
     }
   }
 

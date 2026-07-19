@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { sendBillingEmail } from "@/lib/email/resend";
 import { addOneMonth } from "@/lib/billing/cycle";
 import { isReservedSlug } from "@/lib/tenant/reserved-slugs";
+import { notifyNewTransportadoraTenant } from "@/lib/discord/notify";
 
 const DIACRITIC_MARKS_REGEX = new RegExp("[\\u0300-\\u036f]", "g");
 
@@ -142,6 +143,9 @@ export async function provisionTransportadoraFromCheckout(
     .from("transportadora_pending_checkouts")
     .update({ status: "completed" })
     .eq("id", pending.id);
+
+  const { data: notifiedTenant } = await admin.from("tenants").select("name, slug").eq("id", tenantId).maybeSingle();
+  if (notifiedTenant) void notifyNewTransportadoraTenant(notifiedTenant.name, notifiedTenant.slug);
 
   const { data: userResult } = await admin.auth.admin.getUserById(pending.user_id);
   const email = userResult.user?.email;

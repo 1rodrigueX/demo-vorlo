@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isCurrentUserDev } from "@/lib/auth/current-user";
+import { notifyNewFeedback } from "@/lib/discord/notify";
 
 export type ActionState = { error?: string; message?: string } | null;
 
@@ -26,6 +27,7 @@ export async function submitPlatformFeedback(_prevState: ActionState, formData: 
   });
 
   if (error) return { error: `Não foi possível enviar: ${error.message}` };
+  void notifyNewFeedback(user.email, message);
   return { message: "Recebemos sua mensagem! Vamos responder por e-mail em breve." };
 }
 

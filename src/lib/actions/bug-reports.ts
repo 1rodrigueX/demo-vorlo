@@ -4,14 +4,19 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireTenantId, isCurrentUserDev } from "@/lib/auth/current-user";
-import { notifyNewSuggestion } from "@/lib/discord/notify";
+import { notifyNewBugReport } from "@/lib/discord/notify";
+import { bugReportSchema } from "@/lib/validation/bug-report";
 
 export type ActionState = { error?: string } | null;
 
-export async function submitSuggestion(_prevState: ActionState, formData: FormData): Promise<ActionState> {
-  const message = String(formData.get("message") ?? "").trim();
-  if (!message) return { error: "Escreva sua sugestão antes de enviar" };
-  if (message.length > 2000) return { error: "Sugestão muito longa (máx. 2000 caracteres)" };
+export async function submitBugReport(_prevState: ActionState, formData: FormData): Promise<ActionState> {
+  const parsed = bugReportSchema.safeParse({
+    message: formData.get("message"),
+    severity: formData.get("severity"),
+  });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
+  }
 
   const supabase = await createClient();
   const {
@@ -28,22 +33,23 @@ export async function submitSuggestion(_prevState: ActionState, formData: FormDa
   ]);
   const authorName = profile?.full_name ?? user.email ?? "usuário";
 
-  const { error } = await supabase.from("suggestions").insert({
+  const { error } = await supabase.from("bug_reports").insert({
     tenant_id: tenantId,
     created_by: user.id,
     created_by_name: authorName,
-    message,
+    message: parsed.data.message,
+    severity: parsed.data.severity,
   });
 
   if (error) return { error: `Não foi possível enviar: ${error.message}` };
-  void notifyNewSuggestion(tenant?.name ?? "Empresa", authorName, message);
+  void notifyNewBugReport(tenant?.name ?? "Empresa", authorName, parsed.data.severity, parsed.data.message);
 
-  revalidatePath("/[tenantSlug]/sugestoes", "page");
+  revalidatePath("/[tenantSlug]/bugs", "page");
   return null;
 }
 
-/** Sugestões do próprio tenant (pra tela /sugestoes ver o histórico e respostas). */
-export async function listOwnSuggestions() {
+/** Bugs reportados pelo próprio tenant (histórico + respostas). */
+export async function listOwnBugReports() {
   const supabase = await createClient();
   const {
     data: { user },
@@ -54,7 +60,7 @@ export async function listOwnSuggestions() {
   if (!tenantId) return [];
 
   const { data } = await supabase
-    .from("suggestions")
+    .from("bug_reports")
     .select("*")
     .eq("tenant_id", tenantId)
     .order("created_at", { ascending: false });
@@ -62,37 +68,37 @@ export async function listOwnSuggestions() {
   return data ?? [];
 }
 
-/** Todas as sugestões de todos os tenants — só pro painel /dev. */
-export async function listAllSuggestions() {
+/** Todos os bugs de todos os tenants — só pro painel /dev. */
+export async function listAllBugReports() {
   if (!(await isCurrentUserDev())) return [];
 
   const admin = createAdminClient();
   const { data } = await admin
-    .from("suggestions")
+    .from("bug_reports")
     .select("*, tenant:tenants(name)")
     .order("created_at", { ascending: false });
 
   return data ?? [];
 }
 
-export async function respondToSuggestion(_prevState: ActionState, formData: FormData): Promise<ActionState> {
+export async function respondToBugReport(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   if (!(await isCurrentUserDev())) {
     return { error: "Acesso restrito a devs da plataforma" };
   }
 
-  const suggestionId = String(formData.get("suggestionId") ?? "");
+  const bugId = String(formData.get("bugId") ?? "");
   const response = String(formData.get("response") ?? "").trim();
-  if (!suggestionId) return { error: "Sugestão inválida" };
+  if (!bugId) return { error: "Bug inválido" };
   if (!response) return { error: "Escreva uma resposta" };
 
   const admin = createAdminClient();
   const { error } = await admin
-    .from("suggestions")
+    .from("bug_reports")
     .update({ response, status: "answered", responded_at: new Date().toISOString() })
-    .eq("id", suggestionId);
+    .eq("id", bugId);
 
   if (error) return { error: "Não foi possível salvar a resposta" };
 
-  revalidatePath("/dev/sugestoes");
+  revalidatePath("/dev/bugs");
   return null;
 }

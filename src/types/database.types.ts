@@ -2102,6 +2102,53 @@ export interface Database {
           },
         ];
       };
+      bug_reports: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          created_by: string | null;
+          created_by_name: string | null;
+          message: string;
+          severity: "baixa" | "media" | "alta" | "critica";
+          status: "new" | "answered";
+          response: string | null;
+          responded_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          created_by?: string | null;
+          created_by_name?: string | null;
+          message: string;
+          severity?: "baixa" | "media" | "alta" | "critica";
+          status?: "new" | "answered";
+          response?: string | null;
+          responded_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          created_by?: string | null;
+          created_by_name?: string | null;
+          message?: string;
+          severity?: "baixa" | "media" | "alta" | "critica";
+          status?: "new" | "answered";
+          response?: string | null;
+          responded_at?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "bug_reports_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
