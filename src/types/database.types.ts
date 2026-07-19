@@ -2149,6 +2149,33 @@ export interface Database {
           },
         ];
       };
+      platform_discord_config: {
+        Row: {
+          id: boolean;
+          bot_token: string | null;
+          public_key: string | null;
+          application_id: string | null;
+          log_channel_id: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          id?: boolean;
+          bot_token?: string | null;
+          public_key?: string | null;
+          application_id?: string | null;
+          log_channel_id?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          id?: boolean;
+          bot_token?: string | null;
+          public_key?: string | null;
+          application_id?: string | null;
+          log_channel_id?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;

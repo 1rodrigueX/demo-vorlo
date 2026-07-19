@@ -10,6 +10,7 @@ const TABS = [
   { href: "/dev/sugestoes", label: "Sugestões" },
   { href: "/dev/feedback", label: "Feedback" },
   { href: "/dev/bugs", label: "Bugs" },
+  { href: "/dev/discord", label: "Discord" },
 ];
 
 export function DevNavTabs() {

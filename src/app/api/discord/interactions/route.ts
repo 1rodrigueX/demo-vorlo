@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { verifyKey, InteractionType, InteractionResponseType } from "discord-interactions";
 import { getPlatformStats } from "@/lib/discord/stats";
+import { getDiscordConfig } from "@/lib/discord/config";
 
 /**
  * Endpoint de Interactions do Discord — configurado direto no painel do app
@@ -14,12 +15,12 @@ export async function POST(request: Request) {
   const timestamp = request.headers.get("x-signature-timestamp");
   const rawBody = await request.text();
 
-  const publicKey = process.env.DISCORD_PUBLIC_KEY;
-  if (!publicKey || !signature || !timestamp) {
+  const config = await getDiscordConfig();
+  if (!config.publicKey || !signature || !timestamp) {
     return NextResponse.json({ error: "Não configurado" }, { status: 401 });
   }
 
-  const isValid = await verifyKey(rawBody, signature, timestamp, publicKey);
+  const isValid = await verifyKey(rawBody, signature, timestamp, config.publicKey);
   if (!isValid) {
     return NextResponse.json({ error: "Assinatura inválida" }, { status: 401 });
   }
