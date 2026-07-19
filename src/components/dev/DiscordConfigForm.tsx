@@ -1,13 +1,18 @@
 "use client";
 
-import { useActionState, useEffect, useRef } from "react";
+import { useActionState, useEffect, useRef, useTransition } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { PasswordInput } from "@/components/ui/PasswordInput";
 import { Label } from "@/components/ui/Label";
 import { Card } from "@/components/ui/Card";
-import { saveDiscordConfig, saveAndTestDiscordConfig, type ActionState } from "@/lib/actions/discord-config";
+import {
+  saveDiscordConfig,
+  saveAndTestDiscordConfig,
+  restartDiscordBot,
+  type ActionState,
+} from "@/lib/actions/discord-config";
 
 type InitialConfig = {
   botToken: string | null;
@@ -36,6 +41,15 @@ export function DiscordConfigForm({ initial }: { initial: InitialConfig }) {
   }, [isTesting, testState]);
 
   const error = saveState?.error ?? testState?.error;
+
+  const [isRestarting, startRestart] = useTransition();
+  function handleRestart() {
+    startRestart(async () => {
+      const result = await restartDiscordBot();
+      if (result?.error) toast.error(result.error);
+      else toast.success("Bot reiniciado");
+    });
+  }
 
   return (
     <Card className="max-w-xl p-6">
@@ -73,6 +87,9 @@ export function DiscordConfigForm({ initial }: { initial: InitialConfig }) {
           </Button>
           <Button type="submit" formAction={testAction} variant="secondary" isLoading={isTesting}>
             Salvar e testar
+          </Button>
+          <Button type="button" variant="secondary" isLoading={isRestarting} onClick={handleRestart}>
+            Reiniciar bot
           </Button>
         </div>
       </form>

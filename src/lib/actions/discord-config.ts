@@ -76,3 +76,14 @@ export async function saveAndTestDiscordConfig(_prevState: ActionState, formData
   if (!testResult.ok) return { error: `Salvo, mas o teste falhou: ${testResult.error}` };
   return null;
 }
+
+/** Derruba e reconecta o Gateway sem mudar nada salvo — útil quando o bot parece travado. */
+export async function restartDiscordBot(): Promise<ActionState> {
+  if (!(await isCurrentUserDev())) {
+    return { error: "Acesso restrito a devs da plataforma" };
+  }
+
+  await reconnectDiscordGateway();
+  revalidatePath("/dev/discord");
+  return null;
+}
