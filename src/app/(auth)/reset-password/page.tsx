@@ -4,7 +4,7 @@ import { useActionState } from "react";
 import { updatePassword } from "@/lib/actions/auth";
 import type { AuthActionState } from "@/lib/actions/auth";
 import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
+import { PasswordInput } from "@/components/ui/PasswordInput";
 import { Label } from "@/components/ui/Label";
 
 export default function ResetPasswordPage() {
@@ -19,17 +19,11 @@ export default function ResetPasswordPage() {
         <form action={formAction} className="space-y-4">
           <div>
             <Label htmlFor="password">Nova senha</Label>
-            <Input id="password" name="password" type="password" required autoComplete="new-password" />
+            <PasswordInput id="password" name="password" required autoComplete="new-password" />
           </div>
           <div>
             <Label htmlFor="confirmPassword">Confirmar senha</Label>
-            <Input
-              id="confirmPassword"
-              name="confirmPassword"
-              type="password"
-              required
-              autoComplete="new-password"
-            />
+            <PasswordInput id="confirmPassword" name="confirmPassword" required autoComplete="new-password" />
           </div>
 
           {state?.error && <p className="text-sm text-red-600">{state.error}</p>}

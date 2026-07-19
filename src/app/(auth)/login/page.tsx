@@ -6,6 +6,7 @@ import { Home } from "lucide-react";
 import { login, type AuthActionState } from "@/lib/actions/auth";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { PasswordInput } from "@/components/ui/PasswordInput";
 import { Label } from "@/components/ui/Label";
 import { GoogleAuthButton } from "@/components/auth/GoogleAuthButton";
 
@@ -41,13 +42,7 @@ export default function LoginPage() {
           </div>
           <div>
             <Label htmlFor="password">Senha</Label>
-            <Input
-              id="password"
-              name="password"
-              type="password"
-              required
-              autoComplete="current-password"
-            />
+            <PasswordInput id="password" name="password" required autoComplete="current-password" />
           </div>
 
           {state?.error && <p className="text-sm text-red-600">{state.error}</p>}
