@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { pickLeastLoadedMember } from "@/lib/whatsapp/findOrCreateContact";
 import { incomingLeadSchema } from "@/lib/validation/lead-webhook";
+import { checkRateLimit } from "@/lib/utils/rateLimit";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -23,6 +24,17 @@ export function OPTIONS() {
  */
 export async function POST(request: Request, { params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
+
+  // Sem isso, uma mensagem de boas-vindas configurada vira arma de spam via
+  // o WhatsApp do tenant (número de terceiro pode ser martelado indefinidamente).
+  const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  if (!checkRateLimit(`leads-token:${token}`, 20, 60_000) || !checkRateLimit(`leads-ip:${ip}`, 30, 60_000)) {
+    return NextResponse.json({ error: "Muitas requisições, tente novamente em instantes" }, {
+      status: 429,
+      headers: CORS_HEADERS,
+    });
+  }
+
   const admin = createAdminClient();
 
   const { data: webhook } = await admin

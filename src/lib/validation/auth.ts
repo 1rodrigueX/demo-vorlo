@@ -9,8 +9,8 @@ export type LoginInput = z.infer<typeof loginSchema>;
 
 export const updatePasswordSchema = z
   .object({
-    password: z.string().min(6, "A senha deve ter ao menos 6 caracteres"),
-    confirmPassword: z.string().min(6, "Confirme a senha"),
+    password: z.string().min(8, "A senha deve ter ao menos 8 caracteres"),
+    confirmPassword: z.string().min(8, "Confirme a senha"),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "As senhas não coincidem",
@@ -23,8 +23,8 @@ export const signupSchema = z
   .object({
     fullName: z.string().trim().min(2, "Informe seu nome"),
     email: z.email("Informe um email válido"),
-    password: z.string().min(6, "A senha deve ter ao menos 6 caracteres"),
-    confirmPassword: z.string().min(6, "Confirme a senha"),
+    password: z.string().min(8, "A senha deve ter ao menos 8 caracteres"),
+    confirmPassword: z.string().min(8, "Confirme a senha"),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "As senhas não coincidem",

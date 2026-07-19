@@ -4,6 +4,7 @@ import { useActionState, useEffect, useRef } from "react";
 import { createTeamMember, type ActionState } from "@/lib/actions/tenant-settings";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { PasswordInput } from "@/components/ui/PasswordInput";
 import { Label } from "@/components/ui/Label";
 import { Select } from "@/components/ui/Select";
 
@@ -35,7 +36,7 @@ export function TeamMemberForm({ onSaved }: { onSaved?: () => void }) {
       </div>
       <div>
         <Label htmlFor="password">Senha inicial</Label>
-        <Input id="password" name="password" type="password" minLength={6} required />
+        <PasswordInput id="password" name="password" minLength={8} required />
       </div>
       <div>
         <Label htmlFor="role">Função</Label>

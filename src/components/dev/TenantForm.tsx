@@ -4,6 +4,7 @@ import { useActionState, useEffect, useRef } from "react";
 import { createTenant, type ActionState } from "@/lib/actions/tenants";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { PasswordInput } from "@/components/ui/PasswordInput";
 import { Label } from "@/components/ui/Label";
 
 export function TenantForm({ onSaved }: { onSaved?: () => void }) {
@@ -55,7 +56,7 @@ export function TenantForm({ onSaved }: { onSaved?: () => void }) {
           </div>
           <div>
             <Label htmlFor="ownerPassword">Senha inicial</Label>
-            <Input id="ownerPassword" name="ownerPassword" type="password" minLength={6} required />
+            <PasswordInput id="ownerPassword" name="ownerPassword" minLength={8} required />
           </div>
         </div>
       </div>

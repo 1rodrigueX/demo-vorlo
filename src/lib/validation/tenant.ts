@@ -13,7 +13,7 @@ export const createTenantSchema = z.object({
   managerLimit: z.coerce.number().int().min(0).max(999),
   ownerFullName: z.string().trim().min(2, "Informe o nome do dono"),
   ownerEmail: z.string().trim().email("Email inválido"),
-  ownerPassword: z.string().min(6, "Senha deve ter ao menos 6 caracteres"),
+  ownerPassword: z.string().min(8, "Senha deve ter ao menos 8 caracteres"),
 });
 
 export type CreateTenantInput = z.infer<typeof createTenantSchema>;
@@ -28,7 +28,7 @@ export const createTransportadoraTenantSchema = z.object({
     .refine((slug) => !isReservedSlug(slug), "Esse slug é reservado pelo sistema, escolha outro"),
   ownerFullName: z.string().trim().min(2, "Informe o nome do dono"),
   ownerEmail: z.string().trim().email("Email inválido"),
-  ownerPassword: z.string().min(6, "Senha deve ter ao menos 6 caracteres"),
+  ownerPassword: z.string().min(8, "Senha deve ter ao menos 8 caracteres"),
 });
 
 export type CreateTransportadoraTenantInput = z.infer<typeof createTransportadoraTenantSchema>;
@@ -42,7 +42,7 @@ export type UpdateTenantBrandingInput = z.infer<typeof updateTenantBrandingSchem
 export const createTeamMemberSchema = z.object({
   fullName: z.string().trim().min(2, "Informe o nome"),
   email: z.string().trim().email("Email inválido"),
-  password: z.string().min(6, "Senha deve ter ao menos 6 caracteres"),
+  password: z.string().min(8, "Senha deve ter ao menos 8 caracteres"),
   role: z.enum(["member", "manager"]),
 });
 

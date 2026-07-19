@@ -4,6 +4,7 @@ import { useActionState, useEffect, useRef } from "react";
 import { createTransportadoraTenant, type ActionState } from "@/lib/actions/dev-transportadora";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { PasswordInput } from "@/components/ui/PasswordInput";
 import { Label } from "@/components/ui/Label";
 
 export function TransportadoraTenantForm({ onSaved }: { onSaved?: () => void }) {
@@ -43,7 +44,7 @@ export function TransportadoraTenantForm({ onSaved }: { onSaved?: () => void }) 
           </div>
           <div>
             <Label htmlFor="t-ownerPassword">Senha inicial</Label>
-            <Input id="t-ownerPassword" name="ownerPassword" type="password" minLength={6} required />
+            <PasswordInput id="t-ownerPassword" name="ownerPassword" minLength={8} required />
           </div>
         </div>
       </div>
