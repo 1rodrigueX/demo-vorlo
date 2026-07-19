@@ -16,6 +16,7 @@ export const RESERVED_SLUGS = new Set([
   "central",
   "comprar-transportadora",
   "downloads",
+  "mfa-challenge",
 ]);
 
 export function isReservedSlug(slug: string): boolean {

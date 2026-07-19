@@ -43,10 +43,30 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  if (user && (path === "/login" || path === "/signup")) {
-    const url = request.nextUrl.clone();
-    url.pathname = await resolveHomeRouteFor(supabase, user.id);
-    return NextResponse.redirect(url);
+  if (user) {
+    // Sessão pode estar "logada" (aal1) sem ainda ter passado pelo segundo
+    // fator de quem tem MFA ativado — sem essa checagem, bastaria a senha
+    // pra navegar direto pra qualquer rota digitando a URL.
+    const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+    const needsMfaChallenge = !!aal && aal.nextLevel === "aal2" && aal.currentLevel !== aal.nextLevel;
+
+    if (path === "/login" || path === "/signup") {
+      const url = request.nextUrl.clone();
+      url.pathname = await resolveHomeRouteFor(supabase, user.id);
+      return NextResponse.redirect(url);
+    }
+
+    if (needsMfaChallenge && path !== "/mfa-challenge") {
+      const url = request.nextUrl.clone();
+      url.pathname = "/mfa-challenge";
+      return NextResponse.redirect(url);
+    }
+
+    if (!needsMfaChallenge && path === "/mfa-challenge") {
+      const url = request.nextUrl.clone();
+      url.pathname = await resolveHomeRouteFor(supabase, user.id);
+      return NextResponse.redirect(url);
+    }
   }
 
   return supabaseResponse;

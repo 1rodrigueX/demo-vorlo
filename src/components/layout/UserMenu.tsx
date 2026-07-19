@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { LogOut, Wrench, DoorOpen, LayoutGrid } from "lucide-react";
+import { LogOut, Wrench, DoorOpen, LayoutGrid, ShieldCheck } from "lucide-react";
 import { logout } from "@/lib/actions/auth";
 import { exitDevView } from "@/lib/actions/dev-view";
 import { useTenantTheme } from "@/lib/theme/TenantThemeContext";
@@ -75,13 +75,22 @@ export function UserMenu({
             <p className="truncate text-xs text-gray-500">{email}</p>
           </div>
           {!isDevViewing && (
-            <Link
-              href="/central"
-              className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-            >
-              <LayoutGrid size={16} />
-              Central FALA AI
-            </Link>
+            <>
+              <Link
+                href="/central"
+                className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+              >
+                <LayoutGrid size={16} />
+                Central FALA AI
+              </Link>
+              <Link
+                href="/central/seguranca"
+                className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+              >
+                <ShieldCheck size={16} />
+                Segurança
+              </Link>
+            </>
           )}
           {isDev && (
             <Link

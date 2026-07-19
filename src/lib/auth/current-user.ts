@@ -93,6 +93,15 @@ export async function resolveHomeRouteFor(
   supabase: SupabaseClient<Database>,
   userId: string,
 ): Promise<string> {
+  // Sessão pode estar em aal1 (só senha) mesmo com MFA ativado, até
+  // completar o segundo fator — checado aqui primeiro pra todo mundo que
+  // chama essa função (login, signup, callback do Google, "voltar" da
+  // compra da Transportadora etc.) já respeitar isso sem duplicar a lógica.
+  const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+  if (aal && aal.nextLevel === "aal2" && aal.currentLevel !== aal.nextLevel) {
+    return "/mfa-challenge";
+  }
+
   const { data: profile } = await supabase
     .from("profiles")
     .select("id")

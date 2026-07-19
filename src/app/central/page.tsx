@@ -74,6 +74,12 @@ export default async function CentralPage() {
             );
           })}
         </div>
+
+        <p className="mt-8 text-center text-sm text-gray-400">
+          <Link href="/central/seguranca" className="hover:text-gray-600 hover:underline">
+            Segurança da conta
+          </Link>
+        </p>
       </div>
     </div>
   );
