@@ -2,11 +2,12 @@
 
 import { useActionState, useEffect, useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
-import { Plus, Trash2, PackagePlus, PackageMinus } from "lucide-react";
+import { Plus, Trash2, PackagePlus, PackageMinus, Pencil, X, Check } from "lucide-react";
 import {
   createEstoqueItem,
   deleteEstoqueItem,
   registrarMovimentacao,
+  updateEstoqueItem,
   type ActionState,
 } from "@/lib/actions/estoque";
 import { formatCurrency } from "@/lib/utils/currency";
@@ -127,12 +128,78 @@ function MovimentacaoForm({ itens }: { itens: EstoqueItem[] }) {
   );
 }
 
+function EditItemForm({ item, onDone }: { item: EstoqueItem; onDone: () => void }) {
+  const [state, formAction, isPending] = useActionState<ActionState, FormData>(updateEstoqueItem, null);
+  const wasPending = useRef(false);
+
+  useEffect(() => {
+    if (wasPending.current && !isPending && !state?.error) {
+      toast.success("Item atualizado");
+      onDone();
+    }
+    wasPending.current = isPending;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isPending, state]);
+
+  return (
+    <tr className="border-b border-[#2c2c2a] bg-[#0d0d0d] last:border-0">
+      <td colSpan={5} className="py-2 pr-3">
+        <form action={formAction} className="flex flex-wrap items-end gap-2">
+          <input type="hidden" name="id" value={item.id} />
+          <input name="name" defaultValue={item.name} required className={`min-w-[120px] flex-1 ${inputClass()}`} />
+          <input name="unit" defaultValue={item.unit} className={`w-20 ${inputClass()}`} />
+          <input
+            name="quantity"
+            type="number"
+            min="0"
+            step="0.001"
+            defaultValue={Number(item.quantity)}
+            required
+            className={`w-24 ${inputClass()}`}
+          />
+          <input
+            name="unitCostReais"
+            type="number"
+            min="0"
+            step="0.01"
+            defaultValue={(item.unit_cost_cents / 100).toFixed(2)}
+            required
+            className={`w-28 ${inputClass()}`}
+          />
+          <button
+            type="submit"
+            disabled={isPending}
+            className="flex items-center gap-1 rounded-md bg-[#199e70] px-2.5 py-1.5 text-xs font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+          >
+            <Check size={12} />
+            Salvar
+          </button>
+          <button
+            type="button"
+            onClick={onDone}
+            className="flex items-center gap-1 rounded-md border border-[#383835] px-2.5 py-1.5 text-xs text-[#898781] hover:text-white"
+          >
+            <X size={12} />
+            Cancelar
+          </button>
+        </form>
+        {state?.error && <p className="mt-1 text-xs text-red-400">{state.error}</p>}
+      </td>
+    </tr>
+  );
+}
+
 function ItemRow({ item }: { item: EstoqueItem }) {
   const [isDeleting, startDelete] = useTransition();
+  const [isEditing, setIsEditing] = useState(false);
 
   function handleDelete() {
     if (!window.confirm(`Excluir "${item.name}"? O histórico de movimentações e lançamentos não é apagado.`)) return;
     startDelete(() => deleteEstoqueItem(item.id));
+  }
+
+  if (isEditing) {
+    return <EditItemForm item={item} onDone={() => setIsEditing(false)} />;
   }
 
   const totalValue = (Number(item.quantity) * item.unit_cost_cents) / 100;
@@ -146,15 +213,25 @@ function ItemRow({ item }: { item: EstoqueItem }) {
       <td className="py-2 pr-3 text-right text-[#c3c2b7]">{formatCurrency(item.unit_cost_cents / 100)}</td>
       <td className="py-2 pr-3 text-right text-white">{formatCurrency(totalValue)}</td>
       <td className="py-2 text-right">
-        <button
-          type="button"
-          onClick={handleDelete}
-          disabled={isDeleting}
-          className="text-[#898781] transition-colors hover:text-red-400 disabled:opacity-50"
-          aria-label={`Excluir ${item.name}`}
-        >
-          <Trash2 size={14} />
-        </button>
+        <div className="flex items-center justify-end gap-2">
+          <button
+            type="button"
+            onClick={() => setIsEditing(true)}
+            className="text-[#898781] transition-colors hover:text-white"
+            aria-label={`Editar ${item.name}`}
+          >
+            <Pencil size={14} />
+          </button>
+          <button
+            type="button"
+            onClick={handleDelete}
+            disabled={isDeleting}
+            className="text-[#898781] transition-colors hover:text-red-400 disabled:opacity-50"
+            aria-label={`Excluir ${item.name}`}
+          >
+            <Trash2 size={14} />
+          </button>
+        </div>
       </td>
     </tr>
   );

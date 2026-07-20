@@ -35,3 +35,13 @@ export const estoqueMovimentacaoSchema = z.object({
 });
 
 export type EstoqueMovimentacaoInput = z.infer<typeof estoqueMovimentacaoSchema>;
+
+export const estoqueItemEditSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string().trim().min(2, "Dê um nome pro item").max(60, "Máx. 60 caracteres"),
+  unit: z.string().trim().max(10, "Máx. 10 caracteres").optional().or(z.literal("")),
+  quantity: z.coerce.number().min(0, "Não pode ser negativo"),
+  unitCostReais: z.coerce.number().min(0, "Não pode ser negativo"),
+});
+
+export type EstoqueItemEditInput = z.infer<typeof estoqueItemEditSchema>;

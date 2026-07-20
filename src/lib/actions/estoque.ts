@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireTenantId, getTenantSlug } from "@/lib/auth/current-user";
 import { ensureCategoria } from "@/lib/actions/financas-categorias";
-import { estoqueItemSchema, estoqueMovimentacaoSchema } from "@/lib/validation/financas";
+import { estoqueItemSchema, estoqueMovimentacaoSchema, estoqueItemEditSchema } from "@/lib/validation/financas";
 import type { EstoqueItem, EstoqueMovimentacao } from "@/types/domain";
 
 export type ActionState = { error?: string } | null;
@@ -75,6 +75,50 @@ export async function createEstoqueItem(_prevState: ActionState, formData: FormD
   if (error) {
     const message = error.code === "23505" ? "Já existe um item com esse nome" : error.message;
     return { error: `Não foi possível criar: ${message}` };
+  }
+
+  const slug = await getTenantSlug(supabase, tenantId);
+  if (slug) revalidatePath(`/${slug}/estoque`);
+  return null;
+}
+
+/**
+ * Edição direta do item — corrige nome, unidade, quantidade ou custo sem
+ * passar pelo fluxo de movimentação (que é pra registrar compra/uso de
+ * verdade, com histórico). Aqui é ajuste manual puro, não gera movimentação.
+ */
+export async function updateEstoqueItem(_prevState: ActionState, formData: FormData): Promise<ActionState> {
+  const parsed = estoqueItemEditSchema.safeParse({
+    id: formData.get("id"),
+    name: formData.get("name"),
+    unit: formData.get("unit"),
+    quantity: formData.get("quantity"),
+    unitCostReais: formData.get("unitCostReais"),
+  });
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Sessão expirada, faça login novamente" };
+
+  const tenantId = await requireTenantId(supabase, user.id);
+  if (!tenantId) return { error: "Tenant não encontrado" };
+
+  const { error } = await supabase
+    .from("estoque_itens")
+    .update({
+      name: parsed.data.name,
+      unit: parsed.data.unit || "un",
+      quantity: parsed.data.quantity,
+      unit_cost_cents: Math.round(parsed.data.unitCostReais * 100),
+    })
+    .eq("id", parsed.data.id)
+    .eq("tenant_id", tenantId);
+  if (error) {
+    const message = error.code === "23505" ? "Já existe um item com esse nome" : error.message;
+    return { error: `Não foi possível salvar: ${message}` };
   }
 
   const slug = await getTenantSlug(supabase, tenantId);
