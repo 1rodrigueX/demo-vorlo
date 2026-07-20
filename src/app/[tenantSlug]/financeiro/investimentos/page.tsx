@@ -1,11 +1,11 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, TrendingUp, TrendingDown } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getSelicMeta, getCdiAnualizado } from "@/lib/market/bcb";
-import { getAcoesWatchlist, getFiisWatchlist, hasBrapiToken, type Quote } from "@/lib/market/brapi";
-import { formatCurrency } from "@/lib/utils/currency";
-import { CHART_COLORS } from "@/lib/financas/categories";
+import { getAcoesWatchlist, getFiisWatchlist, hasBrapiToken, SECTORS_ACOES, SECTORS_FIIS, type Quote } from "@/lib/market/brapi";
+import { QuoteTable } from "@/components/financas/QuoteTable";
+import { TickerSearch } from "@/components/financas/TickerSearch";
 
 /**
  * Painel informativo de mercado — cotações (brapi.dev) e Selic/CDI (Banco
@@ -40,7 +40,7 @@ export default async function InvestimentosPage({
 
   return (
     <div className="min-h-screen px-6 py-6" style={{ background: "#0d0d0d", color: "#ffffff" }}>
-      <div className="mx-auto max-w-4xl">
+      <div className="mx-auto max-w-6xl">
         <Link
           href={`/${tenantSlug}/financeiro`}
           className="mb-6 inline-flex items-center gap-1.5 text-sm text-[#898781] hover:text-white"
@@ -68,23 +68,40 @@ export default async function InvestimentosPage({
           </p>
         </div>
 
-        <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
-          {tokenConfigured ? (
-            <>
-              <QuotePanel title="Principais ações (Ibovespa)" quotes={acoes} />
-              <QuotePanel title="Principais Fundos Imobiliários" quotes={fiis} />
-            </>
-          ) : (
-            <div className="lg:col-span-2 rounded-xl border border-[#2c2c2a] bg-[#1a1a19] p-4">
-              <p className="text-sm font-medium text-[#c3c2b7]">Cotações ainda não configuradas</p>
-              <p className="mt-2 text-sm text-[#898781]">
-                Pra mostrar cotação de ações e FIIs aqui, crie uma conta grátis em brapi.dev, pegue o token no
-                dashboard deles e configure a variável de ambiente <code className="text-white">BRAPI_TOKEN</code> no
-                servidor.
-              </p>
+        {tokenConfigured ? (
+          <>
+            <div className="mt-4">
+              <TickerSearch />
             </div>
-          )}
-        </div>
+
+            <div className="mt-6">
+              <p className="mb-3 text-sm font-medium text-white">Ações por setor</p>
+              <div className="space-y-4">
+                {SECTORS_ACOES.map((group) => (
+                  <SectorPanel key={group.sector} title={group.sector} tickers={group.tickers} quotes={acoes} />
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-6">
+              <p className="mb-3 text-sm font-medium text-white">Fundos imobiliários por segmento</p>
+              <div className="space-y-4">
+                {SECTORS_FIIS.map((group) => (
+                  <SectorPanel key={group.sector} title={group.sector} tickers={group.tickers} quotes={fiis} />
+                ))}
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className="mt-4 rounded-xl border border-[#2c2c2a] bg-[#1a1a19] p-4">
+            <p className="text-sm font-medium text-[#c3c2b7]">Cotações ainda não configuradas</p>
+            <p className="mt-2 text-sm text-[#898781]">
+              Pra mostrar cotação de ações e FIIs aqui, crie uma conta grátis em brapi.dev, pegue o token no
+              dashboard deles e configure a variável de ambiente <code className="text-white">BRAPI_TOKEN</code> no
+              servidor.
+            </p>
+          </div>
+        )}
 
         <p className="mt-6 text-xs text-[#5f5e59]">
           Cotações podem ter atraso em relação ao mercado. Consulte um profissional certificado antes de investir —
@@ -105,34 +122,15 @@ function IndicatorTile({ label, value, description }: { label: string; value: nu
   );
 }
 
-function QuotePanel({ title, quotes }: { title: string; quotes: Quote[] }) {
+function SectorPanel({ title, tickers, quotes }: { title: string; tickers: string[]; quotes: Quote[] }) {
+  const sectorQuotes = tickers
+    .map((symbol) => quotes.find((q) => q.symbol === symbol))
+    .filter((q): q is Quote => !!q);
+
   return (
     <div className="rounded-xl border border-[#2c2c2a] bg-[#1a1a19] p-4">
       <p className="mb-3 text-sm font-medium text-[#c3c2b7]">{title}</p>
-      {quotes.length === 0 && <p className="text-sm text-[#898781]">Sem dados no momento.</p>}
-      <div className="space-y-2">
-        {quotes.map((q) => {
-          const isUp = q.changePercent >= 0;
-          return (
-            <div key={q.symbol} className="flex items-center justify-between text-sm">
-              <div className="min-w-0">
-                <p className="font-medium text-white">{q.symbol}</p>
-                <p className="truncate text-xs text-[#898781]">{q.name}</p>
-              </div>
-              <div className="flex items-center gap-3">
-                <span className="text-white">{formatCurrency(q.price)}</span>
-                <span
-                  className="flex w-16 items-center justify-end gap-1 text-xs font-medium"
-                  style={{ color: isUp ? CHART_COLORS.green : CHART_COLORS.red }}
-                >
-                  {isUp ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
-                  {Math.abs(q.changePercent).toFixed(2)}%
-                </span>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+      <QuoteTable quotes={sectorQuotes} />
     </div>
   );
 }
