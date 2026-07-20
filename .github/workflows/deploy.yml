@@ -17,6 +17,13 @@ jobs:
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           script: |
             set -e
+            # Áudio de voz do WhatsApp (convertToOggOpus) depende do ffmpeg do
+            # sistema. Instala se estiver faltando, sem travar o deploy inteiro
+            # se o apt falhar por algum motivo (é um recurso opcional, não vale
+            # bloquear o pull/build/restart do app por causa disso).
+            if ! command -v ffmpeg >/dev/null 2>&1; then
+              sudo apt-get update -y && sudo apt-get install -y ffmpeg || echo "aviso: não foi possível instalar o ffmpeg automaticamente"
+            fi
             cd /opt/crm
             git fetch origin main
             git reset --hard origin/main
