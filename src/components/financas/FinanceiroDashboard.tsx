@@ -14,14 +14,17 @@ import {
   Legend,
 } from "recharts";
 import Link from "next/link";
-import { Plus, Wallet, Building2, User, Settings } from "lucide-react";
+import { Plus, Wallet, Building2, User, Settings, Lightbulb } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { formatCurrency } from "@/lib/utils/currency";
 import { getLancamentos } from "@/lib/actions/financas";
+import { getBankConnection } from "@/lib/actions/financas-bank";
 import { CHART_COLORS, MONTH_LABELS, MONTH_LABELS_FULL } from "@/lib/financas/categories";
+import { computeSavingsTip } from "@/lib/financas/insights";
 import { Sparkline, DonutChart, MiniGauge, type DonutSlice } from "@/components/financas/charts";
 import { NovoLancamentoModal } from "@/components/financas/NovoLancamentoModal";
-import type { FinancasLancamento, FinancasCategoria } from "@/types/domain";
+import { BankConnectionPanel } from "@/components/financas/BankConnectionPanel";
+import type { FinancasLancamento, FinancasCategoria, FinancasBankConnection } from "@/types/domain";
 
 const compactCurrency = new Intl.NumberFormat("pt-BR", {
   style: "currency",
@@ -44,11 +47,13 @@ export function FinanceiroDashboard({
   initialYear,
   categorias,
   tenantSlug,
+  initialBankConnection,
 }: {
   initialLancamentos: FinancasLancamento[];
   initialYear: number;
   categorias: FinancasCategoria[];
   tenantSlug: string;
+  initialBankConnection: FinancasBankConnection | null;
 }) {
   const despesaCategorias = useMemo(() => categorias.filter((c) => c.type === "despesa"), [categorias]);
   const receitaCategorias = useMemo(() => categorias.filter((c) => c.type === "receita"), [categorias]);
@@ -61,6 +66,7 @@ export function FinanceiroDashboard({
     despesaCategorias[4]?.name ?? despesaCategorias[0]?.name ?? "",
   );
   const [lancamentos, setLancamentos] = useState(initialLancamentos);
+  const [bankConnection, setBankConnection] = useState(initialBankConnection);
   const [isPending, startTransition] = useTransition();
   const [modalOpen, setModalOpen] = useState(false);
 
@@ -70,6 +76,14 @@ export function FinanceiroDashboard({
       setLancamentos(data);
     });
   }, [context, year]);
+
+  function refreshAfterBankChange() {
+    startTransition(async () => {
+      const [data, conn] = await Promise.all([getLancamentos(context, year), getBankConnection()]);
+      setLancamentos(data);
+      setBankConnection(conn);
+    });
+  }
 
   const monthly = useMemo(() => {
     const rows = Array.from({ length: 12 }, () => ({ receita: 0, despesa: 0, salario: 0, outrasReceitas: 0 }));
@@ -128,6 +142,16 @@ export function FinanceiroDashboard({
     return [...byDescription.entries()].map(([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value);
   }, [currentMonthLancamentos, selectedCategory]);
   const categoryDetailMax = Math.max(1, ...categoryDetail.map((d) => d.value));
+
+  const cardSpendMes = useMemo(
+    () =>
+      currentMonthLancamentos
+        .filter((l) => l.type === "despesa" && l.payment_method === "cartao_credito")
+        .reduce((sum, l) => sum + l.amount_cents / 100, 0),
+    [currentMonthLancamentos],
+  );
+
+  const savingsTip = useMemo(() => computeSavingsTip(lancamentos, year, month), [lancamentos, year, month]);
 
   const barData = MONTH_LABELS.map((label, i) => ({
     label,
@@ -219,6 +243,25 @@ export function FinanceiroDashboard({
               </Button>
             </div>
           </div>
+
+          {context === "pessoal" && (
+            <div className="space-y-4">
+              <BankConnectionPanel
+                connection={bankConnection}
+                cardSpendMes={cardSpendMes}
+                onChanged={refreshAfterBankChange}
+              />
+              {savingsTip && (
+                <div className="flex items-start gap-3 rounded-xl border border-[#3987e5]/30 bg-[#3987e5]/10 p-4">
+                  <Lightbulb size={16} className="mt-0.5 shrink-0 text-[#3987e5]" />
+                  <p className="text-sm text-[#c3c2b7]">
+                    <span className="font-medium text-white">Dica de economia: </span>
+                    {savingsTip.message}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <StatCard

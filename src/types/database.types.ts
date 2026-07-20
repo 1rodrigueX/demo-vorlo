@@ -2208,6 +2208,9 @@ export interface Database {
           entry_date: string;
           created_by: string | null;
           created_at: string;
+          source: "manual" | "open_finance";
+          payment_method: "pix" | "boleto" | "cartao_credito" | "debito" | null;
+          external_id: string | null;
         };
         Insert: {
           id?: string;
@@ -2220,6 +2223,9 @@ export interface Database {
           entry_date: string;
           created_by?: string | null;
           created_at?: string;
+          source?: "manual" | "open_finance";
+          payment_method?: "pix" | "boleto" | "cartao_credito" | "debito" | null;
+          external_id?: string | null;
         };
         Update: {
           id?: string;
@@ -2232,12 +2238,53 @@ export interface Database {
           entry_date?: string;
           created_by?: string | null;
           created_at?: string;
+          source?: "manual" | "open_finance";
+          payment_method?: "pix" | "boleto" | "cartao_credito" | "debito" | null;
+          external_id?: string | null;
         };
         Relationships: [
           {
             foreignKeyName: "financas_lancamentos_tenant_id_fkey";
             columns: ["tenant_id"];
             isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      financas_bank_connections: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          provider: "mock";
+          institution_name: string;
+          status: "disconnected" | "connected";
+          last_synced_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          provider?: "mock";
+          institution_name?: string;
+          status?: "disconnected" | "connected";
+          last_synced_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          provider?: "mock";
+          institution_name?: string;
+          status?: "disconnected" | "connected";
+          last_synced_at?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "financas_bank_connections_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: true;
             referencedRelation: "tenants";
             referencedColumns: ["id"];
           },

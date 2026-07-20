@@ -36,6 +36,7 @@ export type PlatformFeedback = Database["public"]["Tables"]["platform_feedback"]
 export type BugReport = Database["public"]["Tables"]["bug_reports"]["Row"];
 export type FinancasLancamento = Database["public"]["Tables"]["financas_lancamentos"]["Row"];
 export type FinancasCategoria = Database["public"]["Tables"]["financas_categorias"]["Row"];
+export type FinancasBankConnection = Database["public"]["Tables"]["financas_bank_connections"]["Row"];
 
 export type ContactWithCompany = Contact & {
   company: Pick<Company, "id" | "name"> | null;
