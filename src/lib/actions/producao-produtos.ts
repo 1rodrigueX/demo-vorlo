@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireTenantId, getTenantSlug } from "@/lib/auth/current-user";
+import { requireProducaoActorTenantId } from "@/lib/producao/actor";
 import { produtoSchema, receitaItemSchema } from "@/lib/validation/producao";
 import type { ProducaoProduto, ProducaoReceitaItem, EstoqueItem } from "@/types/domain";
 
@@ -18,13 +19,24 @@ async function currentTenant() {
   return { supabase, user, tenantId };
 }
 
+/** Como currentTenant(), mas também resolve funcionário de Produção — só pra leituras. */
+async function currentActorTenant() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { supabase, user: null, tenantId: null };
+  const tenantId = await requireProducaoActorTenantId(supabase, user.id);
+  return { supabase, user, tenantId };
+}
+
 async function revalidateProducao(supabase: Awaited<ReturnType<typeof createClient>>, tenantId: string) {
   const slug = await getTenantSlug(supabase, tenantId);
   if (slug) revalidatePath(`/${slug}/producao/configuracoes`);
 }
 
 export async function getProdutos(): Promise<(ProducaoProduto & { estoque_item: EstoqueItem | null })[]> {
-  const { supabase, tenantId } = await currentTenant();
+  const { supabase, tenantId } = await currentActorTenant();
   if (!tenantId) return [];
 
   const { data } = await supabase

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireTenantId, getTenantSlug } from "@/lib/auth/current-user";
+import { requireProducaoActorTenantId } from "@/lib/producao/actor";
 import { turnoSchema, maquinaSchema, estiloSchema } from "@/lib/validation/producao";
 import type { ProducaoTurno, ProducaoMaquina, ProducaoEstilo } from "@/types/domain";
 
@@ -18,6 +19,17 @@ async function currentTenant() {
   return { supabase, user, tenantId };
 }
 
+/** Como currentTenant(), mas também resolve funcionário de Produção — só pra leituras. */
+async function currentActorTenant() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { supabase, user: null, tenantId: null };
+  const tenantId = await requireProducaoActorTenantId(supabase, user.id);
+  return { supabase, user, tenantId };
+}
+
 async function revalidateProducao(supabase: Awaited<ReturnType<typeof createClient>>, tenantId: string) {
   const slug = await getTenantSlug(supabase, tenantId);
   if (slug) revalidatePath(`/${slug}/producao/configuracoes`);
@@ -26,7 +38,7 @@ async function revalidateProducao(supabase: Awaited<ReturnType<typeof createClie
 // ── Turnos ──────────────────────────────────────────────────────────────
 
 export async function getTurnos(): Promise<ProducaoTurno[]> {
-  const { supabase, tenantId } = await currentTenant();
+  const { supabase, tenantId } = await currentActorTenant();
   if (!tenantId) return [];
   const { data } = await supabase.from("producao_turnos").select("*").eq("tenant_id", tenantId).order("name");
   return data ?? [];
@@ -69,7 +81,7 @@ export async function deleteTurno(id: string) {
 // ── Máquinas ────────────────────────────────────────────────────────────
 
 export async function getMaquinas(): Promise<ProducaoMaquina[]> {
-  const { supabase, tenantId } = await currentTenant();
+  const { supabase, tenantId } = await currentActorTenant();
   if (!tenantId) return [];
   const { data } = await supabase.from("producao_maquinas").select("*").eq("tenant_id", tenantId).order("name");
   return data ?? [];
@@ -110,7 +122,7 @@ export async function deleteMaquina(id: string) {
 // ── Estilos de produção ─────────────────────────────────────────────────
 
 export async function getEstilos(): Promise<ProducaoEstilo[]> {
-  const { supabase, tenantId } = await currentTenant();
+  const { supabase, tenantId } = await currentActorTenant();
   if (!tenantId) return [];
   const { data } = await supabase.from("producao_estilos").select("*").eq("tenant_id", tenantId).order("name");
   return data ?? [];

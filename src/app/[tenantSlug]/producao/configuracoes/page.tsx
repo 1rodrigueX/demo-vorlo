@@ -4,10 +4,12 @@ import { ArrowLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getTurnos, getMaquinas, getEstilos } from "@/lib/actions/producao-config";
 import { getProdutos, getEstoqueItensParaReceita, getAllReceitaItens } from "@/lib/actions/producao-produtos";
+import { getFuncionarios } from "@/lib/actions/producao-funcionarios";
 import { TurnosManager } from "@/components/producao/TurnosManager";
 import { MaquinasManager } from "@/components/producao/MaquinasManager";
 import { EstilosManager } from "@/components/producao/EstilosManager";
 import { ProdutosManager } from "@/components/producao/ProdutosManager";
+import { FuncionariosManager } from "@/components/producao/FuncionariosManager";
 
 export default async function ProducaoConfiguracoesPage({
   params,
@@ -24,13 +26,14 @@ export default async function ProducaoConfiguracoesPage({
   const { data: hasAccess } = await supabase.rpc("current_tenant_has_producao");
   if (!hasAccess) redirect("/comprar-producao");
 
-  const [turnos, maquinas, estilos, produtos, materiaisDisponiveis, receitaItens] = await Promise.all([
+  const [turnos, maquinas, estilos, produtos, materiaisDisponiveis, receitaItens, funcionarios] = await Promise.all([
     getTurnos(),
     getMaquinas(),
     getEstilos(),
     getProdutos(),
     getEstoqueItensParaReceita(),
     getAllReceitaItens(),
+    getFuncionarios(),
   ]);
 
   const receitaByProdutoId = receitaItens.reduce<Record<string, typeof receitaItens>>((acc, item) => {
@@ -62,6 +65,7 @@ export default async function ProducaoConfiguracoesPage({
             materiaisDisponiveis={materiaisDisponiveis}
             receitaByProdutoId={receitaByProdutoId}
           />
+          <FuncionariosManager funcionarios={funcionarios} turnos={turnos} maquinas={maquinas} />
         </div>
       </div>
     </div>

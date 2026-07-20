@@ -45,6 +45,8 @@ export type ProducaoMaquina = Database["public"]["Tables"]["producao_maquinas"][
 export type ProducaoEstilo = Database["public"]["Tables"]["producao_estilos"]["Row"];
 export type ProducaoProduto = Database["public"]["Tables"]["producao_produtos"]["Row"];
 export type ProducaoReceitaItem = Database["public"]["Tables"]["producao_receita_itens"]["Row"];
+export type ProducaoFuncionario = Database["public"]["Tables"]["producao_funcionarios"]["Row"];
+export type ProducaoApontamento = Database["public"]["Tables"]["producao_apontamentos"]["Row"];
 
 export type ContactWithCompany = Contact & {
   company: Pick<Company, "id" | "name"> | null;

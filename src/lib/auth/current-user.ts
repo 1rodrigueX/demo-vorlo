@@ -109,6 +109,19 @@ export async function resolveHomeRouteFor(
     .maybeSingle();
   if (profile) return "/central";
 
+  // Funcionário de Produção não tem profile (de propósito — ver migration
+  // 0057) e não deve cair na central de contas, que é pro dono da conta.
+  // Ele só acessa a tela de apontamento do próprio tenant.
+  const { data: funcionario } = await supabase
+    .from("producao_funcionarios")
+    .select("tenant_id")
+    .eq("id", userId)
+    .maybeSingle();
+  if (funcionario) {
+    const slug = await getTenantSlug(supabase, funcionario.tenant_id);
+    return slug ? `/${slug}/producao/apontamento` : "/login";
+  }
+
   const { data: dev } = await supabase
     .from("dev_users")
     .select("id")

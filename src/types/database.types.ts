@@ -1964,6 +1964,133 @@ export interface Database {
           },
         ];
       };
+      producao_funcionarios: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          full_name: string;
+          turno_id: string | null;
+          maquina_id: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id: string;
+          tenant_id: string;
+          full_name: string;
+          turno_id?: string | null;
+          maquina_id?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          full_name?: string;
+          turno_id?: string | null;
+          maquina_id?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "producao_funcionarios_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "producao_funcionarios_turno_id_fkey";
+            columns: ["turno_id"];
+            isOneToOne: false;
+            referencedRelation: "producao_turnos";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "producao_funcionarios_maquina_id_fkey";
+            columns: ["maquina_id"];
+            isOneToOne: false;
+            referencedRelation: "producao_maquinas";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      producao_apontamentos: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          produto_id: string;
+          turno_id: string | null;
+          maquina_id: string | null;
+          estilo_id: string | null;
+          funcionario_id: string | null;
+          quantity: number;
+          note: string | null;
+          created_by: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          produto_id: string;
+          turno_id?: string | null;
+          maquina_id?: string | null;
+          estilo_id?: string | null;
+          funcionario_id?: string | null;
+          quantity: number;
+          note?: string | null;
+          created_by: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          produto_id?: string;
+          turno_id?: string | null;
+          maquina_id?: string | null;
+          estilo_id?: string | null;
+          funcionario_id?: string | null;
+          quantity?: number;
+          note?: string | null;
+          created_by?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "producao_apontamentos_produto_id_fkey";
+            columns: ["produto_id"];
+            isOneToOne: false;
+            referencedRelation: "producao_produtos";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "producao_apontamentos_turno_id_fkey";
+            columns: ["turno_id"];
+            isOneToOne: false;
+            referencedRelation: "producao_turnos";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "producao_apontamentos_maquina_id_fkey";
+            columns: ["maquina_id"];
+            isOneToOne: false;
+            referencedRelation: "producao_maquinas";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "producao_apontamentos_estilo_id_fkey";
+            columns: ["estilo_id"];
+            isOneToOne: false;
+            referencedRelation: "producao_estilos";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "producao_apontamentos_funcionario_id_fkey";
+            columns: ["funcionario_id"];
+            isOneToOne: false;
+            referencedRelation: "producao_funcionarios";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       tenant_products: {
         Row: {
           tenant_id: string;
@@ -2703,7 +2830,24 @@ export interface Database {
       };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      registrar_apontamento: {
+        Args: {
+          p_produto_id: string;
+          p_turno_id: string | null;
+          p_maquina_id: string | null;
+          p_estilo_id: string | null;
+          p_quantity: number;
+          p_note: string | null;
+        };
+        Returns: string;
+      };
+      current_tenant_has_transportadora: { Args: Record<string, never>; Returns: boolean };
+      current_tenant_has_financas: { Args: Record<string, never>; Returns: boolean };
+      current_tenant_has_estoque: { Args: Record<string, never>; Returns: boolean };
+      current_tenant_has_producao: { Args: Record<string, never>; Returns: boolean };
+      current_tenant_has_producao_actor: { Args: Record<string, never>; Returns: boolean };
+    };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
   };
