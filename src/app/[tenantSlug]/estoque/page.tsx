@@ -4,7 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getEstoqueItens, getRecentMovimentacoes } from "@/lib/actions/estoque";
 import { EstoqueManager } from "@/components/financas/EstoqueManager";
-import { resolveHomeRoute } from "@/lib/auth/current-user";
+import { resolveHomeRoute, getCurrentUser } from "@/lib/auth/current-user";
 
 export default async function EstoquePage() {
   const supabase = await createClient();
@@ -16,7 +16,12 @@ export default async function EstoquePage() {
   const { data: hasAccess } = await supabase.rpc("current_tenant_has_estoque");
   if (!hasAccess) redirect("/comprar-estoque");
 
-  const [itens, movimentacoes] = await Promise.all([getEstoqueItens(), getRecentMovimentacoes()]);
+  const [itens, movimentacoes, currentUser] = await Promise.all([
+    getEstoqueItens(),
+    getRecentMovimentacoes(),
+    getCurrentUser(),
+  ]);
+  const canSeeValues = currentUser?.profile?.role === "owner" || currentUser?.profile?.role === "manager";
   const backHref = await resolveHomeRoute();
 
   return (
@@ -33,7 +38,7 @@ export default async function EstoquePage() {
         </p>
 
         <div className="mt-6">
-          <EstoqueManager itens={itens} movimentacoes={movimentacoes} />
+          <EstoqueManager itens={itens} movimentacoes={movimentacoes} canSeeValues={canSeeValues} />
         </div>
       </div>
     </div>

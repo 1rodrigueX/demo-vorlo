@@ -128,8 +128,17 @@ function MovimentacaoForm({ itens }: { itens: EstoqueItem[] }) {
   );
 }
 
-function EditItemForm({ item, onDone }: { item: EstoqueItem; onDone: () => void }) {
+function EditItemForm({
+  item,
+  onDone,
+  canSeeValues,
+}: {
+  item: EstoqueItem;
+  onDone: () => void;
+  canSeeValues: boolean;
+}) {
   const [state, formAction, isPending] = useActionState<ActionState, FormData>(updateEstoqueItem, null);
+  const [isDeleting, startDelete] = useTransition();
   const wasPending = useRef(false);
 
   useEffect(() => {
@@ -141,9 +150,17 @@ function EditItemForm({ item, onDone }: { item: EstoqueItem; onDone: () => void 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPending, state]);
 
+  function handleDelete() {
+    if (!window.confirm(`Excluir "${item.name}"? O histórico de movimentações e lançamentos não é apagado.`)) return;
+    startDelete(async () => {
+      await deleteEstoqueItem(item.id);
+      onDone();
+    });
+  }
+
   return (
     <tr className="border-b border-[#2c2c2a] bg-[#0d0d0d] last:border-0">
-      <td colSpan={5} className="py-2 pr-3">
+      <td colSpan={canSeeValues ? 5 : 3} className="py-2 pr-3">
         <form action={formAction} className="flex flex-wrap items-end gap-2">
           <input type="hidden" name="id" value={item.id} />
           <input name="name" defaultValue={item.name} required className={`min-w-[120px] flex-1 ${inputClass()}`} />
@@ -157,15 +174,19 @@ function EditItemForm({ item, onDone }: { item: EstoqueItem; onDone: () => void 
             required
             className={`w-24 ${inputClass()}`}
           />
-          <input
-            name="unitCostReais"
-            type="number"
-            min="0"
-            step="0.01"
-            defaultValue={(item.unit_cost_cents / 100).toFixed(2)}
-            required
-            className={`w-28 ${inputClass()}`}
-          />
+          {canSeeValues ? (
+            <input
+              name="unitCostReais"
+              type="number"
+              min="0"
+              step="0.01"
+              defaultValue={(item.unit_cost_cents / 100).toFixed(2)}
+              required
+              className={`w-28 ${inputClass()}`}
+            />
+          ) : (
+            <input type="hidden" name="unitCostReais" value={(item.unit_cost_cents / 100).toFixed(2)} />
+          )}
           <button
             type="submit"
             disabled={isPending}
@@ -182,6 +203,15 @@ function EditItemForm({ item, onDone }: { item: EstoqueItem; onDone: () => void 
             <X size={12} />
             Cancelar
           </button>
+          <button
+            type="button"
+            onClick={handleDelete}
+            disabled={isDeleting}
+            className="flex items-center gap-1 rounded-md border border-[#383835] px-2.5 py-1.5 text-xs text-[#898781] transition-colors hover:border-red-400 hover:text-red-400 disabled:opacity-50"
+          >
+            <Trash2 size={12} />
+            Excluir
+          </button>
         </form>
         {state?.error && <p className="mt-1 text-xs text-red-400">{state.error}</p>}
       </td>
@@ -189,7 +219,7 @@ function EditItemForm({ item, onDone }: { item: EstoqueItem; onDone: () => void 
   );
 }
 
-function ItemRow({ item }: { item: EstoqueItem }) {
+function ItemRow({ item, canSeeValues }: { item: EstoqueItem; canSeeValues: boolean }) {
   const [isDeleting, startDelete] = useTransition();
   const [isEditing, setIsEditing] = useState(false);
 
@@ -199,7 +229,7 @@ function ItemRow({ item }: { item: EstoqueItem }) {
   }
 
   if (isEditing) {
-    return <EditItemForm item={item} onDone={() => setIsEditing(false)} />;
+    return <EditItemForm item={item} onDone={() => setIsEditing(false)} canSeeValues={canSeeValues} />;
   }
 
   const totalValue = (Number(item.quantity) * item.unit_cost_cents) / 100;
@@ -210,8 +240,12 @@ function ItemRow({ item }: { item: EstoqueItem }) {
       <td className="py-2 pr-3 text-right text-[#c3c2b7]">
         {Number(item.quantity)} {item.unit}
       </td>
-      <td className="py-2 pr-3 text-right text-[#c3c2b7]">{formatCurrency(item.unit_cost_cents / 100)}</td>
-      <td className="py-2 pr-3 text-right text-white">{formatCurrency(totalValue)}</td>
+      {canSeeValues && (
+        <>
+          <td className="py-2 pr-3 text-right text-[#c3c2b7]">{formatCurrency(item.unit_cost_cents / 100)}</td>
+          <td className="py-2 pr-3 text-right text-white">{formatCurrency(totalValue)}</td>
+        </>
+      )}
       <td className="py-2 text-right">
         <div className="flex items-center justify-end gap-2">
           <button
@@ -240,19 +274,23 @@ function ItemRow({ item }: { item: EstoqueItem }) {
 export function EstoqueManager({
   itens,
   movimentacoes,
+  canSeeValues,
 }: {
   itens: EstoqueItem[];
   movimentacoes: EstoqueMovimentacao[];
+  canSeeValues: boolean;
 }) {
   const totalEstoque = itens.reduce((sum, i) => sum + (Number(i.quantity) * i.unit_cost_cents) / 100, 0);
   const itemNameById = new Map(itens.map((i) => [i.id, i.name]));
 
   return (
     <div className="space-y-4">
-      <div className="rounded-xl border border-[#2c2c2a] bg-[#1a1a19] p-4">
-        <p className="text-xs text-[#898781]">Valor total em estoque</p>
-        <p className="mt-1 text-2xl font-semibold text-white">{formatCurrency(totalEstoque)}</p>
-      </div>
+      {canSeeValues && (
+        <div className="rounded-xl border border-[#2c2c2a] bg-[#1a1a19] p-4">
+          <p className="text-xs text-[#898781]">Valor total em estoque</p>
+          <p className="mt-1 text-2xl font-semibold text-white">{formatCurrency(totalEstoque)}</p>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <div className="rounded-xl border border-[#2c2c2a] bg-[#1a1a19] p-4">
@@ -265,14 +303,18 @@ export function EstoqueManager({
                   <tr className="border-b border-[#2c2c2a] text-left text-xs text-[#898781]">
                     <th className="pb-2 pr-3 font-normal">Item</th>
                     <th className="pb-2 pr-3 text-right font-normal">Qtd.</th>
-                    <th className="pb-2 pr-3 text-right font-normal">Custo unit.</th>
-                    <th className="pb-2 pr-3 text-right font-normal">Valor total</th>
+                    {canSeeValues && (
+                      <>
+                        <th className="pb-2 pr-3 text-right font-normal">Custo unit.</th>
+                        <th className="pb-2 pr-3 text-right font-normal">Valor total</th>
+                      </>
+                    )}
                     <th className="pb-2" />
                   </tr>
                 </thead>
                 <tbody>
                   {itens.map((item) => (
-                    <ItemRow key={item.id} item={item} />
+                    <ItemRow key={item.id} item={item} canSeeValues={canSeeValues} />
                   ))}
                 </tbody>
               </table>
@@ -303,7 +345,7 @@ export function EstoqueManager({
                     {Number(m.quantity)} un · {new Date(m.created_at).toLocaleDateString("pt-BR")}
                   </span>
                 </div>
-                <span className="text-xs text-[#c3c2b7]">{formatCurrency(m.total_cents / 100)}</span>
+                {canSeeValues && <span className="text-xs text-[#c3c2b7]">{formatCurrency(m.total_cents / 100)}</span>}
               </div>
             ))}
           </div>
