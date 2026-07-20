@@ -110,17 +110,37 @@ export async function getDashboardData(supabase: SupabaseClient<Database>, filte
     }))
     .sort((a, b) => new Date(a.proposalSentAt).getTime() - new Date(b.proposalSentAt).getTime());
 
-  const closedDeals: ClosedDeal[] = wonInPeriod
-    .filter((d) => d.contact && d.closed_at)
-    .map((d) => ({
-      dealId: d.id,
-      contactId: d.contact!.id,
-      contactName: d.contact!.name,
-      title: d.title,
-      value: Number(d.value),
-      closedAt: d.closed_at as string,
-    }))
-    .sort((a, b) => new Date(b.closedAt).getTime() - new Date(a.closedAt).getTime());
+  // Um contato pode legitimamente ter mais de um negócio ganho no período
+  // (cliente recorrente, testes etc.) — sem agrupar, o mesmo nome aparecia
+  // repetido várias vezes na lista. Agrupa por contato, somando o valor e
+  // mantendo a data mais recente; "dealCount" mostra quantos tinha.
+  const closedByContact = new Map<string, ClosedDeal>();
+  for (const d of wonInPeriod) {
+    if (!d.contact || !d.closed_at) continue;
+    const existing = closedByContact.get(d.contact.id);
+    if (!existing) {
+      closedByContact.set(d.contact.id, {
+        dealId: d.id,
+        contactId: d.contact.id,
+        contactName: d.contact.name,
+        title: d.title,
+        value: Number(d.value),
+        closedAt: d.closed_at,
+        dealCount: 1,
+      });
+      continue;
+    }
+    existing.value += Number(d.value);
+    existing.dealCount += 1;
+    if (new Date(d.closed_at) > new Date(existing.closedAt)) {
+      existing.dealId = d.id;
+      existing.title = d.title;
+      existing.closedAt = d.closed_at;
+    }
+  }
+  const closedDeals: ClosedDeal[] = [...closedByContact.values()].sort(
+    (a, b) => new Date(b.closedAt).getTime() - new Date(a.closedAt).getTime(),
+  );
 
   return {
     allDeals,

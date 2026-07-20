@@ -11,6 +11,8 @@ export type ClosedDeal = {
   title: string;
   value: number;
   closedAt: string;
+  /** Quantos negócios ganhos desse contato foram somados nessa linha (ver getDashboardData). */
+  dealCount: number;
 };
 
 export function ClosedDealsCard({ deals, tenantSlug }: { deals: ClosedDeal[]; tenantSlug: string }) {
@@ -34,7 +36,14 @@ export function ClosedDealsCard({ deals, tenantSlug }: { deals: ClosedDeal[]; te
                 className="flex items-center justify-between gap-3 rounded-lg border border-gray-100 px-3 py-2.5 transition-colors hover:bg-gray-50"
               >
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-gray-900">{d.title}</p>
+                  <p className="truncate text-sm font-medium text-gray-900">
+                    {d.title}
+                    {d.dealCount > 1 && (
+                      <span className="ml-1.5 rounded-full bg-emerald-50 px-1.5 py-0.5 text-[11px] font-medium text-emerald-700">
+                        +{d.dealCount - 1} negócio{d.dealCount - 1 > 1 ? "s" : ""}
+                      </span>
+                    )}
+                  </p>
                   <p className="text-xs text-gray-500">
                     {d.contactName} · Fechado em {formatDateTime(d.closedAt)}
                   </p>
