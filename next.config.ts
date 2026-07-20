@@ -9,13 +9,17 @@ const SUPABASE_WS_URL = SUPABASE_URL.replace("https://", "wss://");
 // middleware, escopo maior que o desta blindagem. Mesmo assim, a política
 // abaixo já fecha a superfície que mais importa: nenhum script/conexão pra
 // domínio externo desconhecido, nenhum iframe alheio embutindo o site.
+// https://www.gstatic.com + 'wasm-unsafe-eval': o app Flutter web (/app-web,
+// apps/frete-app) usa o renderer CanvasKit, que busca canvaskit.js/.wasm
+// desse CDN do Google e precisa rodar WebAssembly — sem os dois, o browser
+// bloqueia silenciosamente e a página trava no branco/spinner pra sempre.
 const CSP = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' https://sdk.scdn.co",
+  "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://sdk.scdn.co https://www.gstatic.com",
   "style-src 'self' 'unsafe-inline'",
   `img-src 'self' data: blob: ${SUPABASE_URL}`,
   "font-src 'self' data:",
-  `connect-src 'self' ${SUPABASE_URL} ${SUPABASE_WS_URL} https://sdk.scdn.co`,
+  `connect-src 'self' ${SUPABASE_URL} ${SUPABASE_WS_URL} https://sdk.scdn.co https://www.gstatic.com`,
   "frame-src https://www.youtube.com",
   "frame-ancestors 'none'",
   "object-src 'none'",
