@@ -56,6 +56,7 @@ export type ContactWithCompany = Contact & {
 
 export type DealWithContact = Deal & {
   contact: Pick<Contact, "id" | "name" | "phone"> | null;
+  owner: Pick<Profile, "id" | "full_name"> | null;
 };
 
 export type ActivityWithProfile = Activity & {

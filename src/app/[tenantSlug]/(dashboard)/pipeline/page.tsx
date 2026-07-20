@@ -48,7 +48,10 @@ export default async function PipelinePage({
     dealIdsFromProduto = (rows ?? []).map((r) => r.deal_id);
   }
 
-  let dealsQuery = supabase.from("deals").select("*, contact:contacts(id, name, phone)").order("position");
+  let dealsQuery = supabase
+    .from("deals")
+    .select("*, contact:contacts(id, name, phone), owner:profiles(id, full_name)")
+    .order("position");
   if (isAdmin && vendedor) dealsQuery = dealsQuery.eq("owner_id", vendedor);
   if (dealIdsFromProduto) dealsQuery = dealsQuery.in("id", dealIdsFromProduto.length ? dealIdsFromProduto : ["-"]);
 

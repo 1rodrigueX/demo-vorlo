@@ -31,6 +31,7 @@ export function DealCard({ deal }: { deal: DealWithContact }) {
     >
       <p className="text-sm font-medium text-gray-900">{deal.title}</p>
       <p className="text-sm font-semibold text-indigo-600">{formatCurrency(Number(deal.value))}</p>
+      {deal.owner?.full_name && <p className="text-xs text-gray-400">{deal.owner.full_name}</p>}
       {deal.contact && (
         <Link
           href={`/${tenantSlug}/contacts/${deal.contact.id}`}
