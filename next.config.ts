@@ -28,7 +28,11 @@ const SECURITY_HEADERS = [
   { key: "X-Frame-Options", value: "DENY" },
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-  { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+  // microphone=(self): o WhatsAppChatPanel grava áudio via getUserMedia no
+  // próprio domínio — bloqueado antes ("microphone=()"), o que gerava
+  // NotAllowedError mesmo com a permissão liberada no navegador (Permissions-
+  // Policy nega antes mesmo do browser perguntar/checar a permissão do site).
+  { key: "Permissions-Policy", value: "camera=(), microphone=(self), geolocation=()" },
   { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
 ];
 
