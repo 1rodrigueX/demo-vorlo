@@ -1736,10 +1736,34 @@ export interface Database {
         };
         Relationships: [];
       };
+      estoque_plans: {
+        Row: {
+          id: string;
+          name: string;
+          is_default: boolean;
+          monthly_price_cents: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          is_default?: boolean;
+          monthly_price_cents?: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          is_default?: boolean;
+          monthly_price_cents?: number;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       tenant_products: {
         Row: {
           tenant_id: string;
-          product: "transportadora" | "financas";
+          product: "transportadora" | "financas" | "estoque";
           status: "active" | "past_due" | "suspended";
           plan_id: string | null;
           mp_payer_id: string | null;
@@ -1751,7 +1775,7 @@ export interface Database {
         };
         Insert: {
           tenant_id: string;
-          product: "transportadora" | "financas";
+          product: "transportadora" | "financas" | "estoque";
           status?: "active" | "past_due" | "suspended";
           plan_id?: string | null;
           mp_payer_id?: string | null;
@@ -1763,7 +1787,7 @@ export interface Database {
         };
         Update: {
           tenant_id?: string;
-          product?: "transportadora" | "financas";
+          product?: "transportadora" | "financas" | "estoque";
           status?: "active" | "past_due" | "suspended";
           plan_id?: string | null;
           mp_payer_id?: string | null;

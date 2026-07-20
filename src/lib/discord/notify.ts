@@ -32,6 +32,22 @@ export function notifyNewFinancasTenant(name: string, slug: string) {
   });
 }
 
+export function notifyNewEstoqueTenant(name: string, slug: string) {
+  return sendDiscordMessage({
+    title: "📦 Novo Controle de Estoque criado",
+    description: `**${name}** (\`${slug}\`)`,
+    color: COLOR.success,
+  });
+}
+
+export function notifyNewProducaoTenant(name: string, slug: string) {
+  return sendDiscordMessage({
+    title: "🏭 Novo Controle de Produção criado",
+    description: `**${name}** (\`${slug}\`)`,
+    color: COLOR.success,
+  });
+}
+
 export function notifyNewFeedback(email: string, message: string) {
   return sendDiscordMessage({
     title: "💬 Novo feedback",

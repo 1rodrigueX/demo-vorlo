@@ -78,7 +78,7 @@ export async function createEstoqueItem(_prevState: ActionState, formData: FormD
   }
 
   const slug = await getTenantSlug(supabase, tenantId);
-  if (slug) revalidatePath(`/${slug}/financeiro/estoque`);
+  if (slug) revalidatePath(`/${slug}/estoque`);
   return null;
 }
 
@@ -93,7 +93,7 @@ export async function deleteEstoqueItem(id: string) {
   await supabase.from("estoque_itens").delete().eq("id", id);
 
   const slug = tenantId ? await getTenantSlug(supabase, tenantId) : null;
-  if (slug) revalidatePath(`/${slug}/financeiro/estoque`);
+  if (slug) revalidatePath(`/${slug}/estoque`);
 }
 
 /**
@@ -167,26 +167,32 @@ export async function registrarMovimentacao(_prevState: ActionState, formData: F
   if (updateError) return { error: `Registrado, mas não deu pra atualizar a quantidade: ${updateError.message}` };
 
   if (type === "entrada") {
-    await ensureCategoria(supabase, tenantId, "despesa", "Estoque");
-    const { error: lancamentoError } = await supabase.from("financas_lancamentos").insert({
-      tenant_id: tenantId,
-      context: "empresarial",
-      type: "despesa",
-      category: "Estoque",
-      description: `Compra de estoque — ${item.name}`,
-      amount_cents: totalCents,
-      entry_date: new Date().toISOString().slice(0, 10),
-      source: "estoque",
-      created_by: user.id,
-    });
-    if (lancamentoError) {
-      return { error: `Estoque atualizado, mas não deu pra lançar em Empresarial: ${lancamentoError.message}` };
+    // Estoque não depende mais de Finanças pra funcionar — o lançamento em
+    // Empresarial só acontece se o tenant também tiver o Financeiro ativo
+    // (mesmo padrão best-effort do link CRM→Caixa de Entrada).
+    const { data: hasFinancas } = await supabase.rpc("current_tenant_has_financas");
+    if (hasFinancas) {
+      await ensureCategoria(supabase, tenantId, "despesa", "Estoque");
+      const { error: lancamentoError } = await supabase.from("financas_lancamentos").insert({
+        tenant_id: tenantId,
+        context: "empresarial",
+        type: "despesa",
+        category: "Estoque",
+        description: `Compra de estoque — ${item.name}`,
+        amount_cents: totalCents,
+        entry_date: new Date().toISOString().slice(0, 10),
+        source: "estoque",
+        created_by: user.id,
+      });
+      if (lancamentoError) {
+        return { error: `Estoque atualizado, mas não deu pra lançar em Empresarial: ${lancamentoError.message}` };
+      }
     }
   }
 
   const slug = await getTenantSlug(supabase, tenantId);
   if (slug) {
-    revalidatePath(`/${slug}/financeiro/estoque`);
+    revalidatePath(`/${slug}/estoque`);
     revalidatePath(`/${slug}/financeiro`);
   }
   return null;

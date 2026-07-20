@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils/cn";
 import { NewTenantButton } from "@/components/dev/NewTenantButton";
 import { NewTransportadoraTenantButton } from "@/components/dev/NewTransportadoraTenantButton";
 import { NewFinancasTenantButton } from "@/components/dev/NewFinancasTenantButton";
+import { NewEstoqueTenantButton } from "@/components/dev/NewEstoqueTenantButton";
 import { TenantStatusToggle } from "@/components/dev/TenantStatusToggle";
 import { AccessTenantButton } from "@/components/dev/AccessTenantButton";
 
@@ -28,6 +29,13 @@ export default async function DevTenantsPage() {
     .eq("status", "active");
   const financasTenantIds = new Set((financasProducts ?? []).map((p) => p.tenant_id));
 
+  const { data: estoqueProducts } = await admin
+    .from("tenant_products")
+    .select("tenant_id")
+    .eq("product", "estoque")
+    .eq("status", "active");
+  const estoqueTenantIds = new Set((estoqueProducts ?? []).map((p) => p.tenant_id));
+
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
@@ -38,6 +46,7 @@ export default async function DevTenantsPage() {
         <div className="flex items-center gap-2">
           <NewTransportadoraTenantButton />
           <NewFinancasTenantButton />
+          <NewEstoqueTenantButton />
           <NewTenantButton />
         </div>
       </div>
@@ -50,6 +59,7 @@ export default async function DevTenantsPage() {
             const hasCrm = !!tenant.billing_plan_id;
             const hasTransportadora = transportadoraTenantIds.has(tenant.id);
             const hasFinancas = financasTenantIds.has(tenant.id);
+            const hasEstoque = estoqueTenantIds.has(tenant.id);
             return (
               <div key={tenant.id} className="flex items-center justify-between gap-4 px-4 py-3.5">
                 <div className="min-w-0">
@@ -68,6 +78,11 @@ export default async function DevTenantsPage() {
                     {hasFinancas && (
                       <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700">
                         Finanças
+                      </span>
+                    )}
+                    {hasEstoque && (
+                      <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700">
+                        Estoque
                       </span>
                     )}
                   </div>
