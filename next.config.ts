@@ -13,13 +13,16 @@ const SUPABASE_WS_URL = SUPABASE_URL.replace("https://", "wss://");
 // apps/frete-app) usa o renderer CanvasKit, que busca canvaskit.js/.wasm
 // desse CDN do Google e precisa rodar WebAssembly — sem os dois, o browser
 // bloqueia silenciosamente e a página trava no branco/spinner pra sempre.
+// https://fonts.gstatic.com: mesmo app busca a fonte Roboto nesse CDN em
+// tempo de execução (não vem bundlada) — sem liberar, o texto renderiza
+// invisível (só os ícones, que usam uma fonte própria local, aparecem).
 const CSP = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://sdk.scdn.co https://www.gstatic.com",
   "style-src 'self' 'unsafe-inline'",
   `img-src 'self' data: blob: ${SUPABASE_URL}`,
-  "font-src 'self' data:",
-  `connect-src 'self' ${SUPABASE_URL} ${SUPABASE_WS_URL} https://sdk.scdn.co https://www.gstatic.com`,
+  "font-src 'self' data: https://fonts.gstatic.com",
+  `connect-src 'self' ${SUPABASE_URL} ${SUPABASE_WS_URL} https://sdk.scdn.co https://www.gstatic.com https://fonts.gstatic.com`,
   "frame-src https://www.youtube.com",
   "frame-ancestors 'none'",
   "object-src 'none'",
