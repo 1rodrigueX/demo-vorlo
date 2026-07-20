@@ -16,3 +16,10 @@ export const updateDealStageSchema = z.object({
 });
 
 export type UpdateDealStageInput = z.infer<typeof updateDealStageSchema>;
+
+export const updateDealOwnerSchema = z.object({
+  dealId: z.uuid(),
+  ownerId: z.uuid(),
+});
+
+export type UpdateDealOwnerInput = z.infer<typeof updateDealOwnerSchema>;

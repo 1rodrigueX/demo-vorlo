@@ -15,10 +15,12 @@ import { NewDealModal } from "@/components/contacts/NewDealModal";
 import { DealStageSelect } from "@/components/contacts/DealStageSelect";
 import { DealWonButton } from "@/components/contacts/DealWonButton";
 import { DealProdutosSection } from "@/components/contacts/DealProdutosSection";
+import { DealOwnerSelect } from "@/components/contacts/DealOwnerSelect";
 import { ConfirmDeleteButton } from "@/components/ui/ConfirmDeleteButton";
 import { deleteContact } from "@/lib/actions/contacts";
 import { getDealProdutosForDeals } from "@/lib/actions/deal-produtos";
 import { getEstoqueItens } from "@/lib/actions/estoque";
+import { getCurrentUser } from "@/lib/auth/current-user";
 import { formatCurrency } from "@/lib/utils/currency";
 import type { WhatsAppMessage } from "@/types/domain";
 
@@ -42,12 +44,13 @@ export default async function ContactDetailPage({
     { data: attachmentRows },
     { data: allTags },
     { data: contactTagRows },
+    currentUser,
   ] = await Promise.all([
     supabase.from("contacts").select("*").eq("id", id).single(),
     supabase.from("companies").select("id, name").order("name"),
     supabase
       .from("deals")
-      .select("id, title, value, status, stage_id")
+      .select("id, title, value, status, stage_id, owner_id")
       .eq("contact_id", id)
       .order("created_at", { ascending: false }),
     supabase.from("pipeline_stages").select("*").order("position"),
@@ -71,6 +74,7 @@ export default async function ContactDetailPage({
       .order("created_at", { ascending: false }),
     supabase.from("tags").select("*").order("name"),
     supabase.from("contact_tags").select("tag_id").eq("contact_id", id),
+    getCurrentUser(),
   ]);
 
   if (!contact) notFound();
@@ -79,6 +83,14 @@ export default async function ContactDetailPage({
   // seção some inteira pros demais em vez de aparecer vazia sem explicação.
   const { data: hasEstoque } = await supabase.rpc("current_tenant_has_estoque");
   const dealIds = (deals ?? []).map((d) => d.id);
+
+  // Reatribuir vendedor responsável é uma reação de gestão — RLS já só
+  // deixa dono/gerente mudar pra outra pessoa (ver updateDealOwner), então
+  // a seleção só aparece pra quem realmente consegue usá-la.
+  const isAdmin = currentUser?.profile?.role === "owner" || currentUser?.profile?.role === "manager";
+  const { data: sellers } = isAdmin
+    ? await supabase.from("profiles").select("id, full_name").order("full_name")
+    : { data: null };
   const [dealProdutosByDealId, estoqueItens] = hasEstoque
     ? await Promise.all([getDealProdutosForDeals(dealIds), getEstoqueItens()])
     : [{} as Record<string, Awaited<ReturnType<typeof getDealProdutosForDeals>>[string]>, []];
@@ -166,6 +178,12 @@ export default async function ContactDetailPage({
                       />
                       <DealWonButton dealId={deal.id} initialStatus={deal.status} />
                     </div>
+                    {isAdmin && sellers && sellers.length > 0 && (
+                      <div className="mt-2 flex items-center gap-1.5">
+                        <span className="text-xs text-gray-400">Vendedor:</span>
+                        <DealOwnerSelect dealId={deal.id} currentOwnerId={deal.owner_id} sellers={sellers} />
+                      </div>
+                    )}
                     {hasEstoque && (
                       <DealProdutosSection
                         dealId={deal.id}

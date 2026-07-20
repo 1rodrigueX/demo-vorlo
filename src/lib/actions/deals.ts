@@ -6,7 +6,7 @@ import { requireTenantId } from "@/lib/auth/current-user";
 import { createBlingOrderForDeal } from "@/lib/bling/sync";
 import { createDealWonInboxEntry } from "@/lib/financas/crmInbox";
 import { baixarEstoqueVenda } from "@/lib/estoque/dealStock";
-import { dealSchema, updateDealStageSchema } from "@/lib/validation/deal";
+import { dealSchema, updateDealOwnerSchema, updateDealStageSchema } from "@/lib/validation/deal";
 
 export type ActionState = { error?: string } | null;
 
@@ -132,6 +132,32 @@ export async function updateDealStage(input: {
     revalidatePath(`/[tenantSlug]/whatsapp/${deal.contact_id}`, "page");
   }
 
+  return { error: undefined };
+}
+
+/** Reatribui o vendedor responsável pelo negócio — só o dono/gerente pode mudar pra outra pessoa (RLS). */
+export async function updateDealOwner(input: { dealId: string; ownerId: string }) {
+  const parsed = updateDealOwnerSchema.safeParse(input);
+  if (!parsed.success) {
+    return { error: "Dados inválidos" };
+  }
+
+  const supabase = await createClient();
+
+  const { data: deal, error } = await supabase
+    .from("deals")
+    .update({ owner_id: parsed.data.ownerId })
+    .eq("id", parsed.data.dealId)
+    .select("contact_id")
+    .single();
+
+  if (error || !deal) {
+    return { error: "Não foi possível reatribuir o negócio (só o dono da conta pode mudar o vendedor)" };
+  }
+
+  revalidatePath("/[tenantSlug]/pipeline", "page");
+  revalidatePath(`/[tenantSlug]/contacts/${deal.contact_id}`, "page");
+  revalidatePath(`/[tenantSlug]/whatsapp/${deal.contact_id}`, "page");
   return { error: undefined };
 }
 
