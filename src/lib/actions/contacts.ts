@@ -216,7 +216,13 @@ export async function updateContact(
   return null;
 }
 
-/** Reatribui o vendedor responsável pelo contato — RLS só deixa o dono/gerente mudar pra outra pessoa. */
+/**
+ * Reatribui o vendedor responsável pelo contato — RLS só deixa o dono/gerente
+ * mudar pra outra pessoa. Também reatribui os negócios ainda abertos desse
+ * contato (só os abertos: não reescreve o histórico de quem fechou/perdeu um
+ * negócio já encerrado), senão o card do pipeline continuaria mostrando o
+ * vendedor antigo mesmo depois de trocar aqui.
+ */
 export async function updateContactOwner(contactId: string, ownerId: string) {
   const supabase = await createClient();
 
@@ -226,8 +232,11 @@ export async function updateContactOwner(contactId: string, ownerId: string) {
     return { error: "Não foi possível reatribuir o contato (só o dono da conta pode mudar o vendedor)" };
   }
 
+  await supabase.from("deals").update({ owner_id: ownerId }).eq("contact_id", contactId).eq("status", "open");
+
   revalidatePath("/[tenantSlug]/contacts", "page");
   revalidatePath(`/[tenantSlug]/contacts/${contactId}`, "page");
+  revalidatePath("/[tenantSlug]/pipeline", "page");
   return { error: undefined };
 }
 
