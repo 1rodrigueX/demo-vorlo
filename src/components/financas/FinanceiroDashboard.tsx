@@ -14,7 +14,7 @@ import {
   Legend,
 } from "recharts";
 import Link from "next/link";
-import { Plus, Wallet, Building2, User, Settings, Lightbulb } from "lucide-react";
+import { Plus, Wallet, Building2, User, Settings, Lightbulb, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { formatCurrency } from "@/lib/utils/currency";
 import { getLancamentos } from "@/lib/actions/financas";
@@ -230,6 +230,13 @@ export function FinanceiroDashboard({
               </button>
             </div>
             <div className="flex items-center gap-2">
+              <Link
+                href={`/${tenantSlug}/financeiro/investimentos`}
+                className="flex items-center gap-1.5 rounded-lg border border-[#383835] px-3 py-2 text-sm text-[#898781] transition-colors hover:text-white"
+              >
+                <TrendingUp size={14} />
+                Investimentos
+              </Link>
               <Link
                 href={`/${tenantSlug}/financeiro/configuracoes`}
                 className="flex items-center gap-1.5 rounded-lg border border-[#383835] px-3 py-2 text-sm text-[#898781] transition-colors hover:text-white"
