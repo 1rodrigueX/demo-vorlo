@@ -1709,10 +1709,37 @@ export interface Database {
         };
         Relationships: [];
       };
+      financas_plans: {
+        Row: {
+          id: string;
+          name: string;
+          is_default: boolean;
+          monthly_price_cents: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          is_default?: boolean;
+          monthly_price_cents: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          is_default?: boolean;
+          monthly_price_cents?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       tenant_products: {
         Row: {
           tenant_id: string;
-          product: "transportadora";
+          product: "transportadora" | "financas";
           status: "active" | "past_due" | "suspended";
           plan_id: string | null;
           mp_payer_id: string | null;
@@ -1724,7 +1751,7 @@ export interface Database {
         };
         Insert: {
           tenant_id: string;
-          product: "transportadora";
+          product: "transportadora" | "financas";
           status?: "active" | "past_due" | "suspended";
           plan_id?: string | null;
           mp_payer_id?: string | null;
@@ -1736,7 +1763,7 @@ export interface Database {
         };
         Update: {
           tenant_id?: string;
-          product?: "transportadora";
+          product?: "transportadora" | "financas";
           status?: "active" | "past_due" | "suspended";
           plan_id?: string | null;
           mp_payer_id?: string | null;
@@ -1752,13 +1779,6 @@ export interface Database {
             columns: ["tenant_id"];
             isOneToOne: false;
             referencedRelation: "tenants";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "tenant_products_plan_id_fkey";
-            columns: ["plan_id"];
-            isOneToOne: false;
-            referencedRelation: "transportadora_plans";
             referencedColumns: ["id"];
           },
         ];

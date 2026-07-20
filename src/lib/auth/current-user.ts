@@ -139,7 +139,7 @@ export async function resolveHomeRoute(): Promise<string> {
 }
 
 export type AccountService = {
-  key: "crm" | "transportadora";
+  key: "crm" | "transportadora" | "financas";
   name: string;
   description: string;
   active: boolean;
@@ -179,7 +179,10 @@ export async function getAccountServices(): Promise<{
     crmSlug = tenant?.slug ?? null;
   }
 
-  const { data: hasTransportadora } = await supabase.rpc("current_tenant_has_transportadora");
+  const [{ data: hasTransportadora }, { data: hasFinancas }] = await Promise.all([
+    supabase.rpc("current_tenant_has_transportadora"),
+    supabase.rpc("current_tenant_has_financas"),
+  ]);
   const ownerName = (user.user_metadata?.full_name as string | undefined) ?? null;
 
   return {
@@ -198,6 +201,13 @@ export async function getAccountServices(): Promise<{
         description: "App de gestão de fretes, clientes e motoristas.",
         active: !!hasTransportadora,
         href: hasTransportadora ? "/app/download" : "/comprar-transportadora",
+      },
+      {
+        key: "financas",
+        name: "Finanças",
+        description: "Controle financeiro completo — fluxo de caixa, contas e boletos.",
+        active: !!hasFinancas,
+        href: hasFinancas && crmSlug ? `/${crmSlug}/financeiro` : "/comprar-financas",
       },
     ],
   };

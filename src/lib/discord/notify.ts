@@ -24,6 +24,14 @@ export function notifyNewTransportadoraTenant(name: string, slug: string) {
   });
 }
 
+export function notifyNewFinancasTenant(name: string, slug: string) {
+  return sendDiscordMessage({
+    title: "💰 Novo Controle de Finanças criado",
+    description: `**${name}** (\`${slug}\`)`,
+    color: COLOR.success,
+  });
+}
+
 export function notifyNewFeedback(email: string, message: string) {
   return sendDiscordMessage({
     title: "💬 Novo feedback",

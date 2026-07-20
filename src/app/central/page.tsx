@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { ArrowRight, LayoutDashboard, Lock, Truck } from "lucide-react";
+import { ArrowRight, LayoutDashboard, Lock, Truck, Wallet } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getAccountServices, type AccountService } from "@/lib/auth/current-user";
 import { UserMenu } from "@/components/layout/UserMenu";
@@ -8,6 +8,7 @@ import { UserMenu } from "@/components/layout/UserMenu";
 const ICONS: Record<AccountService["key"], typeof LayoutDashboard> = {
   crm: LayoutDashboard,
   transportadora: Truck,
+  financas: Wallet,
 };
 
 export default async function CentralPage() {
@@ -40,7 +41,7 @@ export default async function CentralPage() {
           </p>
         </div>
 
-        <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {services.map((service) => {
             const Icon = ICONS[service.key];
             return (

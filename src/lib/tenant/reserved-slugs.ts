@@ -15,6 +15,7 @@ export const RESERVED_SLUGS = new Set([
   "app-web",
   "central",
   "comprar-transportadora",
+  "comprar-financas",
   "downloads",
   "mfa-challenge",
 ]);
