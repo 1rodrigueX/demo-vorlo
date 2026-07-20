@@ -52,6 +52,7 @@ export async function createTeamMemberWithAccess(_prevState: ActionState, formDa
     email: formData.get("email"),
     password: formData.get("password"),
     role: formData.get("role"),
+    color: formData.get("color") || undefined,
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
 
@@ -93,6 +94,10 @@ export async function createTeamMemberWithAccess(_prevState: ActionState, formDa
   if (error || !created.user) {
     return { error: `Não foi possível criar o acesso: ${error?.message ?? "erro desconhecido"}` };
   }
+
+  // handle_new_user só copia full_name/tenant_id/role do user_metadata pro
+  // profiles novo — a cor é setada num segundo passo aqui.
+  await admin.from("profiles").update({ color: parsed.data.color }).eq("id", created.user.id);
 
   const selectedProducts = TOGGLEABLE_PRODUCTS.filter((p) => formData.get(`product_${p}`) === "on");
   if (selectedProducts.length > 0) {

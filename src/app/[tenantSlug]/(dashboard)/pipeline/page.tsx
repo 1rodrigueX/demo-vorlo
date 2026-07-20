@@ -50,7 +50,7 @@ export default async function PipelinePage({
 
   let dealsQuery = supabase
     .from("deals")
-    .select("*, contact:contacts(id, name, phone), owner:profiles(id, full_name)")
+    .select("*, contact:contacts(id, name, phone), owner:profiles(id, full_name, color)")
     .order("position");
   if (isAdmin && vendedor) dealsQuery = dealsQuery.eq("owner_id", vendedor);
   if (dealIdsFromProduto) dealsQuery = dealsQuery.in("id", dealIdsFromProduto.length ? dealIdsFromProduto : ["-"]);

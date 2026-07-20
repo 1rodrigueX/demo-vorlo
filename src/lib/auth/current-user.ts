@@ -43,6 +43,7 @@ export async function getCurrentUser() {
         role: "owner",
         avatar_url: null,
         seller_tag_id: null,
+        color: "#6366f1",
         created_at: new Date().toISOString(),
       };
       return { user, profile: syntheticProfile, isDevViewing: true as const };

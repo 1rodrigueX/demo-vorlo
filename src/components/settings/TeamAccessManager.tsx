@@ -47,6 +47,15 @@ function NewMemberForm({ onCreated }: { onCreated: () => void }) {
           <option value="manager">Gestor</option>
         </select>
       </div>
+      <label className="flex items-center gap-2 text-sm text-gray-700">
+        Cor no pipeline
+        <input
+          name="color"
+          type="color"
+          defaultValue="#6366f1"
+          className="h-8 w-12 cursor-pointer rounded border border-gray-300 bg-panel p-0.5"
+        />
+      </label>
 
       <div>
         <p className="mb-1.5 text-xs font-medium text-gray-500">Acesso aos produtos (CRM sempre incluso)</p>
@@ -121,9 +130,16 @@ function MemberRow({ member, onChanged }: { member: TeamMemberWithAccess; onChan
   return (
     <div className="rounded-xl border border-gray-200 bg-panel p-4">
       <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <p className="truncate text-sm font-medium text-gray-900">{member.full_name}</p>
-          <p className="truncate text-xs text-gray-500">{member.email}</p>
+        <div className="flex min-w-0 items-center gap-2">
+          <span
+            className="h-2.5 w-2.5 shrink-0 rounded-full"
+            style={{ backgroundColor: member.color }}
+            aria-hidden
+          />
+          <div className="min-w-0">
+            <p className="truncate text-sm font-medium text-gray-900">{member.full_name}</p>
+            <p className="truncate text-xs text-gray-500">{member.email}</p>
+          </div>
         </div>
         <div className="flex shrink-0 items-center gap-2">
           <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-600">

@@ -535,6 +535,7 @@ export interface Database {
           avatar_url: string | null;
           role: "owner" | "manager" | "member";
           seller_tag_id: string | null;
+          color: string;
           created_at: string;
         };
         Insert: {
@@ -544,6 +545,7 @@ export interface Database {
           avatar_url?: string | null;
           role?: "owner" | "manager" | "member";
           seller_tag_id?: string | null;
+          color?: string;
           created_at?: string;
         };
         Update: {
@@ -553,6 +555,7 @@ export interface Database {
           avatar_url?: string | null;
           role?: "owner" | "manager" | "member";
           seller_tag_id?: string | null;
+          color?: string;
           created_at?: string;
         };
         Relationships: [

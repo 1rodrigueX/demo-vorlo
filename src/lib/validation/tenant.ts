@@ -89,6 +89,10 @@ export const createTeamMemberSchema = z.object({
   email: z.string().trim().email("Email inválido"),
   password: z.string().min(8, "Senha deve ter ao menos 8 caracteres"),
   role: z.enum(["member", "manager"]),
+  color: z
+    .string()
+    .regex(/^#[0-9a-fA-F]{6}$/, "Cor inválida")
+    .default("#6366f1"),
 });
 
 export type CreateTeamMemberInput = z.infer<typeof createTeamMemberSchema>;
