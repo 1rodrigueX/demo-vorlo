@@ -2793,6 +2793,48 @@ export interface Database {
           },
         ];
       };
+      deal_produtos: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          deal_id: string;
+          estoque_item_id: string;
+          quantity: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          deal_id: string;
+          estoque_item_id: string;
+          quantity: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          deal_id?: string;
+          estoque_item_id?: string;
+          quantity?: number;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "deal_produtos_deal_id_fkey";
+            columns: ["deal_id"];
+            isOneToOne: false;
+            referencedRelation: "deals";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "deal_produtos_estoque_item_id_fkey";
+            columns: ["estoque_item_id"];
+            isOneToOne: false;
+            referencedRelation: "estoque_itens";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       financas_categorias: {
         Row: {
           id: string;

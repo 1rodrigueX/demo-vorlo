@@ -47,6 +47,7 @@ export type ProducaoProduto = Database["public"]["Tables"]["producao_produtos"][
 export type ProducaoReceitaItem = Database["public"]["Tables"]["producao_receita_itens"]["Row"];
 export type ProducaoFuncionario = Database["public"]["Tables"]["producao_funcionarios"]["Row"];
 export type ProducaoApontamento = Database["public"]["Tables"]["producao_apontamentos"]["Row"];
+export type DealProduto = Database["public"]["Tables"]["deal_produtos"]["Row"];
 
 export type ContactWithCompany = Contact & {
   company: Pick<Company, "id" | "name"> | null;

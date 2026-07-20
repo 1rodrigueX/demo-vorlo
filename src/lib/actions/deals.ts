@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireTenantId } from "@/lib/auth/current-user";
 import { createBlingOrderForDeal } from "@/lib/bling/sync";
 import { createDealWonInboxEntry } from "@/lib/financas/crmInbox";
+import { baixarEstoqueVenda } from "@/lib/estoque/dealStock";
 import { dealSchema, updateDealStageSchema } from "@/lib/validation/deal";
 
 export type ActionState = { error?: string } | null;
@@ -98,6 +99,7 @@ export async function updateDealStage(input: {
 
   if (stage?.is_won && previousDeal && previousDeal.status !== "won") {
     void createDealWonInboxEntry(previousDeal.tenant_id, parsed.data.dealId, previousDeal.title, Number(previousDeal.value));
+    void baixarEstoqueVenda(previousDeal.tenant_id, parsed.data.dealId, previousDeal.title);
   }
 
   const {

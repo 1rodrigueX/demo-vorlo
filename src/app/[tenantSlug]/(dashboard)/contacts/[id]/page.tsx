@@ -14,8 +14,11 @@ import { WhatsAppChatPanel } from "@/components/contacts/WhatsAppChatPanel";
 import { NewDealModal } from "@/components/contacts/NewDealModal";
 import { DealStageSelect } from "@/components/contacts/DealStageSelect";
 import { DealWonButton } from "@/components/contacts/DealWonButton";
+import { DealProdutosSection } from "@/components/contacts/DealProdutosSection";
 import { ConfirmDeleteButton } from "@/components/ui/ConfirmDeleteButton";
 import { deleteContact } from "@/lib/actions/contacts";
+import { getDealProdutosForDeals } from "@/lib/actions/deal-produtos";
+import { getEstoqueItens } from "@/lib/actions/estoque";
 import { formatCurrency } from "@/lib/utils/currency";
 import type { WhatsAppMessage } from "@/types/domain";
 
@@ -71,6 +74,14 @@ export default async function ContactDetailPage({
   ]);
 
   if (!contact) notFound();
+
+  // "Produtos vendidos" só faz sentido pra quem tem Estoque ativo — a
+  // seção some inteira pros demais em vez de aparecer vazia sem explicação.
+  const { data: hasEstoque } = await supabase.rpc("current_tenant_has_estoque");
+  const dealIds = (deals ?? []).map((d) => d.id);
+  const [dealProdutosByDealId, estoqueItens] = hasEstoque
+    ? await Promise.all([getDealProdutosForDeals(dealIds), getEstoqueItens()])
+    : [{} as Record<string, Awaited<ReturnType<typeof getDealProdutosForDeals>>[string]>, []];
 
   // Bucket é privado — gera URL assinada com o client de service role (o
   // client comum não tem policy de storage.objects, só o RLS de metadados
@@ -155,6 +166,13 @@ export default async function ContactDetailPage({
                       />
                       <DealWonButton dealId={deal.id} initialStatus={deal.status} />
                     </div>
+                    {hasEstoque && (
+                      <DealProdutosSection
+                        dealId={deal.id}
+                        initialProdutos={dealProdutosByDealId[deal.id] ?? []}
+                        estoqueItens={estoqueItens}
+                      />
+                    )}
                   </li>
                 ))}
               </ul>
