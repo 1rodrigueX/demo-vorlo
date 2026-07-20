@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getLancamentos } from "@/lib/actions/financas";
 import { getCategorias } from "@/lib/actions/financas-categorias";
 import { getBankConnection } from "@/lib/actions/financas-bank";
+import { getInboxItems } from "@/lib/actions/financas-inbox";
 import { FinanceiroDashboard } from "@/components/financas/FinanceiroDashboard";
 
 /**
@@ -28,10 +29,11 @@ export default async function FinanceiroPage({
   if (!hasAccess) redirect("/comprar-financas");
 
   const year = new Date().getFullYear();
-  const [lancamentos, categorias, bankConnection] = await Promise.all([
+  const [lancamentos, categorias, bankConnection, inboxItems] = await Promise.all([
     getLancamentos("pessoal", year),
     getCategorias(),
     getBankConnection(),
+    getInboxItems(),
   ]);
 
   return (
@@ -41,6 +43,7 @@ export default async function FinanceiroPage({
       categorias={categorias}
       tenantSlug={tenantSlug}
       initialBankConnection={bankConnection}
+      initialInboxItems={inboxItems}
     />
   );
 }

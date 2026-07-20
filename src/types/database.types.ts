@@ -2208,7 +2208,7 @@ export interface Database {
           entry_date: string;
           created_by: string | null;
           created_at: string;
-          source: "manual" | "open_finance";
+          source: "manual" | "open_finance" | "crm" | "estoque";
           payment_method: "pix" | "boleto" | "cartao_credito" | "debito" | null;
           external_id: string | null;
         };
@@ -2223,7 +2223,7 @@ export interface Database {
           entry_date: string;
           created_by?: string | null;
           created_at?: string;
-          source?: "manual" | "open_finance";
+          source?: "manual" | "open_finance" | "crm" | "estoque";
           payment_method?: "pix" | "boleto" | "cartao_credito" | "debito" | null;
           external_id?: string | null;
         };
@@ -2238,7 +2238,7 @@ export interface Database {
           entry_date?: string;
           created_by?: string | null;
           created_at?: string;
-          source?: "manual" | "open_finance";
+          source?: "manual" | "open_finance" | "crm" | "estoque";
           payment_method?: "pix" | "boleto" | "cartao_credito" | "debito" | null;
           external_id?: string | null;
         };
@@ -2286,6 +2286,151 @@ export interface Database {
             columns: ["tenant_id"];
             isOneToOne: true;
             referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      financas_inbox: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          source: "crm_deal";
+          reference_id: string | null;
+          type: "receita" | "despesa";
+          category: string;
+          description: string | null;
+          amount_cents: number;
+          entry_date: string;
+          status: "pending" | "approved" | "dismissed";
+          created_at: string;
+          resolved_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          source: "crm_deal";
+          reference_id?: string | null;
+          type: "receita" | "despesa";
+          category: string;
+          description?: string | null;
+          amount_cents: number;
+          entry_date: string;
+          status?: "pending" | "approved" | "dismissed";
+          created_at?: string;
+          resolved_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          source?: "crm_deal";
+          reference_id?: string | null;
+          type?: "receita" | "despesa";
+          category?: string;
+          description?: string | null;
+          amount_cents?: number;
+          entry_date?: string;
+          status?: "pending" | "approved" | "dismissed";
+          created_at?: string;
+          resolved_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "financas_inbox_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      estoque_itens: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          name: string;
+          unit: string;
+          quantity: number;
+          unit_cost_cents: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          name: string;
+          unit?: string;
+          quantity?: number;
+          unit_cost_cents?: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          name?: string;
+          unit?: string;
+          quantity?: number;
+          unit_cost_cents?: number;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "estoque_itens_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      estoque_movimentacoes: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          item_id: string;
+          type: "entrada" | "saida";
+          quantity: number;
+          unit_cost_cents: number;
+          total_cents: number;
+          note: string | null;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          item_id: string;
+          type: "entrada" | "saida";
+          quantity: number;
+          unit_cost_cents?: number;
+          total_cents?: number;
+          note?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          item_id?: string;
+          type?: "entrada" | "saida";
+          quantity?: number;
+          unit_cost_cents?: number;
+          total_cents?: number;
+          note?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "estoque_movimentacoes_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "estoque_movimentacoes_item_id_fkey";
+            columns: ["item_id"];
+            isOneToOne: false;
+            referencedRelation: "estoque_itens";
             referencedColumns: ["id"];
           },
         ];

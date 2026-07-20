@@ -14,17 +14,24 @@ import {
   Legend,
 } from "recharts";
 import Link from "next/link";
-import { Plus, Wallet, Building2, User, Settings, Lightbulb, TrendingUp } from "lucide-react";
+import { Plus, Wallet, Building2, User, Settings, Lightbulb, TrendingUp, Boxes } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { formatCurrency } from "@/lib/utils/currency";
 import { getLancamentos } from "@/lib/actions/financas";
 import { getBankConnection } from "@/lib/actions/financas-bank";
+import { getInboxItems } from "@/lib/actions/financas-inbox";
 import { CHART_COLORS, MONTH_LABELS, MONTH_LABELS_FULL } from "@/lib/financas/categories";
 import { computeSavingsTip } from "@/lib/financas/insights";
 import { Sparkline, DonutChart, MiniGauge, type DonutSlice } from "@/components/financas/charts";
 import { NovoLancamentoModal } from "@/components/financas/NovoLancamentoModal";
 import { BankConnectionPanel } from "@/components/financas/BankConnectionPanel";
-import type { FinancasLancamento, FinancasCategoria, FinancasBankConnection } from "@/types/domain";
+import { InboxPanel } from "@/components/financas/InboxPanel";
+import type {
+  FinancasLancamento,
+  FinancasCategoria,
+  FinancasBankConnection,
+  FinancasInboxItem,
+} from "@/types/domain";
 
 const compactCurrency = new Intl.NumberFormat("pt-BR", {
   style: "currency",
@@ -48,12 +55,14 @@ export function FinanceiroDashboard({
   categorias,
   tenantSlug,
   initialBankConnection,
+  initialInboxItems,
 }: {
   initialLancamentos: FinancasLancamento[];
   initialYear: number;
   categorias: FinancasCategoria[];
   tenantSlug: string;
   initialBankConnection: FinancasBankConnection | null;
+  initialInboxItems: FinancasInboxItem[];
 }) {
   const despesaCategorias = useMemo(() => categorias.filter((c) => c.type === "despesa"), [categorias]);
   const receitaCategorias = useMemo(() => categorias.filter((c) => c.type === "receita"), [categorias]);
@@ -67,6 +76,7 @@ export function FinanceiroDashboard({
   );
   const [lancamentos, setLancamentos] = useState(initialLancamentos);
   const [bankConnection, setBankConnection] = useState(initialBankConnection);
+  const [inboxItems, setInboxItems] = useState(initialInboxItems);
   const [isPending, startTransition] = useTransition();
   const [modalOpen, setModalOpen] = useState(false);
 
@@ -82,6 +92,14 @@ export function FinanceiroDashboard({
       const [data, conn] = await Promise.all([getLancamentos(context, year), getBankConnection()]);
       setLancamentos(data);
       setBankConnection(conn);
+    });
+  }
+
+  function refreshAfterInboxChange() {
+    startTransition(async () => {
+      const [data, inbox] = await Promise.all([getLancamentos(context, year), getInboxItems()]);
+      setLancamentos(data);
+      setInboxItems(inbox);
     });
   }
 
@@ -230,6 +248,15 @@ export function FinanceiroDashboard({
               </button>
             </div>
             <div className="flex items-center gap-2">
+              {context === "empresarial" && (
+                <Link
+                  href={`/${tenantSlug}/financeiro/estoque`}
+                  className="flex items-center gap-1.5 rounded-lg border border-[#383835] px-3 py-2 text-sm text-[#898781] transition-colors hover:text-white"
+                >
+                  <Boxes size={14} />
+                  Estoque
+                </Link>
+              )}
               <Link
                 href={`/${tenantSlug}/financeiro/investimentos`}
                 className="flex items-center gap-1.5 rounded-lg border border-[#383835] px-3 py-2 text-sm text-[#898781] transition-colors hover:text-white"
@@ -268,6 +295,10 @@ export function FinanceiroDashboard({
                 </div>
               )}
             </div>
+          )}
+
+          {context === "empresarial" && (
+            <InboxPanel items={inboxItems} onChanged={refreshAfterInboxChange} />
           )}
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">

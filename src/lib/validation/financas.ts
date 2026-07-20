@@ -18,3 +18,20 @@ export const categoriaSchema = z.object({
 });
 
 export type CategoriaInput = z.infer<typeof categoriaSchema>;
+
+export const estoqueItemSchema = z.object({
+  name: z.string().trim().min(2, "Dê um nome pro item").max(60, "Máx. 60 caracteres"),
+  unit: z.string().trim().max(10, "Máx. 10 caracteres").optional().or(z.literal("")),
+});
+
+export type EstoqueItemInput = z.infer<typeof estoqueItemSchema>;
+
+export const estoqueMovimentacaoSchema = z.object({
+  itemId: z.string().uuid("Escolha um item"),
+  type: z.enum(["entrada", "saida"]),
+  quantity: z.coerce.number().positive("Informe uma quantidade maior que zero"),
+  unitCostReais: z.coerce.number().min(0).optional(),
+  note: z.string().trim().max(200).optional().or(z.literal("")),
+});
+
+export type EstoqueMovimentacaoInput = z.infer<typeof estoqueMovimentacaoSchema>;

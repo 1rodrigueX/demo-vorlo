@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireTenantId } from "@/lib/auth/current-user";
 import { createBlingOrderForDeal } from "@/lib/bling/sync";
+import { createDealWonInboxEntry } from "@/lib/financas/crmInbox";
 import { dealSchema, updateDealStageSchema } from "@/lib/validation/deal";
 
 export type ActionState = { error?: string } | null;
@@ -75,6 +76,12 @@ export async function updateDealStage(input: {
 
   const closingNow = stage?.is_won || stage?.is_lost;
 
+  const { data: previousDeal } = await supabase
+    .from("deals")
+    .select("status, tenant_id, title, value")
+    .eq("id", parsed.data.dealId)
+    .single();
+
   const { error } = await supabase
     .from("deals")
     .update({
@@ -87,6 +94,10 @@ export async function updateDealStage(input: {
 
   if (error) {
     return { error: "Não foi possível mover o negócio (você só move negócios que é o dono)" };
+  }
+
+  if (stage?.is_won && previousDeal && previousDeal.status !== "won") {
+    void createDealWonInboxEntry(previousDeal.tenant_id, parsed.data.dealId, previousDeal.title, Number(previousDeal.value));
   }
 
   const {

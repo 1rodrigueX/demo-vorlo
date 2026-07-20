@@ -37,6 +37,9 @@ export type BugReport = Database["public"]["Tables"]["bug_reports"]["Row"];
 export type FinancasLancamento = Database["public"]["Tables"]["financas_lancamentos"]["Row"];
 export type FinancasCategoria = Database["public"]["Tables"]["financas_categorias"]["Row"];
 export type FinancasBankConnection = Database["public"]["Tables"]["financas_bank_connections"]["Row"];
+export type FinancasInboxItem = Database["public"]["Tables"]["financas_inbox"]["Row"];
+export type EstoqueItem = Database["public"]["Tables"]["estoque_itens"]["Row"];
+export type EstoqueMovimentacao = Database["public"]["Tables"]["estoque_movimentacoes"]["Row"];
 
 export type ContactWithCompany = Contact & {
   company: Pick<Company, "id" | "name"> | null;
