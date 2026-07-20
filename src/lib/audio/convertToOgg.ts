@@ -17,7 +17,19 @@ export async function convertToOggOpus(inputBuffer: Buffer): Promise<Buffer> {
 
   try {
     await writeFile(inputPath, inputBuffer);
-    await execFileAsync(FFMPEG_BIN, ["-y", "-i", inputPath, "-c:a", "libopus", "-b:a", "32k", "-vn", outputPath]);
+    try {
+      await execFileAsync(FFMPEG_BIN, ["-y", "-i", inputPath, "-c:a", "libopus", "-b:a", "32k", "-vn", outputPath]);
+    } catch (err) {
+      // ENOENT aqui é sempre config de ambiente (FFMPEG_PATH errado/vazio ou
+      // ffmpeg não instalado no servidor) — nunca vale a pena mostrar o path
+      // bruto do binário pro usuário final.
+      if (err && typeof err === "object" && "code" in err && err.code === "ENOENT") {
+        throw new Error(
+          "Conversão de áudio indisponível no servidor: ffmpeg não encontrado (verifique FFMPEG_PATH ou a instalação do ffmpeg).",
+        );
+      }
+      throw err;
+    }
     return await readFile(outputPath);
   } finally {
     await unlink(inputPath).catch(() => {});
