@@ -2,12 +2,17 @@ import "server-only";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { writeFile, readFile, unlink } from "node:fs/promises";
+import { existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 
 const execFileAsync = promisify(execFile);
-const FFMPEG_BIN = process.env.FFMPEG_PATH || "ffmpeg";
+// Só confia em FFMPEG_PATH se o arquivo realmente existir — um valor
+// desatualizado ou copiado de outra máquina (ex: path do Windows num
+// servidor Linux) travava a conversão pra sempre mesmo com o ffmpeg do
+// sistema instalado e funcionando, porque a env var tinha prioridade.
+const FFMPEG_BIN = process.env.FFMPEG_PATH && existsSync(process.env.FFMPEG_PATH) ? process.env.FFMPEG_PATH : "ffmpeg";
 
 /** Converte um áudio gravado no navegador (webm/opus) pra ogg/opus — formato exigido pelo WhatsApp pra tocar como nota de voz nativa. */
 export async function convertToOggOpus(inputBuffer: Buffer): Promise<Buffer> {
