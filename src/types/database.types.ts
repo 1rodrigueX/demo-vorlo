@@ -2196,6 +2196,53 @@ export interface Database {
         };
         Relationships: [];
       };
+      financas_lancamentos: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          context: "pessoal" | "empresarial";
+          type: "receita" | "despesa";
+          category: string;
+          description: string | null;
+          amount_cents: number;
+          entry_date: string;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          context: "pessoal" | "empresarial";
+          type: "receita" | "despesa";
+          category: string;
+          description?: string | null;
+          amount_cents: number;
+          entry_date: string;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          context?: "pessoal" | "empresarial";
+          type?: "receita" | "despesa";
+          category?: string;
+          description?: string | null;
+          amount_cents?: number;
+          entry_date?: string;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "financas_lancamentos_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;

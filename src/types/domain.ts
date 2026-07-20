@@ -34,6 +34,7 @@ export type UserSpotifyConnection = Database["public"]["Tables"]["user_spotify_c
 export type Suggestion = Database["public"]["Tables"]["suggestions"]["Row"];
 export type PlatformFeedback = Database["public"]["Tables"]["platform_feedback"]["Row"];
 export type BugReport = Database["public"]["Tables"]["bug_reports"]["Row"];
+export type FinancasLancamento = Database["public"]["Tables"]["financas_lancamentos"]["Row"];
 
 export type ContactWithCompany = Contact & {
   company: Pick<Company, "id" | "name"> | null;
