@@ -140,6 +140,16 @@ export function WhatsAppChatPanel({
       return;
     }
 
+    // getUserMedia só existe em contexto seguro (HTTPS ou localhost) — sem
+    // isso o navigator.mediaDevices inteiro vem undefined, e chamar
+    // .getUserMedia nele lançava um TypeError genérico que caía no mesmo
+    // catch-all de baixo, escondendo a causa real (acesso via IP/HTTP em
+    // vez do domínio com HTTPS, por exemplo).
+    if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) {
+      toast.error("Gravação de áudio não disponível — acesse pelo endereço https:// do site");
+      return;
+    }
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const recorder = new MediaRecorder(stream);
@@ -166,8 +176,17 @@ export function WhatsAppChatPanel({
       mediaRecorderRef.current = recorder;
       recorder.start();
       setIsRecording(true);
-    } catch {
-      toast.error("Não foi possível acessar o microfone");
+    } catch (err) {
+      const name = err instanceof DOMException ? err.name : "";
+      if (name === "NotAllowedError" || name === "PermissionDeniedError") {
+        toast.error("Permissão do microfone negada — libere o acesso nas configurações do navegador");
+      } else if (name === "NotFoundError" || name === "DevicesNotFoundError") {
+        toast.error("Nenhum microfone encontrado nesse dispositivo");
+      } else if (name === "NotReadableError") {
+        toast.error("O microfone está sendo usado por outro programa");
+      } else {
+        toast.error("Não foi possível acessar o microfone");
+      }
     }
   }
 
