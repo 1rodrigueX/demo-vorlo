@@ -5,6 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { isCurrentUserDev } from "@/lib/auth/current-user";
 import { createTenantSchema } from "@/lib/validation/tenant";
 import { notifyNewCrmTenant } from "@/lib/discord/notify";
+import { grantFreeFinancasEmpresarial } from "@/lib/billing/grant-financas";
 
 export type ActionState = { error?: string } | null;
 
@@ -77,6 +78,7 @@ export async function createTenant(_prevState: ActionState, formData: FormData):
   await admin
     .from("pipeline_stages")
     .insert(DEFAULT_STAGES.map((stage) => ({ ...stage, tenant_id: tenant.id })));
+  await grantFreeFinancasEmpresarial(admin, tenant.id);
 
   void notifyNewCrmTenant(parsed.data.name, parsed.data.slug);
 

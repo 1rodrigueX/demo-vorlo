@@ -7,6 +7,7 @@ import { calculateTotalCents } from "@/lib/billing/pricing";
 import { addOneMonth } from "@/lib/billing/cycle";
 import { isReservedSlug } from "@/lib/tenant/reserved-slugs";
 import { notifyNewCrmTenant } from "@/lib/discord/notify";
+import { grantFreeFinancasEmpresarial } from "@/lib/billing/grant-financas";
 
 const DEFAULT_STAGES = [
   { name: "Novo", position: 1, color: "#6366f1", is_won: false, is_lost: false },
@@ -137,6 +138,7 @@ export async function provisionTenantFromCheckout(
   }
 
   await admin.from("pipeline_stages").insert(DEFAULT_STAGES.map((stage) => ({ ...stage, tenant_id: tenantId })));
+  await grantFreeFinancasEmpresarial(admin, tenantId);
 
   if (pending.anthropic_api_key) {
     const test = await testAnthropicApiKey(pending.anthropic_api_key);
