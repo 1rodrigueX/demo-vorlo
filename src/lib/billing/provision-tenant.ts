@@ -9,11 +9,16 @@ import { isReservedSlug } from "@/lib/tenant/reserved-slugs";
 import { notifyNewCrmTenant } from "@/lib/discord/notify";
 import { grantFreeFinancasEmpresarial } from "@/lib/billing/grant-financas";
 
+// A SDR de IA já move o lead entre "Atendimento SDR" -> "Qualificado" /
+// "Não Qualificado" sozinha (ver sdrPipelineStage.ts) — "Não Qualificado" é
+// is_lost pra reaproveitar o mesmo comportamento de fechamento que qualquer
+// etapa is_lost já tem.
 const DEFAULT_STAGES = [
-  { name: "Novo", position: 1, color: "#6366f1", is_won: false, is_lost: false },
-  { name: "Contato", position: 2, color: "#0ea5e9", is_won: false, is_lost: false },
-  { name: "Proposta", position: 3, color: "#f59e0b", is_won: false, is_lost: false },
-  { name: "Fechado", position: 4, color: "#22c55e", is_won: true, is_lost: false },
+  { name: "Atendimento SDR", position: 1, color: "#6366f1", is_won: false, is_lost: false },
+  { name: "Qualificado", position: 2, color: "#0ea5e9", is_won: false, is_lost: false },
+  { name: "Não Qualificado", position: 3, color: "#ef4444", is_won: false, is_lost: true },
+  { name: "Proposta", position: 4, color: "#f59e0b", is_won: false, is_lost: false },
+  { name: "Fechado", position: 5, color: "#22c55e", is_won: true, is_lost: false },
 ] as const;
 
 const DIACRITIC_MARKS_REGEX = new RegExp("[\\u0300-\\u036f]", "g");

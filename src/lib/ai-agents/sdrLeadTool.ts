@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { syncContactToBling, updateBlingContactVendedor } from "@/lib/bling/sync";
 import { resolveBlingConnectionId } from "@/lib/bling/resolveConnection";
 import { ensureSellerTag } from "@/lib/tags/ensureTag";
+import { moveLeadToQualificationStage } from "@/lib/ai-agents/sdrPipelineStage";
 
 /** Única ferramenta exposta ao SDR na conversa automática com o lead pelo WhatsApp. */
 export const COMPLETE_LEAD_REGISTRATION_TOOL: Anthropic.Tool = {
@@ -11,7 +12,9 @@ export const COMPLETE_LEAD_REGISTRATION_TOOL: Anthropic.Tool = {
   description:
     "Conclui o cadastro do lead depois de coletar os dados necessários na conversa. Chame só quando já tiver " +
     "confirmado o nome completo e o CPF/CNPJ com a pessoa — os outros campos são opcionais, colete o que " +
-    "conseguir naturalmente na conversa.",
+    "conseguir naturalmente na conversa. Além do cadastro, essa chamada também move o lead no pipeline pra " +
+    "'Qualificado' ou 'Não Qualificado' — avalie com sinceridade se a pessoa tem interesse e perfil reais de " +
+    "compra (não force qualificação positiva só pra ser gentil).",
   input_schema: {
     type: "object",
     properties: {
@@ -25,8 +28,19 @@ export const COMPLETE_LEAD_REGISTRATION_TOOL: Anthropic.Tool = {
       addressNeighborhood: { type: "string", description: "Bairro, se informado" },
       addressCity: { type: "string", description: "Cidade, se informada" },
       addressState: { type: "string", description: "UF (2 letras), se informada" },
+      qualified: {
+        type: "boolean",
+        description:
+          "true se o lead tem interesse e perfil reais pra virar oportunidade de venda (sabe o que precisa, " +
+          "demanda plausível); false se claramente não é um lead viável agora (só curiosidade, fora da área de " +
+          "atuação, sem intenção real de compra).",
+      },
+      qualificationNote: {
+        type: "string",
+        description: "Resumo de 1 frase do motivo da avaliação, pro vendedor humano entender o contexto rápido.",
+      },
     },
-    required: ["fullName", "cpfCnpj"],
+    required: ["fullName", "cpfCnpj", "qualified"],
   },
 };
 
@@ -98,6 +112,18 @@ export async function executeCompleteLeadRegistration(
       { onConflict: "contact_id,tag_id", ignoreDuplicates: true },
     );
   }
+
+  const qualified = input.qualified !== false;
+  const qualificationNote = input.qualificationNote ? String(input.qualificationNote).trim() : null;
+  await moveLeadToQualificationStage(
+    admin,
+    tenantId,
+    contactId,
+    sellerId,
+    fullName || contact.name,
+    qualified,
+    qualificationNote,
+  );
 
   // Best-effort: só tenta refletir o vendedor dentro do Bling se o admin já
   // mapeou esse vendedor do CRM pra um vendedor cadastrado no Bling.

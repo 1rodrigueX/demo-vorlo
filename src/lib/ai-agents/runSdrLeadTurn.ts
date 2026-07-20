@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getAnthropicClientForTenant } from "@/lib/anthropic/client";
 import { buildSdrLeadPrompt, type CompanyProfileContext } from "@/lib/ai-agents/sdrLeadPrompt";
 import { COMPLETE_LEAD_REGISTRATION_TOOL, executeCompleteLeadRegistration } from "@/lib/ai-agents/sdrLeadTool";
+import { ensureLeadInSdrStage } from "@/lib/ai-agents/sdrPipelineStage";
 import { SEARCH_COMPANY_WEBSITE_TOOL, executeSearchCompanyWebsite } from "@/lib/ai-agents/companyWebsiteTool";
 import { SEND_CATALOG_TOOL, executeSendCatalog } from "@/lib/ai-agents/sendCatalogTool";
 import { SEND_PRODUCT_PHOTOS_TOOL, executeSendProductPhotos } from "@/lib/ai-agents/sendProductPhotosTool";
@@ -38,6 +39,10 @@ export async function runSdrLeadTurn(tenantId: string, contactId: string): Promi
     .maybeSingle();
 
   if (!contact || !contact.phone || !contact.needs_registration) return;
+
+  // Já bota o lead no pipeline (etapa "Atendimento SDR") assim que a IA
+  // começa a conversar, mesmo antes do cadastro/qualificação terminar.
+  await ensureLeadInSdrStage(admin, tenantId, contactId, contact.created_by, contact.name);
 
   let client: Anthropic;
   try {
