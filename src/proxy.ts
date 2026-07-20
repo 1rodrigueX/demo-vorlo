@@ -9,7 +9,7 @@ export const config = {
   matcher: [
     /*
      * Match all request paths except:
-     * - static assets, image optimization, favicon
+     * - static assets, image optimization, favicon, robots.txt
      * - the Twilio webhook (no user session; authenticated via signature instead)
      * - webhooks under api/webhooks/ (ex: Mercado Pago — autenticado via assinatura, sem sessão)
      * - api/cron/ (autenticado via segredo compartilhado, chamado pelo crontab da VPS)
@@ -28,6 +28,6 @@ export const config = {
      *   senão o Next normaliza "/app-web/" pra "/app-web" e isso volta a
      *   cair no gate de sessão.
      */
-    "/((?!_next/static|_next/image|favicon.ico|api/whatsapp/webhook/|api/webhooks/|api/cron/|api/public/|api/discord/|app-web|.*\\.(?:svg|png|jpg|jpeg|gif|webp|apk)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|robots.txt|api/whatsapp/webhook/|api/webhooks/|api/cron/|api/public/|api/discord/|app-web|.*\\.(?:svg|png|jpg|jpeg|gif|webp|apk)$).*)",
   ],
 };
