@@ -37,7 +37,7 @@ export default async function ApontamentoPage() {
           <div className="flex items-center gap-2">
             <PackagePlus size={20} className="text-indigo-600" />
             <h1 className="text-xl font-semibold text-gray-900">
-              {proprioFuncionario ? `Apontamento — ${proprioFuncionario.full_name}` : "Apontamento de Produção"}
+              {proprioFuncionario ? `Lançar Produção — ${proprioFuncionario.full_name}` : "Lançar Produção"}
             </h1>
           </div>
           <form action={logout}>

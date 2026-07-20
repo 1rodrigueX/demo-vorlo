@@ -48,7 +48,7 @@ export function ApontamentoForm({
 
   return (
     <Card className="p-4">
-      <p className="mb-3 text-sm font-medium text-gray-900">Registrar produção</p>
+      <p className="mb-3 text-sm font-medium text-gray-900">Lançar Produção</p>
       <form ref={formRef} action={formAction} className="space-y-3">
         <div>
           <Label htmlFor="ap-produto">Produto</Label>
@@ -120,7 +120,7 @@ export function ApontamentoForm({
 
         <Button type="submit" isLoading={isPending} className="w-full">
           <Send size={14} />
-          Registrar
+          Lançar Produção
         </Button>
       </form>
     </Card>

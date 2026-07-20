@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Settings, Factory } from "lucide-react";
+import { Settings, Factory, PackagePlus } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getTurnos, getMaquinas, getEstilos } from "@/lib/actions/producao-config";
 import { getProdutos } from "@/lib/actions/producao-produtos";
@@ -35,13 +35,22 @@ export default async function ProducaoPage({
             <Factory size={20} className="text-indigo-600" />
             <h1 className="text-xl font-semibold text-gray-900">Controle de Produção</h1>
           </div>
-          <Link
-            href={`/${tenantSlug}/producao/configuracoes`}
-            className="flex items-center gap-1.5 rounded-lg border border-gray-300 bg-panel px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
-          >
-            <Settings size={14} />
-            Configurações
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              href={`/${tenantSlug}/producao/configuracoes`}
+              className="flex items-center gap-1.5 rounded-lg border border-gray-300 bg-panel px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+            >
+              <Settings size={14} />
+              Configurações
+            </Link>
+            <Link
+              href={`/${tenantSlug}/producao/apontamento`}
+              className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:opacity-90"
+            >
+              <PackagePlus size={14} />
+              Lançar Produção
+            </Link>
+          </div>
         </div>
 
         <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
@@ -51,13 +60,13 @@ export default async function ProducaoPage({
           <StatTile label="Produtos" value={produtos.length} />
         </div>
 
-        <div className="mt-6 rounded-xl border border-gray-200 bg-panel p-6 text-center">
-          <p className="text-sm text-gray-500">
-            {turnos.length === 0 || maquinas.length === 0 || produtos.length === 0
-              ? "Configure turnos, máquinas e produtos antes de começar a apontar produção."
-              : "A tela de apontamento de produção (registro do que cada funcionário produziu) está a caminho."}
-          </p>
-        </div>
+        {(turnos.length === 0 || maquinas.length === 0 || produtos.length === 0) && (
+          <div className="mt-6 rounded-xl border border-gray-200 bg-panel p-6 text-center">
+            <p className="text-sm text-gray-500">
+              Configure turnos, máquinas e produtos antes de começar a lançar produção.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
