@@ -216,6 +216,21 @@ export async function updateContact(
   return null;
 }
 
+/** Reatribui o vendedor responsável pelo contato — RLS só deixa o dono/gerente mudar pra outra pessoa. */
+export async function updateContactOwner(contactId: string, ownerId: string) {
+  const supabase = await createClient();
+
+  const { error } = await supabase.from("contacts").update({ created_by: ownerId }).eq("id", contactId);
+
+  if (error) {
+    return { error: "Não foi possível reatribuir o contato (só o dono da conta pode mudar o vendedor)" };
+  }
+
+  revalidatePath("/[tenantSlug]/contacts", "page");
+  revalidatePath(`/[tenantSlug]/contacts/${contactId}`, "page");
+  return { error: undefined };
+}
+
 export async function deleteContact(contactId: string) {
   const supabase = await createClient();
   const {

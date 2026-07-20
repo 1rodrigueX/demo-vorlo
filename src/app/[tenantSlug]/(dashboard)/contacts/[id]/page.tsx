@@ -16,6 +16,7 @@ import { DealStageSelect } from "@/components/contacts/DealStageSelect";
 import { DealWonButton } from "@/components/contacts/DealWonButton";
 import { DealProdutosSection } from "@/components/contacts/DealProdutosSection";
 import { DealOwnerSelect } from "@/components/contacts/DealOwnerSelect";
+import { ContactOwnerSelect } from "@/components/contacts/ContactOwnerSelect";
 import { ConfirmDeleteButton } from "@/components/ui/ConfirmDeleteButton";
 import { deleteContact } from "@/lib/actions/contacts";
 import { getDealProdutosForDeals } from "@/lib/actions/deal-produtos";
@@ -85,12 +86,17 @@ export default async function ContactDetailPage({
   const dealIds = (deals ?? []).map((d) => d.id);
 
   // Reatribuir vendedor responsável é uma reação de gestão — RLS já só
-  // deixa dono/gerente mudar pra outra pessoa (ver updateDealOwner), então
-  // a seleção só aparece pra quem realmente consegue usá-la.
+  // deixa dono/gerente mudar pra outra pessoa (ver updateDealOwner e
+  // updateContactOwner), então a troca só fica editável pra quem realmente
+  // consegue usá-la — mas a lista é buscada sempre, pra dar pra mostrar o
+  // nome de quem já é responsável pra qualquer um que veja a página.
   const isAdmin = currentUser?.profile?.role === "owner" || currentUser?.profile?.role === "manager";
-  const { data: sellers } = isAdmin
-    ? await supabase.from("profiles").select("id, full_name").order("full_name")
-    : { data: null };
+  const { data: sellers } = await supabase.from("profiles").select("id, full_name").order("full_name");
+
+  // Negócio "principal" pro seletor rápido de estágio nos Dados do contato:
+  // o mais recente ainda aberto, ou o mais recente de todos se não tiver
+  // nenhum aberto (deals já vem ordenado por created_at desc).
+  const primaryDeal = (deals ?? []).find((d) => d.status === "open") ?? deals?.[0] ?? null;
   const [dealProdutosByDealId, estoqueItens] = hasEstoque
     ? await Promise.all([getDealProdutosForDeals(dealIds), getEstoqueItens()])
     : [{} as Record<string, Awaited<ReturnType<typeof getDealProdutosForDeals>>[string]>, []];
@@ -130,6 +136,30 @@ export default async function ContactDetailPage({
           <Card className="p-5">
             <h2 className="mb-4 text-sm font-semibold text-gray-900">Dados do contato</h2>
             <ContactForm contact={contact} companies={companies ?? []} />
+            <div className="mt-4 flex flex-wrap gap-4 border-t border-gray-100 pt-4">
+              <div>
+                <h3 className="mb-1.5 text-xs font-semibold text-gray-500">Vendedor responsável</h3>
+                {isAdmin && sellers && sellers.length > 0 ? (
+                  <ContactOwnerSelect contactId={contact.id} currentOwnerId={contact.created_by} sellers={sellers} />
+                ) : (
+                  <p className="text-sm text-gray-700">
+                    {sellers?.find((s) => s.id === contact.created_by)?.full_name ?? "—"}
+                  </p>
+                )}
+              </div>
+              <div>
+                <h3 className="mb-1.5 text-xs font-semibold text-gray-500">Estágio no pipeline</h3>
+                {primaryDeal ? (
+                  <DealStageSelect
+                    dealId={primaryDeal.id}
+                    currentStageId={primaryDeal.stage_id}
+                    stages={stages ?? []}
+                  />
+                ) : (
+                  <p className="text-sm text-gray-500">Nenhum negócio ainda.</p>
+                )}
+              </div>
+            </div>
             <div className="mt-4 border-t border-gray-100 pt-4">
               <h3 className="mb-2 text-xs font-semibold text-gray-500">Tags</h3>
               <ContactTagPicker
