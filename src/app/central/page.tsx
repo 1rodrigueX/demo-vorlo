@@ -23,12 +23,13 @@ export default async function CentralPage() {
   const { services, ownerName } = await getAccountServices();
   const hasAnyActive = services.some((service) => service.active);
   const email = user.email ?? "";
+  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
 
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-6">
       <header className="mx-auto flex max-w-4xl items-center justify-between pb-10">
         <span className="text-sm font-semibold text-gray-900">FALA AI</span>
-        <UserMenu name={ownerName || email || "Usuário"} email={email} />
+        <UserMenu name={ownerName || email || "Usuário"} email={email} role={profile?.role} />
       </header>
 
       <div className="mx-auto max-w-4xl">

@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { LogOut, Wrench, DoorOpen, LayoutGrid, ShieldCheck } from "lucide-react";
+import { LogOut, Wrench, DoorOpen, LayoutGrid, ShieldCheck, Users } from "lucide-react";
 import { logout } from "@/lib/actions/auth";
 import { exitDevView } from "@/lib/actions/dev-view";
 import { useTenantTheme } from "@/lib/theme/TenantThemeContext";
@@ -90,6 +90,15 @@ export function UserMenu({
                 <ShieldCheck size={16} />
                 Segurança
               </Link>
+              {role === "owner" && (
+                <Link
+                  href="/central/usuarios"
+                  className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                >
+                  <Users size={16} />
+                  Usuários
+                </Link>
+              )}
             </>
           )}
           {isDev && (

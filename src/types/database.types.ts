@@ -2013,6 +2013,32 @@ export interface Database {
           },
         ];
       };
+      profile_product_access: {
+        Row: {
+          profile_id: string;
+          product: "transportadora" | "financas" | "estoque" | "producao";
+          granted_at: string;
+        };
+        Insert: {
+          profile_id: string;
+          product: "transportadora" | "financas" | "estoque" | "producao";
+          granted_at?: string;
+        };
+        Update: {
+          profile_id?: string;
+          product?: "transportadora" | "financas" | "estoque" | "producao";
+          granted_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "profile_product_access_profile_id_fkey";
+            columns: ["profile_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       producao_apontamentos: {
         Row: {
           id: string;
