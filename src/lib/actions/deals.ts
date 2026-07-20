@@ -57,6 +57,55 @@ export async function createDeal(_prevState: ActionState, formData: FormData): P
   return null;
 }
 
+/**
+ * Cria o negócio do contato direto num estágio escolhido — usado pelo
+ * carrossel de estágio nos Dados do contato quando o contato ainda não tem
+ * nenhum negócio (ver ContactStageCarousel). owner_id é sempre quem está
+ * clicando: a policy de insert de deals exige owner_id = auth.uid(), sem
+ * bypass de admin.
+ */
+export async function createDealAtStage(contactId: string, stageId: string) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Sessão expirada, faça login novamente" };
+
+  const tenantId = await requireTenantId(supabase, user.id);
+  if (!tenantId) return { error: "Tenant não encontrado para este usuário" };
+
+  const { data: contact } = await supabase.from("contacts").select("name").eq("id", contactId).single();
+
+  const { count } = await supabase
+    .from("deals")
+    .select("id", { count: "exact", head: true })
+    .eq("stage_id", stageId);
+
+  const { data: created, error } = await supabase
+    .from("deals")
+    .insert({
+      tenant_id: tenantId,
+      title: `Lead — ${contact?.name ?? "Novo"}`,
+      contact_id: contactId,
+      stage_id: stageId,
+      value: 0,
+      owner_id: user.id,
+      position: count ?? 0,
+    })
+    .select("id")
+    .single();
+
+  if (error || !created) {
+    return { error: "Não foi possível criar o negócio" };
+  }
+
+  revalidatePath("/[tenantSlug]/pipeline", "page");
+  revalidatePath("/[tenantSlug]/dashboard", "page");
+  revalidatePath(`/[tenantSlug]/contacts/${contactId}`, "page");
+  revalidatePath(`/[tenantSlug]/whatsapp/${contactId}`, "page");
+  return { dealId: created.id };
+}
+
 export async function updateDealStage(input: {
   dealId: string;
   stageId: string;

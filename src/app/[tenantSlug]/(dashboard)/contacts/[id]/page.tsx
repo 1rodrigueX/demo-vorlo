@@ -17,6 +17,7 @@ import { DealWonButton } from "@/components/contacts/DealWonButton";
 import { DealProdutosSection } from "@/components/contacts/DealProdutosSection";
 import { DealOwnerSelect } from "@/components/contacts/DealOwnerSelect";
 import { ContactOwnerSelect } from "@/components/contacts/ContactOwnerSelect";
+import { ContactStageCarousel } from "@/components/contacts/ContactStageCarousel";
 import { ConfirmDeleteButton } from "@/components/ui/ConfirmDeleteButton";
 import { deleteContact } from "@/lib/actions/contacts";
 import { getDealProdutosForDeals } from "@/lib/actions/deal-produtos";
@@ -136,7 +137,7 @@ export default async function ContactDetailPage({
           <Card className="p-5">
             <h2 className="mb-4 text-sm font-semibold text-gray-900">Dados do contato</h2>
             <ContactForm contact={contact} companies={companies ?? []} />
-            <div className="mt-4 flex flex-wrap gap-4 border-t border-gray-100 pt-4">
+            <div className="mt-4 space-y-3 border-t border-gray-100 pt-4">
               <div>
                 <h3 className="mb-1.5 text-xs font-semibold text-gray-500">Vendedor responsável</h3>
                 {isAdmin && sellers && sellers.length > 0 ? (
@@ -149,15 +150,12 @@ export default async function ContactDetailPage({
               </div>
               <div>
                 <h3 className="mb-1.5 text-xs font-semibold text-gray-500">Estágio no pipeline</h3>
-                {primaryDeal ? (
-                  <DealStageSelect
-                    dealId={primaryDeal.id}
-                    currentStageId={primaryDeal.stage_id}
-                    stages={stages ?? []}
-                  />
-                ) : (
-                  <p className="text-sm text-gray-500">Nenhum negócio ainda.</p>
-                )}
+                <ContactStageCarousel
+                  contactId={contact.id}
+                  dealId={primaryDeal?.id ?? null}
+                  currentStageId={primaryDeal?.stage_id ?? null}
+                  stages={stages ?? []}
+                />
               </div>
             </div>
             <div className="mt-4 border-t border-gray-100 pt-4">
