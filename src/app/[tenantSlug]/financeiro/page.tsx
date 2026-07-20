@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getLancamentos } from "@/lib/actions/financas";
+import { getCategorias } from "@/lib/actions/financas-categorias";
 import { FinanceiroDashboard } from "@/components/financas/FinanceiroDashboard";
 
 /**
@@ -10,7 +11,12 @@ import { FinanceiroDashboard } from "@/components/financas/FinanceiroDashboard";
  * intencional aqui (fixo, não segue o resto do site) — pedido explícito a
  * partir de uma referência visual.
  */
-export default async function FinanceiroPage() {
+export default async function FinanceiroPage({
+  params,
+}: {
+  params: Promise<{ tenantSlug: string }>;
+}) {
+  const { tenantSlug } = await params;
   const supabase = await createClient();
   const {
     data: { user },
@@ -21,7 +27,14 @@ export default async function FinanceiroPage() {
   if (!hasAccess) redirect("/comprar-financas");
 
   const year = new Date().getFullYear();
-  const lancamentos = await getLancamentos("pessoal", year);
+  const [lancamentos, categorias] = await Promise.all([getLancamentos("pessoal", year), getCategorias()]);
 
-  return <FinanceiroDashboard initialLancamentos={lancamentos} initialYear={year} />;
+  return (
+    <FinanceiroDashboard
+      initialLancamentos={lancamentos}
+      initialYear={year}
+      categorias={categorias}
+      tenantSlug={tenantSlug}
+    />
+  );
 }

@@ -13,20 +13,15 @@ import {
   Tooltip,
   Legend,
 } from "recharts";
-import { Plus, Wallet, Building2, User } from "lucide-react";
+import Link from "next/link";
+import { Plus, Wallet, Building2, User, Settings } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { formatCurrency } from "@/lib/utils/currency";
 import { getLancamentos } from "@/lib/actions/financas";
-import {
-  CHART_COLORS,
-  EXPENSE_CATEGORIES,
-  MONTH_LABELS,
-  MONTH_LABELS_FULL,
-  colorForExpenseCategory,
-} from "@/lib/financas/categories";
+import { CHART_COLORS, MONTH_LABELS, MONTH_LABELS_FULL } from "@/lib/financas/categories";
 import { Sparkline, DonutChart, MiniGauge, type DonutSlice } from "@/components/financas/charts";
 import { NovoLancamentoModal } from "@/components/financas/NovoLancamentoModal";
-import type { FinancasLancamento } from "@/types/domain";
+import type { FinancasLancamento, FinancasCategoria } from "@/types/domain";
 
 const compactCurrency = new Intl.NumberFormat("pt-BR", {
   style: "currency",
@@ -47,15 +42,24 @@ function tooltipStyle() {
 export function FinanceiroDashboard({
   initialLancamentos,
   initialYear,
+  categorias,
+  tenantSlug,
 }: {
   initialLancamentos: FinancasLancamento[];
   initialYear: number;
+  categorias: FinancasCategoria[];
+  tenantSlug: string;
 }) {
+  const despesaCategorias = useMemo(() => categorias.filter((c) => c.type === "despesa"), [categorias]);
+  const receitaCategorias = useMemo(() => categorias.filter((c) => c.type === "receita"), [categorias]);
+
   const now = new Date();
   const [context, setContext] = useState<"pessoal" | "empresarial">("pessoal");
   const [year, setYear] = useState(initialYear);
   const [month, setMonth] = useState(now.getMonth() + 1);
-  const [selectedCategory, setSelectedCategory] = useState<string>(EXPENSE_CATEGORIES[4].value);
+  const [selectedCategory, setSelectedCategory] = useState<string>(
+    despesaCategorias[4]?.name ?? despesaCategorias[0]?.name ?? "",
+  );
   const [lancamentos, setLancamentos] = useState(initialLancamentos);
   const [isPending, startTransition] = useTransition();
   const [modalOpen, setModalOpen] = useState(false);
@@ -102,14 +106,14 @@ export function FinanceiroDashboard({
   );
 
   const despesasMesPorCategoria: DonutSlice[] = useMemo(
-    () => buildCategorySlices(currentMonthLancamentos),
-    [currentMonthLancamentos],
+    () => buildCategorySlices(currentMonthLancamentos, despesaCategorias),
+    [currentMonthLancamentos, despesaCategorias],
   );
 
   const despesasAnoLancamentos = useMemo(() => lancamentos.filter((l) => l.type === "despesa"), [lancamentos]);
   const despesasAnoPorCategoria: DonutSlice[] = useMemo(
-    () => buildCategorySlices(despesasAnoLancamentos),
-    [despesasAnoLancamentos],
+    () => buildCategorySlices(despesasAnoLancamentos, despesaCategorias),
+    [despesasAnoLancamentos, despesaCategorias],
   );
   const despesasAnoTotal = despesasAnoPorCategoria.reduce((s, d) => s + d.value, 0);
   const despesasMesTotalForDonut = despesasMesPorCategoria.reduce((s, d) => s + d.value, 0);
@@ -201,10 +205,19 @@ export function FinanceiroDashboard({
                 Empresarial
               </button>
             </div>
-            <Button onClick={() => setModalOpen(true)} isLoading={isPending && false}>
-              <Plus size={16} />
-              Novo Lançamento
-            </Button>
+            <div className="flex items-center gap-2">
+              <Link
+                href={`/${tenantSlug}/financeiro/configuracoes`}
+                className="flex items-center gap-1.5 rounded-lg border border-[#383835] px-3 py-2 text-sm text-[#898781] transition-colors hover:text-white"
+              >
+                <Settings size={14} />
+                Configurações
+              </Link>
+              <Button onClick={() => setModalOpen(true)} isLoading={isPending && false}>
+                <Plus size={16} />
+                Novo Lançamento
+              </Button>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -233,10 +246,10 @@ export function FinanceiroDashboard({
 
           <Panel title="Participação na base anual">
             <div className="grid grid-cols-3 gap-4 sm:grid-cols-6">
-              {EXPENSE_CATEGORIES.map((cat) => {
-                const catTotal = despesasAnoPorCategoria.find((d) => d.name === cat.value)?.value ?? 0;
+              {despesaCategorias.map((cat) => {
+                const catTotal = despesasAnoPorCategoria.find((d) => d.name === cat.name)?.value ?? 0;
                 const pct = despesasAnoTotal > 0 ? (catTotal / despesasAnoTotal) * 100 : 0;
-                return <MiniGauge key={cat.value} label={cat.value} percent={pct} color={cat.color} />;
+                return <MiniGauge key={cat.id} label={cat.name} percent={pct} color={cat.color} />;
               })}
             </div>
           </Panel>
@@ -288,7 +301,7 @@ export function FinanceiroDashboard({
                           className="h-2 rounded-full"
                           style={{
                             width: `${(item.value / categoryDetailMax) * 100}%`,
-                            backgroundColor: colorForExpenseCategory(selectedCategory),
+                            backgroundColor: colorForCategory(despesaCategorias, selectedCategory),
                           }}
                         />
                       </div>
@@ -297,15 +310,15 @@ export function FinanceiroDashboard({
                   ))}
                 </div>
                 <ul className="w-28 shrink-0 space-y-1 border-l border-[#2c2c2a] pl-3">
-                  {EXPENSE_CATEGORIES.map((cat) => (
-                    <li key={cat.value}>
+                  {despesaCategorias.map((cat) => (
+                    <li key={cat.id}>
                       <button
-                        onClick={() => setSelectedCategory(cat.value)}
+                        onClick={() => setSelectedCategory(cat.name)}
                         className={`w-full rounded px-2 py-1 text-left text-xs transition-colors ${
-                          selectedCategory === cat.value ? "bg-[#3987e5] text-white" : "text-[#898781] hover:text-white"
+                          selectedCategory === cat.name ? "bg-[#3987e5] text-white" : "text-[#898781] hover:text-white"
                         }`}
                       >
-                        {cat.value}
+                        {cat.name}
                       </button>
                     </li>
                   ))}
@@ -357,6 +370,8 @@ export function FinanceiroDashboard({
         open={modalOpen}
         onClose={() => setModalOpen(false)}
         context={context}
+        despesaCategorias={despesaCategorias}
+        receitaCategorias={receitaCategorias}
         onSaved={() => {
           setModalOpen(false);
           startTransition(async () => {
@@ -400,17 +415,19 @@ function Panel({ title, children }: { title: string; children: React.ReactNode }
   );
 }
 
-function buildCategorySlices(rows: FinancasLancamento[]): DonutSlice[] {
+function buildCategorySlices(rows: FinancasLancamento[], despesaCategorias: FinancasCategoria[]): DonutSlice[] {
   const byCategory = new Map<string, number>();
   for (const l of rows) {
     if (l.type !== "despesa") continue;
     byCategory.set(l.category, (byCategory.get(l.category) ?? 0) + l.amount_cents / 100);
   }
-  return EXPENSE_CATEGORIES.filter((c) => byCategory.has(c.value)).map((c) => ({
-    name: c.value,
-    value: byCategory.get(c.value) ?? 0,
-    color: c.color,
-  }));
+  return despesaCategorias
+    .filter((c) => byCategory.has(c.name))
+    .map((c) => ({ name: c.name, value: byCategory.get(c.name) ?? 0, color: c.color }));
+}
+
+function colorForCategory(categorias: FinancasCategoria[], name: string): string {
+  return categorias.find((c) => c.name === name)?.color ?? CHART_COLORS.violet;
 }
 
 function buildDailySparkline(

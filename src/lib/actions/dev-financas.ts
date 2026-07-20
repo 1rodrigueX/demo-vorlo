@@ -5,6 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { isCurrentUserDev } from "@/lib/auth/current-user";
 import { createFinancasTenantSchema } from "@/lib/validation/tenant";
 import { notifyNewFinancasTenant } from "@/lib/discord/notify";
+import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from "@/lib/financas/categories";
 
 export type ActionState = { error?: string } | null;
 
@@ -79,6 +80,29 @@ export async function createFinancasTenant(_prevState: ActionState, formData: Fo
   });
   if (productError) {
     return { error: `Empresa criada, mas ativar o Finanças falhou: ${productError.message}` };
+  }
+
+  // Mesma paleta/ordem padrão da migration de backfill (0052) — tenant novo
+  // já nasce com categorias usáveis, e pode customizar depois em /configuracoes.
+  const defaultCategorias = [
+    ...EXPENSE_CATEGORIES.map((c, i) => ({
+      tenant_id: tenant.id,
+      type: "despesa" as const,
+      name: c.value,
+      color: c.color,
+      position: i + 1,
+    })),
+    ...INCOME_CATEGORIES.map((c, i) => ({
+      tenant_id: tenant.id,
+      type: "receita" as const,
+      name: c.value,
+      color: c.color,
+      position: i + 1,
+    })),
+  ];
+  const { error: categoriasError } = await admin.from("financas_categorias").insert(defaultCategorias);
+  if (categoriasError) {
+    return { error: `Empresa criada, mas não deu pra criar as categorias padrão: ${categoriasError.message}` };
   }
 
   void notifyNewFinancasTenant(parsed.data.name, parsed.data.slug);

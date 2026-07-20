@@ -7,17 +7,21 @@ import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
 import { Select } from "@/components/ui/Select";
 import { createLancamento, type ActionState } from "@/lib/actions/financas";
-import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from "@/lib/financas/categories";
+import type { FinancasCategoria } from "@/types/domain";
 
 export function NovoLancamentoModal({
   open,
   onClose,
   context,
+  despesaCategorias,
+  receitaCategorias,
   onSaved,
 }: {
   open: boolean;
   onClose: () => void;
   context: "pessoal" | "empresarial";
+  despesaCategorias: FinancasCategoria[];
+  receitaCategorias: FinancasCategoria[];
   onSaved: () => void;
 }) {
   const [state, formAction, isPending] = useActionState<ActionState, FormData>(createLancamento, null);
@@ -34,7 +38,7 @@ export function NovoLancamentoModal({
     wasPending.current = isPending;
   }, [isPending, state, onSaved]);
 
-  const categories = type === "despesa" ? EXPENSE_CATEGORIES : INCOME_CATEGORIES;
+  const categories = type === "despesa" ? despesaCategorias : receitaCategorias;
   const today = new Date().toISOString().slice(0, 10);
 
   return (
@@ -72,8 +76,8 @@ export function NovoLancamentoModal({
           <Label htmlFor="lanc-category">Categoria</Label>
           <Select id="lanc-category" name="category" required>
             {categories.map((c) => (
-              <option key={c.value} value={c.value}>
-                {c.value}
+              <option key={c.id} value={c.name}>
+                {c.name}
               </option>
             ))}
           </Select>

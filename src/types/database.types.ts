@@ -2243,6 +2243,44 @@ export interface Database {
           },
         ];
       };
+      financas_categorias: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          type: "receita" | "despesa";
+          name: string;
+          color: string;
+          position: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          type: "receita" | "despesa";
+          name: string;
+          color: string;
+          position?: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          type?: "receita" | "despesa";
+          name?: string;
+          color?: string;
+          position?: number;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "financas_categorias_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;

@@ -11,3 +11,10 @@ export const lancamentoSchema = z.object({
 });
 
 export type LancamentoInput = z.infer<typeof lancamentoSchema>;
+
+export const categoriaSchema = z.object({
+  type: z.enum(["receita", "despesa"]),
+  name: z.string().trim().min(2, "Dê um nome pra categoria").max(40, "Máx. 40 caracteres"),
+});
+
+export type CategoriaInput = z.infer<typeof categoriaSchema>;
