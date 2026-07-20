@@ -16,13 +16,17 @@ const SUPABASE_WS_URL = SUPABASE_URL.replace("https://", "wss://");
 // https://fonts.gstatic.com: mesmo app busca a fonte Roboto nesse CDN em
 // tempo de execução (não vem bundlada) — sem liberar, o texto renderiza
 // invisível (só os ícones, que usam uma fonte própria local, aparecem).
+// nominatim.openstreetmap.org + router.project-osrm.org: o cálculo de
+// distância do frete (DistanceService) chama essas duas APIs públicas
+// direto do navegador — sem liberar, o preenchimento automático do km falha
+// sempre, sem nenhum aviso visível (a exceção nem chegava a ser tratada).
 const CSP = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://sdk.scdn.co https://www.gstatic.com",
   "style-src 'self' 'unsafe-inline'",
   `img-src 'self' data: blob: ${SUPABASE_URL}`,
   "font-src 'self' data: https://fonts.gstatic.com",
-  `connect-src 'self' ${SUPABASE_URL} ${SUPABASE_WS_URL} https://sdk.scdn.co https://www.gstatic.com https://fonts.gstatic.com`,
+  `connect-src 'self' ${SUPABASE_URL} ${SUPABASE_WS_URL} https://sdk.scdn.co https://www.gstatic.com https://fonts.gstatic.com https://nominatim.openstreetmap.org https://router.project-osrm.org`,
   "frame-src https://www.youtube.com",
   "frame-ancestors 'none'",
   "object-src 'none'",

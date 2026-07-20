@@ -153,7 +153,15 @@ class _FreteFormScreenState extends State<FreteFormScreen> {
     if (origem.isEmpty || destino.isEmpty || _calculandoDistancia) return;
 
     setState(() => _calculandoDistancia = true);
-    final distancia = await _distanceService.calcularDistanciaKm(origem, destino);
+    // Sem o try/catch, uma falha de rede (ou de CSP no build web) deixava o
+    // spinner girando pra sempre e nenhum aviso aparecia — _calculandoDistancia
+    // nunca voltava a false porque a exceção pulava direto pro fora da função.
+    double? distancia;
+    try {
+      distancia = await _distanceService.calcularDistanciaKm(origem, destino);
+    } catch (_) {
+      distancia = null;
+    }
     if (!mounted) return;
     setState(() => _calculandoDistancia = false);
 
