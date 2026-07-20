@@ -55,7 +55,11 @@ export async function getDashboardData(supabase: SupabaseClient<Database>, filte
   const totalPipelineValue = openDeals.reduce((sum, d) => sum + Number(d.value), 0);
   const wonInPeriodValue = wonInPeriod.reduce((sum, d) => sum + Number(d.value), 0);
 
-  const trendMonths = monthsBetweenInclusive(from, to);
+  // Sempre uma janela fixa de 6 meses terminando em "to", independente do
+  // filtro de período escolhido — com o filtro "mês" (padrão), from/to caem
+  // no mesmo mês e monthsBetweenInclusive(from, to) dava 1, então o gráfico
+  // só tinha 1 ponto e a linha nunca aparecia (precisa de 2+ pra desenhar).
+  const trendMonths = 6;
   const revenueTrend: MonthlyRevenuePoint[] = Array.from({ length: trendMonths }, (_, i) => {
     const ref = new Date(to);
     ref.setDate(1);
@@ -135,9 +139,4 @@ export async function getDashboardData(supabase: SupabaseClient<Database>, filte
 
 function isWithin(date: Date, from: Date, to: Date): boolean {
   return date >= from && date <= to;
-}
-
-function monthsBetweenInclusive(from: Date, to: Date): number {
-  const months = (to.getFullYear() - from.getFullYear()) * 12 + (to.getMonth() - from.getMonth()) + 1;
-  return Math.min(Math.max(months, 1), 12);
 }
