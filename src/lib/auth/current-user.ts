@@ -139,7 +139,7 @@ export async function resolveHomeRoute(): Promise<string> {
 }
 
 export type AccountService = {
-  key: "crm" | "transportadora" | "financas" | "estoque";
+  key: "crm" | "transportadora" | "financas" | "estoque" | "producao";
   name: string;
   description: string;
   active: boolean;
@@ -179,11 +179,13 @@ export async function getAccountServices(): Promise<{
     crmSlug = tenant?.slug ?? null;
   }
 
-  const [{ data: hasTransportadora }, { data: hasFinancas }, { data: hasEstoque }] = await Promise.all([
-    supabase.rpc("current_tenant_has_transportadora"),
-    supabase.rpc("current_tenant_has_financas"),
-    supabase.rpc("current_tenant_has_estoque"),
-  ]);
+  const [{ data: hasTransportadora }, { data: hasFinancas }, { data: hasEstoque }, { data: hasProducao }] =
+    await Promise.all([
+      supabase.rpc("current_tenant_has_transportadora"),
+      supabase.rpc("current_tenant_has_financas"),
+      supabase.rpc("current_tenant_has_estoque"),
+      supabase.rpc("current_tenant_has_producao"),
+    ]);
   const ownerName = (user.user_metadata?.full_name as string | undefined) ?? null;
 
   return {
@@ -216,6 +218,13 @@ export async function getAccountServices(): Promise<{
         description: "Controle de estoque, itens, entradas e saídas.",
         active: !!hasEstoque,
         href: hasEstoque && crmSlug ? `/${crmSlug}/estoque` : "/comprar-estoque",
+      },
+      {
+        key: "producao",
+        name: "Produção",
+        description: "Turnos, máquinas, produtos e apontamento de produção.",
+        active: !!hasProducao,
+        href: hasProducao && crmSlug ? `/${crmSlug}/producao` : "/comprar-producao",
       },
     ],
   };

@@ -1760,10 +1760,214 @@ export interface Database {
         };
         Relationships: [];
       };
+      producao_plans: {
+        Row: {
+          id: string;
+          name: string;
+          is_default: boolean;
+          monthly_price_cents: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          is_default?: boolean;
+          monthly_price_cents?: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          is_default?: boolean;
+          monthly_price_cents?: number;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      producao_turnos: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          name: string;
+          start_time: string | null;
+          end_time: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          name: string;
+          start_time?: string | null;
+          end_time?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          name?: string;
+          start_time?: string | null;
+          end_time?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "producao_turnos_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      producao_maquinas: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          name: string;
+          status: "ativa" | "manutencao" | "parada";
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          name: string;
+          status?: "ativa" | "manutencao" | "parada";
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          name?: string;
+          status?: "ativa" | "manutencao" | "parada";
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "producao_maquinas_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      producao_estilos: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          name: string;
+          description: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          name: string;
+          description?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          name?: string;
+          description?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "producao_estilos_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      producao_produtos: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          name: string;
+          estoque_item_id: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          name: string;
+          estoque_item_id: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          name?: string;
+          estoque_item_id?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "producao_produtos_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "producao_produtos_estoque_item_id_fkey";
+            columns: ["estoque_item_id"];
+            isOneToOne: false;
+            referencedRelation: "estoque_itens";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      producao_receita_itens: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          produto_id: string;
+          materia_prima_id: string;
+          quantity_per_unit: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          produto_id: string;
+          materia_prima_id: string;
+          quantity_per_unit: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          produto_id?: string;
+          materia_prima_id?: string;
+          quantity_per_unit?: number;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "producao_receita_itens_produto_id_fkey";
+            columns: ["produto_id"];
+            isOneToOne: false;
+            referencedRelation: "producao_produtos";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "producao_receita_itens_materia_prima_id_fkey";
+            columns: ["materia_prima_id"];
+            isOneToOne: false;
+            referencedRelation: "estoque_itens";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       tenant_products: {
         Row: {
           tenant_id: string;
-          product: "transportadora" | "financas" | "estoque";
+          product: "transportadora" | "financas" | "estoque" | "producao";
           status: "active" | "past_due" | "suspended";
           plan_id: string | null;
           mp_payer_id: string | null;
@@ -1775,7 +1979,7 @@ export interface Database {
         };
         Insert: {
           tenant_id: string;
-          product: "transportadora" | "financas" | "estoque";
+          product: "transportadora" | "financas" | "estoque" | "producao";
           status?: "active" | "past_due" | "suspended";
           plan_id?: string | null;
           mp_payer_id?: string | null;
@@ -1787,7 +1991,7 @@ export interface Database {
         };
         Update: {
           tenant_id?: string;
-          product?: "transportadora" | "financas" | "estoque";
+          product?: "transportadora" | "financas" | "estoque" | "producao";
           status?: "active" | "past_due" | "suspended";
           plan_id?: string | null;
           mp_payer_id?: string | null;

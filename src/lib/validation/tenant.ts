@@ -63,6 +63,21 @@ export const createEstoqueTenantSchema = z.object({
 
 export type CreateEstoqueTenantInput = z.infer<typeof createEstoqueTenantSchema>;
 
+export const createProducaoTenantSchema = z.object({
+  name: z.string().trim().min(2, "Informe o nome da empresa"),
+  slug: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .regex(/^[a-z0-9-]+$/, "Use apenas letras minúsculas, números e hífen")
+    .refine((slug) => !isReservedSlug(slug), "Esse slug é reservado pelo sistema, escolha outro"),
+  ownerFullName: z.string().trim().min(2, "Informe o nome do dono"),
+  ownerEmail: z.string().trim().email("Email inválido"),
+  ownerPassword: z.string().min(8, "Senha deve ter ao menos 8 caracteres"),
+});
+
+export type CreateProducaoTenantInput = z.infer<typeof createProducaoTenantSchema>;
+
 export const updateTenantBrandingSchema = z.object({
   name: z.string().trim().min(2, "Informe o nome da empresa"),
 });

@@ -40,6 +40,11 @@ export type FinancasBankConnection = Database["public"]["Tables"]["financas_bank
 export type FinancasInboxItem = Database["public"]["Tables"]["financas_inbox"]["Row"];
 export type EstoqueItem = Database["public"]["Tables"]["estoque_itens"]["Row"];
 export type EstoqueMovimentacao = Database["public"]["Tables"]["estoque_movimentacoes"]["Row"];
+export type ProducaoTurno = Database["public"]["Tables"]["producao_turnos"]["Row"];
+export type ProducaoMaquina = Database["public"]["Tables"]["producao_maquinas"]["Row"];
+export type ProducaoEstilo = Database["public"]["Tables"]["producao_estilos"]["Row"];
+export type ProducaoProduto = Database["public"]["Tables"]["producao_produtos"]["Row"];
+export type ProducaoReceitaItem = Database["public"]["Tables"]["producao_receita_itens"]["Row"];
 
 export type ContactWithCompany = Contact & {
   company: Pick<Company, "id" | "name"> | null;
