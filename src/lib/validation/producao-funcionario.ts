@@ -9,12 +9,18 @@ export const funcionarioSchema = z.object({
 });
 export type FuncionarioInput = z.infer<typeof funcionarioSchema>;
 
-export const apontamentoSchema = z.object({
-  produtoId: z.string().uuid("Escolha um produto"),
-  turnoId: z.string().uuid().optional().or(z.literal("")),
-  maquinaId: z.string().uuid().optional().or(z.literal("")),
-  estiloId: z.string().uuid().optional().or(z.literal("")),
-  quantity: z.coerce.number().positive("Informe uma quantidade maior que zero"),
-  note: z.string().trim().max(200).optional().or(z.literal("")),
-});
+export const apontamentoSchema = z
+  .object({
+    produtoId: z.string().uuid("Escolha um produto"),
+    turnoId: z.string().uuid().optional().or(z.literal("")),
+    maquinaId: z.string().uuid().optional().or(z.literal("")),
+    estiloId: z.string().uuid().optional().or(z.literal("")),
+    quantity: z.coerce.number().min(0, "Não pode ser negativo").default(0),
+    perdas: z.coerce.number().min(0, "Não pode ser negativo").default(0),
+    note: z.string().trim().max(200).optional().or(z.literal("")),
+  })
+  .refine((data) => data.quantity > 0 || data.perdas > 0, {
+    message: "Informe a quantidade produzida ou as perdas",
+    path: ["quantity"],
+  });
 export type ApontamentoInput = z.infer<typeof apontamentoSchema>;

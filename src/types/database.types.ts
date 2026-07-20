@@ -2023,6 +2023,7 @@ export interface Database {
           estilo_id: string | null;
           funcionario_id: string | null;
           quantity: number;
+          perdas: number;
           note: string | null;
           created_by: string;
           created_at: string;
@@ -2036,6 +2037,7 @@ export interface Database {
           estilo_id?: string | null;
           funcionario_id?: string | null;
           quantity: number;
+          perdas?: number;
           note?: string | null;
           created_by: string;
           created_at?: string;
@@ -2049,6 +2051,7 @@ export interface Database {
           estilo_id?: string | null;
           funcionario_id?: string | null;
           quantity?: number;
+          perdas?: number;
           note?: string | null;
           created_by?: string;
           created_at?: string;
@@ -2839,6 +2842,7 @@ export interface Database {
           p_estilo_id: string | null;
           p_quantity: number;
           p_note: string | null;
+          p_perdas?: number;
         };
         Returns: string;
       };

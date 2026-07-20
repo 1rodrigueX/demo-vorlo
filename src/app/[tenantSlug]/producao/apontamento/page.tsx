@@ -74,7 +74,9 @@ export default async function ApontamentoPage() {
                       </span>
                     </div>
                     <span className="text-gray-700">
-                      {Number(a.quantity)} · {new Date(a.created_at).toLocaleDateString("pt-BR")}
+                      {Number(a.quantity)}
+                      {Number(a.perdas) > 0 && <span className="text-red-500"> (perda: {Number(a.perdas)})</span>} ·{" "}
+                      {new Date(a.created_at).toLocaleDateString("pt-BR")}
                     </span>
                   </div>
                 ))}

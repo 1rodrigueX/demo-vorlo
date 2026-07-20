@@ -30,6 +30,7 @@ export async function registrarApontamentoAction(_prevState: ActionState, formDa
     maquinaId: formData.get("maquinaId"),
     estiloId: formData.get("estiloId"),
     quantity: formData.get("quantity"),
+    perdas: formData.get("perdas"),
     note: formData.get("note"),
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
@@ -42,6 +43,7 @@ export async function registrarApontamentoAction(_prevState: ActionState, formDa
     p_estilo_id: parsed.data.estiloId || null,
     p_quantity: parsed.data.quantity,
     p_note: parsed.data.note || null,
+    p_perdas: parsed.data.perdas,
   });
   if (error) return { error: error.message };
 

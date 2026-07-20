@@ -100,9 +100,15 @@ export function ApontamentoForm({
           </div>
         </div>
 
-        <div>
-          <Label htmlFor="ap-quantity">Quantidade produzida</Label>
-          <Input id="ap-quantity" name="quantity" type="number" min="0.001" step="0.001" required />
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <Label htmlFor="ap-quantity">Quantidade produzida</Label>
+            <Input id="ap-quantity" name="quantity" type="number" min="0" step="0.001" defaultValue="0" />
+          </div>
+          <div>
+            <Label htmlFor="ap-perdas">Perdas</Label>
+            <Input id="ap-perdas" name="perdas" type="number" min="0" step="0.001" defaultValue="0" />
+          </div>
         </div>
 
         <div>
