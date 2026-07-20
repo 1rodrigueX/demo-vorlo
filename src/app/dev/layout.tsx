@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { LogOut } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { isCurrentUserDev, resolveHomeRoute } from "@/lib/auth/current-user";
+import { logout } from "@/lib/actions/auth";
 import { DevNavTabs } from "@/components/dev/DevNavTabs";
 
 export default async function DevLayout({ children }: { children: React.ReactNode }) {
@@ -26,9 +28,20 @@ export default async function DevLayout({ children }: { children: React.ReactNod
             Painel Dev <span className="font-normal text-gray-400">FALA AI.IA</span>
           </span>
         </div>
-        <Link href={homeRoute} className="text-sm font-medium text-indigo-600 hover:underline">
-          Ir para meu CRM
-        </Link>
+        <div className="flex items-center gap-4">
+          <Link href={homeRoute} className="text-sm font-medium text-indigo-600 hover:underline">
+            Ir para meu CRM
+          </Link>
+          <form action={logout}>
+            <button
+              type="submit"
+              className="flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-gray-900"
+            >
+              <LogOut size={15} />
+              Sair
+            </button>
+          </form>
+        </div>
       </header>
       <div className="mx-auto max-w-5xl px-6 pt-4">
         <DevNavTabs />
