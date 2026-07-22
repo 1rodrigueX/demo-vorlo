@@ -30,11 +30,11 @@ export default async function EstoquePage() {
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div
           className="absolute -left-40 -top-40 h-[520px] w-[520px] rounded-full"
-          style={{ background: "radial-gradient(circle, rgba(34,211,238,0.14), transparent 60%)", filter: "blur(40px)" }}
+          style={{ background: "radial-gradient(circle, rgba(34,211,238,0.08), transparent 60%)", filter: "blur(40px)" }}
         />
         <div
           className="absolute -right-40 top-24 h-[520px] w-[520px] rounded-full"
-          style={{ background: "radial-gradient(circle, rgba(168,85,247,0.12), transparent 60%)", filter: "blur(40px)" }}
+          style={{ background: "radial-gradient(circle, rgba(168,85,247,0.07), transparent 60%)", filter: "blur(40px)" }}
         />
       </div>
 

@@ -43,8 +43,8 @@ function NeonCard({
       className={cn("relative rounded-2xl", className)}
       style={{
         padding: 1,
-        background: `linear-gradient(150deg, ${accent}, ${accent}22 45%, rgba(255,255,255,0.05) 85%)`,
-        boxShadow: `0 0 28px -14px ${accent}`,
+        background: `linear-gradient(150deg, ${accent}88, ${accent}14 45%, rgba(255,255,255,0.04) 85%)`,
+        boxShadow: `0 0 16px -16px ${accent}`,
       }}
     >
       <div className="h-full rounded-[15px] bg-[#0a0c14]/95 p-4 backdrop-blur-xl">{children}</div>
@@ -55,7 +55,7 @@ function NeonCard({
 function PanelHeading({ title, accent }: { title: string; accent: string }) {
   return (
     <div className="mb-3 flex items-center gap-2">
-      <span className="h-4 w-1 rounded-full" style={{ background: accent, boxShadow: `0 0 8px ${accent}` }} />
+      <span className="h-4 w-1 rounded-full" style={{ background: accent, boxShadow: `0 0 4px ${accent}88` }} />
       <p className="text-sm font-medium text-[#c3c7d4]">{title}</p>
     </div>
   );
@@ -82,7 +82,7 @@ function NovoItemForm() {
         type="submit"
         disabled={isPending}
         className="flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
-        style={{ background: `linear-gradient(135deg, ${NEON.cyan}, ${NEON.violet})`, boxShadow: `0 0 20px -6px ${NEON.cyan}` }}
+        style={{ background: `linear-gradient(135deg, ${NEON.cyan}, ${NEON.violet})`, boxShadow: `0 0 12px -9px ${NEON.cyan}` }}
       >
         <Plus size={14} />
         Adicionar item
@@ -122,7 +122,7 @@ function MovimentacaoForm({ itens }: { itens: EstoqueItem[] }) {
           )}
           style={
             type === "entrada"
-              ? { borderColor: `${NEON.green}88`, background: `${NEON.green}1a`, color: NEON.green, boxShadow: `0 0 20px -8px ${NEON.green}` }
+              ? { borderColor: `${NEON.green}66`, background: `${NEON.green}14`, color: NEON.green, boxShadow: `0 0 12px -10px ${NEON.green}` }
               : undefined
           }
         >
@@ -138,7 +138,7 @@ function MovimentacaoForm({ itens }: { itens: EstoqueItem[] }) {
           )}
           style={
             type === "saida"
-              ? { borderColor: `${NEON.blue}88`, background: `${NEON.blue}1a`, color: NEON.blue, boxShadow: `0 0 20px -8px ${NEON.blue}` }
+              ? { borderColor: `${NEON.blue}66`, background: `${NEON.blue}14`, color: NEON.blue, boxShadow: `0 0 12px -10px ${NEON.blue}` }
               : undefined
           }
         >
@@ -178,7 +178,7 @@ function MovimentacaoForm({ itens }: { itens: EstoqueItem[] }) {
         type="submit"
         disabled={isPending}
         className="w-full rounded-lg px-3 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
-        style={{ background: `linear-gradient(135deg, ${NEON.cyan}, ${NEON.violet})`, boxShadow: `0 0 20px -6px ${NEON.cyan}` }}
+        style={{ background: `linear-gradient(135deg, ${NEON.cyan}, ${NEON.violet})`, boxShadow: `0 0 12px -9px ${NEON.cyan}` }}
       >
         {isPending ? "Salvando..." : "Registrar"}
       </button>
@@ -249,7 +249,7 @@ function EditItemForm({
             type="submit"
             disabled={isPending}
             className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
-            style={{ background: NEON.green, boxShadow: `0 0 16px -6px ${NEON.green}` }}
+            style={{ background: NEON.green, boxShadow: `0 0 10px -8px ${NEON.green}` }}
           >
             <Check size={12} />
             Salvar

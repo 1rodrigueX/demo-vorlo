@@ -54,18 +54,18 @@ export default async function ProducaoPage({
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div
           className="absolute -left-40 -top-40 h-[520px] w-[520px] rounded-full"
-          style={{ background: "radial-gradient(circle, rgba(34,211,238,0.14), transparent 60%)", filter: "blur(40px)" }}
+          style={{ background: "radial-gradient(circle, rgba(34,211,238,0.08), transparent 60%)", filter: "blur(40px)" }}
         />
         <div
           className="absolute -right-40 top-16 h-[520px] w-[520px] rounded-full"
-          style={{ background: "radial-gradient(circle, rgba(242,79,160,0.12), transparent 60%)", filter: "blur(40px)" }}
+          style={{ background: "radial-gradient(circle, rgba(242,79,160,0.07), transparent 60%)", filter: "blur(40px)" }}
         />
       </div>
 
       <div className="relative z-10 mx-auto max-w-5xl">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Factory size={20} style={{ color: NEON.violet, filter: `drop-shadow(0 0 6px ${NEON.violet}aa)` }} />
+            <Factory size={20} style={{ color: NEON.violet, filter: `drop-shadow(0 0 4px ${NEON.violet}66)` }} />
             <h1 className="text-xl font-semibold text-white">Controle de Produção</h1>
           </div>
           <div className="flex items-center gap-2">
@@ -81,7 +81,7 @@ export default async function ProducaoPage({
               className="flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90"
               style={{
                 background: `linear-gradient(135deg, ${NEON.magenta}, ${NEON.violet})`,
-                boxShadow: `0 0 22px -6px ${NEON.magenta}`,
+                boxShadow: `0 0 13px -9px ${NEON.magenta}`,
               }}
             >
               <PackagePlus size={14} />
@@ -114,13 +114,13 @@ export default async function ProducaoPage({
                         style={{
                           width: `${st.fill}%`,
                           background: `linear-gradient(to right, ${st.color}, ${st.color}aa)`,
-                          boxShadow: `0 0 12px ${st.color}aa`,
+                          boxShadow: `0 0 7px ${st.color}66`,
                         }}
                       />
                     </div>
                     <span
                       className="w-24 shrink-0 text-right text-xs font-medium"
-                      style={{ color: st.color, textShadow: `0 0 10px ${st.color}66` }}
+                      style={{ color: st.color, textShadow: `0 0 6px ${st.color}44` }}
                     >
                       {st.label}
                     </span>
@@ -159,7 +159,7 @@ export default async function ProducaoPage({
                           <div className="flex items-center gap-2.5">
                             <span
                               className="h-6 w-1 shrink-0 rounded-full"
-                              style={{ background: accent, boxShadow: `0 0 8px ${accent}` }}
+                              style={{ background: accent, boxShadow: `0 0 5px ${accent}88` }}
                             />
                             <span className="text-white">{p.name}</span>
                           </div>
@@ -215,8 +215,8 @@ function NeonCard({
       className={["relative rounded-2xl", className].filter(Boolean).join(" ")}
       style={{
         padding: 1,
-        background: `linear-gradient(150deg, ${accent}, ${accent}22 45%, rgba(255,255,255,0.05) 85%)`,
-        boxShadow: `0 0 28px -14px ${accent}`,
+        background: `linear-gradient(150deg, ${accent}88, ${accent}14 45%, rgba(255,255,255,0.04) 85%)`,
+        boxShadow: `0 0 16px -16px ${accent}`,
       }}
     >
       <div className="h-full rounded-[15px] bg-[#0a0c14]/95 p-4 backdrop-blur-xl">{children}</div>
@@ -227,7 +227,7 @@ function NeonCard({
 function PanelHeading({ title, accent }: { title: string; accent: string }) {
   return (
     <div className="mb-3 flex items-center gap-2">
-      <span className="h-4 w-1 rounded-full" style={{ background: accent, boxShadow: `0 0 8px ${accent}` }} />
+      <span className="h-4 w-1 rounded-full" style={{ background: accent, boxShadow: `0 0 4px ${accent}88` }} />
       <p className="text-sm font-medium text-[#c3c7d4]">{title}</p>
     </div>
   );
@@ -237,7 +237,7 @@ function StatCard({ label, value, accent }: { label: string; value: number; acce
   return (
     <NeonCard accent={accent}>
       <div className="text-center">
-        <p className="text-3xl font-bold" style={{ color: accent, textShadow: `0 0 14px ${accent}77` }}>
+        <p className="text-3xl font-bold" style={{ color: accent, textShadow: `0 0 8px ${accent}44` }}>
           {value}
         </p>
         <p className="mt-1 text-xs text-[#8b93a7]">{label}</p>
