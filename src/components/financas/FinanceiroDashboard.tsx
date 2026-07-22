@@ -14,15 +14,32 @@ import {
   Legend,
 } from "recharts";
 import Link from "next/link";
-import { Plus, Wallet, Building2, User, Settings, Lightbulb, TrendingUp } from "lucide-react";
+import {
+  Plus,
+  Wallet,
+  Building2,
+  User,
+  Settings,
+  Lightbulb,
+  TrendingUp,
+  Home,
+  Utensils,
+  Truck,
+  HeartPulse,
+  Umbrella,
+  Shirt,
+  Package,
+  Tag,
+} from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { cn } from "@/lib/utils/cn";
 import { formatCurrency } from "@/lib/utils/currency";
 import { getLancamentos } from "@/lib/actions/financas";
 import { getBankConnection } from "@/lib/actions/financas-bank";
 import { getInboxItems } from "@/lib/actions/financas-inbox";
 import { CHART_COLORS, MONTH_LABELS, MONTH_LABELS_FULL } from "@/lib/financas/categories";
 import { computeSavingsTip } from "@/lib/financas/insights";
-import { Sparkline, DonutChart, MiniGauge, type DonutSlice } from "@/components/financas/charts";
+import { Sparkline, DonutChart, MiniBars, type DonutSlice } from "@/components/financas/charts";
 import { NovoLancamentoModal } from "@/components/financas/NovoLancamentoModal";
 import { BankConnectionPanel } from "@/components/financas/BankConnectionPanel";
 import { InboxPanel } from "@/components/financas/InboxPanel";
@@ -42,10 +59,36 @@ const compactCurrency = new Intl.NumberFormat("pt-BR", {
 
 const YEARS = [2024, 2025, 2026];
 
+/** Neon do dashboard escuro. cyan = saldo/receita, pink = despesa. */
+const NEON = {
+  cyan: "#22d3ee",
+  pink: "#f24fa0",
+  violet: "#a855f7",
+} as const;
+
+/** Ícone por nome de categoria de despesa (fallback: Tag). */
+const CATEGORY_ICONS: Record<string, typeof Home> = {
+  Moradia: Home,
+  Subsistência: Utensils,
+  Alimentação: Utensils,
+  Transporte: Truck,
+  Saúde: HeartPulse,
+  Lazer: Umbrella,
+  Vestuário: Shirt,
+  Estoque: Package,
+};
+
 function tooltipStyle() {
   return {
-    contentStyle: { background: "#1a1a19", border: "1px solid #383835", borderRadius: 8, fontSize: 12 },
-    labelStyle: { color: "#ffffff" },
+    contentStyle: {
+      background: "rgba(9,11,18,0.95)",
+      border: "1px solid rgba(34,211,238,0.35)",
+      borderRadius: 10,
+      fontSize: 12,
+      boxShadow: "0 8px 30px -10px rgba(34,211,238,0.4)",
+    },
+    labelStyle: { color: "#e8eaf2" },
+    itemStyle: { color: "#e8eaf2" },
   };
 }
 
@@ -119,6 +162,19 @@ export function FinanceiroDashboard({
     return rows;
   }, [lancamentos]);
 
+  // Gasto mensal (12 meses) por categoria de despesa — alimenta as mini barras
+  // dos tiles de "Participação na base anual".
+  const categoryMonthly = useMemo(() => {
+    const map: Record<string, number[]> = {};
+    for (const c of despesaCategorias) map[c.name] = new Array(12).fill(0);
+    for (const l of lancamentos) {
+      if (l.type !== "despesa" || !map[l.category]) continue;
+      const m = new Date(l.entry_date + "T00:00:00").getMonth();
+      map[l.category][m] += l.amount_cents / 100;
+    }
+    return map;
+  }, [lancamentos, despesaCategorias]);
+
   const currentMonthLancamentos = useMemo(
     () => lancamentos.filter((l) => new Date(l.entry_date + "T00:00:00").getMonth() + 1 === month),
     [lancamentos, month],
@@ -184,11 +240,27 @@ export function FinanceiroDashboard({
   }));
 
   return (
-    <div className="min-h-screen" style={{ background: "#0d0d0d", color: "#ffffff" }}>
-      <div className="mx-auto flex max-w-7xl gap-6 p-6">
-        <aside className="w-40 shrink-0 space-y-6">
-          <div className="flex items-center gap-2">
-            <Wallet size={20} className="text-[#3987e5]" />
+    <div className="relative min-h-screen overflow-hidden" style={{ background: "#05060c", color: "#e8eaf2" }}>
+      {/* Halos neon de fundo */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div
+          className="absolute -left-40 -top-40 h-[520px] w-[520px] rounded-full"
+          style={{ background: "radial-gradient(circle, rgba(34,211,238,0.14), transparent 60%)", filter: "blur(40px)" }}
+        />
+        <div
+          className="absolute -right-40 top-16 h-[520px] w-[520px] rounded-full"
+          style={{ background: "radial-gradient(circle, rgba(242,79,160,0.12), transparent 60%)", filter: "blur(40px)" }}
+        />
+        <div
+          className="absolute bottom-0 left-1/3 h-[420px] w-[640px] rounded-full"
+          style={{ background: "radial-gradient(circle, rgba(168,85,247,0.10), transparent 60%)", filter: "blur(40px)" }}
+        />
+      </div>
+
+      <div className="relative z-10 mx-auto flex max-w-7xl gap-6 p-6">
+        <aside className="w-40 shrink-0 space-y-6 rounded-2xl border border-white/5 bg-white/[0.02] p-3 backdrop-blur">
+          <div className="flex items-center gap-2 px-1">
+            <Wallet size={20} style={{ color: NEON.cyan }} />
             <div className="text-sm font-semibold leading-tight">
               Dashboard
               <br />
@@ -201,9 +273,18 @@ export function FinanceiroDashboard({
               <button
                 key={y}
                 onClick={() => setYear(y)}
-                className={`block w-full rounded-md px-3 py-1.5 text-left text-sm transition-colors ${
-                  y === year ? "bg-[#3987e5] font-medium text-white" : "text-[#898781] hover:text-white"
-                }`}
+                className={cn(
+                  "block w-full rounded-lg px-3 py-1.5 text-left text-sm transition-all",
+                  y === year ? "font-semibold text-white" : "text-[#8b93a7] hover:text-white",
+                )}
+                style={
+                  y === year
+                    ? {
+                        background: `linear-gradient(135deg, ${NEON.cyan}33, ${NEON.violet}22)`,
+                        boxShadow: `inset 0 0 0 1px ${NEON.cyan}66, 0 0 18px -8px ${NEON.cyan}`,
+                      }
+                    : undefined
+                }
               >
                 {y}
               </button>
@@ -215,9 +296,18 @@ export function FinanceiroDashboard({
               <button
                 key={label}
                 onClick={() => setMonth(i + 1)}
-                className={`block w-full rounded-md px-3 py-1 text-left text-xs transition-colors ${
-                  i + 1 === month ? "bg-[#3987e5] font-medium text-white" : "text-[#898781] hover:text-white"
-                }`}
+                className={cn(
+                  "block w-full rounded-lg px-3 py-1 text-left text-xs transition-all",
+                  i + 1 === month ? "font-semibold text-white" : "text-[#8b93a7] hover:text-white",
+                )}
+                style={
+                  i + 1 === month
+                    ? {
+                        background: `linear-gradient(135deg, ${NEON.cyan}33, ${NEON.violet}22)`,
+                        boxShadow: `inset 0 0 0 1px ${NEON.cyan}66, 0 0 18px -8px ${NEON.cyan}`,
+                      }
+                    : undefined
+                }
               >
                 {label}
               </button>
@@ -227,21 +317,33 @@ export function FinanceiroDashboard({
 
         <div className="min-w-0 flex-1 space-y-4">
           <div className="flex items-center justify-between">
-            <div className="flex rounded-lg border border-[#383835] p-1">
+            <div className="flex rounded-xl border border-white/10 bg-white/[0.03] p-1 backdrop-blur">
               <button
                 onClick={() => setContext("pessoal")}
-                className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm transition-colors ${
-                  context === "pessoal" ? "bg-[#3987e5] text-white" : "text-[#898781] hover:text-white"
-                }`}
+                className={cn(
+                  "flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm transition-all",
+                  context === "pessoal" ? "text-white" : "text-[#8b93a7] hover:text-white",
+                )}
+                style={
+                  context === "pessoal"
+                    ? { background: `linear-gradient(135deg, ${NEON.cyan}, ${NEON.violet})`, boxShadow: `0 0 20px -6px ${NEON.cyan}` }
+                    : undefined
+                }
               >
                 <User size={14} />
                 Pessoal
               </button>
               <button
                 onClick={() => setContext("empresarial")}
-                className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm transition-colors ${
-                  context === "empresarial" ? "bg-[#3987e5] text-white" : "text-[#898781] hover:text-white"
-                }`}
+                className={cn(
+                  "flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm transition-all",
+                  context === "empresarial" ? "text-white" : "text-[#8b93a7] hover:text-white",
+                )}
+                style={
+                  context === "empresarial"
+                    ? { background: `linear-gradient(135deg, ${NEON.cyan}, ${NEON.violet})`, boxShadow: `0 0 20px -6px ${NEON.cyan}` }
+                    : undefined
+                }
               >
                 <Building2 size={14} />
                 Empresarial
@@ -250,14 +352,14 @@ export function FinanceiroDashboard({
             <div className="flex items-center gap-2">
               <Link
                 href={`/${tenantSlug}/financeiro/investimentos`}
-                className="flex items-center gap-1.5 rounded-lg border border-[#383835] px-3 py-2 text-sm text-[#898781] transition-colors hover:text-white"
+                className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-[#8b93a7] transition-colors hover:border-white/20 hover:text-white"
               >
                 <TrendingUp size={14} />
                 Investimentos
               </Link>
               <Link
                 href={`/${tenantSlug}/financeiro/configuracoes`}
-                className="flex items-center gap-1.5 rounded-lg border border-[#383835] px-3 py-2 text-sm text-[#898781] transition-colors hover:text-white"
+                className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-[#8b93a7] transition-colors hover:border-white/20 hover:text-white"
               >
                 <Settings size={14} />
                 Configurações
@@ -277,9 +379,16 @@ export function FinanceiroDashboard({
                 onChanged={refreshAfterBankChange}
               />
               {savingsTip && (
-                <div className="flex items-start gap-3 rounded-xl border border-[#3987e5]/30 bg-[#3987e5]/10 p-4">
-                  <Lightbulb size={16} className="mt-0.5 shrink-0 text-[#3987e5]" />
-                  <p className="text-sm text-[#c3c2b7]">
+                <div
+                  className="flex items-start gap-3 rounded-2xl border p-4"
+                  style={{
+                    borderColor: `${NEON.violet}55`,
+                    background: `linear-gradient(135deg, ${NEON.violet}1a, transparent)`,
+                    boxShadow: `0 0 30px -18px ${NEON.violet}`,
+                  }}
+                >
+                  <Lightbulb size={16} className="mt-0.5 shrink-0" style={{ color: NEON.violet }} />
+                  <p className="text-sm text-[#c3c7d4]">
                     <span className="font-medium text-white">Dica de economia: </span>
                     {savingsTip.message}
                   </p>
@@ -293,48 +402,53 @@ export function FinanceiroDashboard({
           )}
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <StatCard
-              label="Saldo do mês"
-              value={formatCurrency(saldoMes)}
-              color={CHART_COLORS.blue}
-              sparkline={saldoSparkline}
-            />
+            <StatCard label="Saldo do mês" value={formatCurrency(saldoMes)} accent={NEON.cyan} sparkline={saldoSparkline} />
             <StatCard
               label="Despesas do mês"
               value={formatCurrency(despesasMes)}
-              color={CHART_COLORS.magenta}
+              accent={NEON.pink}
               sparkline={despesasSparkline}
             />
-            <Panel title="Despesas no Mês">
+            <Panel title="Despesas no Mês" accent={NEON.violet}>
               <DonutChart
                 data={despesasMesPorCategoria}
-                centerLabel={despesasAnoTotal > 0 ? `${((despesasMesTotalForDonut / despesasAnoTotal) * 100).toFixed(1)}%` : "0%"}
+                centerLabel={
+                  despesasAnoTotal > 0 ? `${((despesasMesTotalForDonut / despesasAnoTotal) * 100).toFixed(1)}%` : "0%"
+                }
               />
             </Panel>
-            <Panel title="Despesas no Ano">
+            <Panel title="Despesas no Ano" accent={NEON.cyan}>
               <DonutChart data={despesasAnoPorCategoria} centerLabel={formatCurrency(despesasAnoTotal).replace(",00", "")} />
             </Panel>
           </div>
 
-          <Panel title="Participação na base anual">
-            <div className="grid grid-cols-3 gap-4 sm:grid-cols-6">
+          <Panel title="Participação na base anual" accent={NEON.cyan}>
+            <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-7">
               {despesaCategorias.map((cat) => {
                 const catTotal = despesasAnoPorCategoria.find((d) => d.name === cat.name)?.value ?? 0;
                 const pct = despesasAnoTotal > 0 ? (catTotal / despesasAnoTotal) * 100 : 0;
-                return <MiniGauge key={cat.id} label={cat.name} percent={pct} color={cat.color} />;
+                return (
+                  <CategoryTile
+                    key={cat.id}
+                    label={cat.name}
+                    percent={pct}
+                    color={cat.color}
+                    bars={categoryMonthly[cat.name] ?? new Array(12).fill(0)}
+                  />
+                );
               })}
             </div>
           </Panel>
 
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-            <Panel title="Análise Mensal">
-              <div className="h-64">
+            <Panel title="Análise Mensal" accent={NEON.cyan}>
+              <div className="h-64" style={{ filter: `drop-shadow(0 0 8px ${NEON.cyan}44)` }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={barData} margin={{ top: 5, right: 8, left: 0, bottom: 0 }}>
-                    <CartesianGrid stroke="#2c2c2a" vertical={false} />
-                    <XAxis dataKey="label" stroke="#898781" fontSize={11} tickLine={false} axisLine={false} />
+                    <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
+                    <XAxis dataKey="label" stroke="#8b93a7" fontSize={11} tickLine={false} axisLine={false} />
                     <YAxis
-                      stroke="#898781"
+                      stroke="#8b93a7"
                       fontSize={11}
                       tickLine={false}
                       axisLine={false}
@@ -346,34 +460,30 @@ export function FinanceiroDashboard({
                       formatter={(value) => formatCurrency(Number(value))}
                       cursor={{ fill: "rgba(255,255,255,0.04)" }}
                     />
-                    <Legend wrapperStyle={{ fontSize: 12, color: "#c3c2b7" }} />
-                    <Bar dataKey="Salário" fill={CHART_COLORS.blue} radius={[4, 4, 0, 0]} isAnimationActive={false} />
-                    <Bar
-                      dataKey="Outras Receitas"
-                      fill={CHART_COLORS.magenta}
-                      radius={[4, 4, 0, 0]}
-                      isAnimationActive={false}
-                    />
+                    <Legend wrapperStyle={{ fontSize: 12, color: "#c3c7d4" }} />
+                    <Bar dataKey="Salário" fill={NEON.cyan} radius={[4, 4, 0, 0]} isAnimationActive={false} />
+                    <Bar dataKey="Outras Receitas" fill={NEON.pink} radius={[4, 4, 0, 0]} isAnimationActive={false} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
             </Panel>
 
-            <Panel title="Detalhamento de Despesas">
+            <Panel title="Detalhamento de Despesas" accent={NEON.pink}>
               <div className="flex gap-4">
                 <div className="min-w-0 flex-1 space-y-3">
                   {categoryDetail.length === 0 && (
-                    <p className="py-8 text-center text-sm text-[#898781]">Sem despesas nessa categoria.</p>
+                    <p className="py-8 text-center text-sm text-[#8b93a7]">Sem despesas nessa categoria.</p>
                   )}
                   {categoryDetail.map((item) => (
                     <div key={item.label} className="flex items-center gap-3">
-                      <span className="w-24 shrink-0 truncate text-xs text-[#c3c2b7]">{item.label}</span>
-                      <div className="h-2 flex-1 rounded-full bg-[#2c2c2a]">
+                      <span className="w-24 shrink-0 truncate text-xs text-[#c3c7d4]">{item.label}</span>
+                      <div className="h-2 flex-1 rounded-full bg-white/5">
                         <div
                           className="h-2 rounded-full"
                           style={{
                             width: `${(item.value / categoryDetailMax) * 100}%`,
                             backgroundColor: colorForCategory(despesaCategorias, selectedCategory),
+                            boxShadow: `0 0 8px ${colorForCategory(despesaCategorias, selectedCategory)}aa`,
                           }}
                         />
                       </div>
@@ -381,14 +491,20 @@ export function FinanceiroDashboard({
                     </div>
                   ))}
                 </div>
-                <ul className="w-28 shrink-0 space-y-1 border-l border-[#2c2c2a] pl-3">
+                <ul className="w-28 shrink-0 space-y-1 border-l border-white/10 pl-3">
                   {despesaCategorias.map((cat) => (
                     <li key={cat.id}>
                       <button
                         onClick={() => setSelectedCategory(cat.name)}
-                        className={`w-full rounded px-2 py-1 text-left text-xs transition-colors ${
-                          selectedCategory === cat.name ? "bg-[#3987e5] text-white" : "text-[#898781] hover:text-white"
-                        }`}
+                        className={cn(
+                          "w-full rounded-lg px-2 py-1 text-left text-xs transition-all",
+                          selectedCategory === cat.name ? "text-white" : "text-[#8b93a7] hover:text-white",
+                        )}
+                        style={
+                          selectedCategory === cat.name
+                            ? { background: `${cat.color}22`, boxShadow: `inset 0 0 0 1px ${cat.color}66` }
+                            : undefined
+                        }
                       >
                         {cat.name}
                       </button>
@@ -399,14 +515,14 @@ export function FinanceiroDashboard({
             </Panel>
           </div>
 
-          <Panel title="Receitas e Despesas">
-            <div className="h-64">
+          <Panel title="Receitas e Despesas" accent={NEON.violet}>
+            <div className="h-64" style={{ filter: `drop-shadow(0 0 8px ${NEON.violet}44)` }}>
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={lineData} margin={{ top: 5, right: 8, left: 0, bottom: 0 }}>
-                  <CartesianGrid stroke="#2c2c2a" vertical={false} />
-                  <XAxis dataKey="label" stroke="#898781" fontSize={11} tickLine={false} axisLine={false} />
+                  <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
+                  <XAxis dataKey="label" stroke="#8b93a7" fontSize={11} tickLine={false} axisLine={false} />
                   <YAxis
-                    stroke="#898781"
+                    stroke="#8b93a7"
                     fontSize={11}
                     tickLine={false}
                     axisLine={false}
@@ -414,20 +530,20 @@ export function FinanceiroDashboard({
                     tickFormatter={(v: number) => compactCurrency.format(v)}
                   />
                   <Tooltip {...tooltipStyle()} formatter={(value) => formatCurrency(Number(value))} />
-                  <Legend wrapperStyle={{ fontSize: 12, color: "#c3c2b7" }} />
+                  <Legend wrapperStyle={{ fontSize: 12, color: "#c3c7d4" }} />
                   <Line
                     type="monotone"
                     dataKey="Receita"
-                    stroke={CHART_COLORS.blue}
-                    strokeWidth={2}
+                    stroke={NEON.cyan}
+                    strokeWidth={2.5}
                     dot={false}
                     isAnimationActive={false}
                   />
                   <Line
                     type="monotone"
                     dataKey="Despesa"
-                    stroke={CHART_COLORS.magenta}
-                    strokeWidth={2}
+                    stroke={NEON.pink}
+                    strokeWidth={2.5}
                     dot={false}
                     isAnimationActive={false}
                   />
@@ -456,33 +572,91 @@ export function FinanceiroDashboard({
   );
 }
 
-function StatCard({
-  label,
-  value,
-  color,
-  sparkline,
+/** Card de vidro escuro com borda/halo neon na cor do acento. */
+function NeonCard({
+  accent,
+  className,
+  children,
 }: {
-  label: string;
-  value: string;
-  color: string;
-  sparkline: { value: number }[];
+  accent: string;
+  className?: string;
+  children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-xl border border-[#2c2c2a] bg-[#1a1a19] p-4">
-      <p className="text-xs text-[#898781]">{label}</p>
-      <p className="mt-1 text-xl font-semibold text-white">{value}</p>
-      <div className="mt-2">
-        <Sparkline data={sparkline} color={color} />
-      </div>
+    <div
+      className={cn("relative rounded-2xl", className)}
+      style={{
+        padding: 1,
+        background: `linear-gradient(150deg, ${accent}, ${accent}22 45%, rgba(255,255,255,0.05) 85%)`,
+        boxShadow: `0 0 28px -14px ${accent}`,
+      }}
+    >
+      <div className="h-full rounded-[15px] bg-[#0a0c14]/95 p-4 backdrop-blur-xl">{children}</div>
     </div>
   );
 }
 
-function Panel({ title, children }: { title: string; children: React.ReactNode }) {
+function StatCard({
+  label,
+  value,
+  accent,
+  sparkline,
+}: {
+  label: string;
+  value: string;
+  accent: string;
+  sparkline: { value: number }[];
+}) {
   return (
-    <div className="rounded-xl border border-[#2c2c2a] bg-[#1a1a19] p-4">
-      <p className="mb-3 text-sm font-medium text-[#c3c2b7]">{title}</p>
+    <NeonCard accent={accent}>
+      <p className="text-xs text-[#8b93a7]">{label}</p>
+      <p className="mt-1 text-xl font-semibold text-white">{value}</p>
+      <div className="mt-2">
+        <Sparkline data={sparkline} color={accent} />
+      </div>
+    </NeonCard>
+  );
+}
+
+function Panel({ title, accent, children }: { title: string; accent: string; children: React.ReactNode }) {
+  return (
+    <NeonCard accent={accent}>
+      <div className="mb-3 flex items-center gap-2">
+        <span className="h-4 w-1 rounded-full" style={{ background: accent, boxShadow: `0 0 8px ${accent}` }} />
+        <p className="text-sm font-medium text-[#c3c7d4]">{title}</p>
+      </div>
       {children}
+    </NeonCard>
+  );
+}
+
+/** Tile de categoria: ícone + nome + % (na cor) + mini barras neon. */
+function CategoryTile({
+  label,
+  percent,
+  color,
+  bars,
+}: {
+  label: string;
+  percent: number;
+  color: string;
+  bars: number[];
+}) {
+  const Icon = CATEGORY_ICONS[label] ?? Tag;
+  return (
+    <div
+      className="flex flex-col items-center gap-2 rounded-xl p-3 text-center"
+      style={{
+        background: `linear-gradient(160deg, ${color}14, rgba(255,255,255,0.02))`,
+        boxShadow: `inset 0 0 0 1px ${color}55, 0 0 22px -14px ${color}`,
+      }}
+    >
+      <Icon size={18} style={{ color, filter: `drop-shadow(0 0 6px ${color}aa)` }} />
+      <span className="text-[11px] leading-tight text-[#8b93a7]">{label}</span>
+      <span className="text-lg font-bold" style={{ color, textShadow: `0 0 12px ${color}88` }}>
+        {percent.toFixed(0)}%
+      </span>
+      <MiniBars data={bars} color={color} />
     </div>
   );
 }

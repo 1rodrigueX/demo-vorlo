@@ -6,27 +6,55 @@ const INK_PRIMARY = "#ffffff";
 const INK_MUTED = "#898781";
 const TRACK = "#2c2c2a";
 
-/** Mini tendência dentro de um stat tile — sem eixo, sem grid, só a forma. */
+/** Mini tendência dentro de um stat tile — sem eixo, sem grid, só a forma.
+ * Brilho neon (drop-shadow na cor) pra combinar com o dashboard escuro. */
 export function Sparkline({ data, color }: { data: { value: number }[]; color: string }) {
+  const gid = `spark-${color.replace(/[^a-z0-9]/gi, "")}`;
   return (
-    <ResponsiveContainer width="100%" height={48}>
-      <AreaChart data={data} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
-        <defs>
-          <linearGradient id={`spark-${color}`} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={color} stopOpacity={0.35} />
-            <stop offset="100%" stopColor={color} stopOpacity={0} />
-          </linearGradient>
-        </defs>
-        <Area
-          type="monotone"
-          dataKey="value"
-          stroke={color}
-          strokeWidth={2}
-          fill={`url(#spark-${color})`}
-          isAnimationActive={false}
+    <div style={{ filter: `drop-shadow(0 0 6px ${color}bb)` }}>
+      <ResponsiveContainer width="100%" height={48}>
+        <AreaChart data={data} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
+          <defs>
+            <linearGradient id={gid} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={color} stopOpacity={0.45} />
+              <stop offset="100%" stopColor={color} stopOpacity={0} />
+            </linearGradient>
+          </defs>
+          <Area
+            type="monotone"
+            dataKey="value"
+            stroke={color}
+            strokeWidth={2.25}
+            fill={`url(#${gid})`}
+            isAnimationActive={false}
+          />
+        </AreaChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+/** Mini barras verticais com brilho neon — usado nos tiles de "Participação
+ * na base anual". Dados brutos (não precisa somar 100); normaliza pelo maior. */
+export function MiniBars({ data, color, height = 34 }: { data: number[]; color: string; height?: number }) {
+  const max = Math.max(1, ...data);
+  return (
+    <div
+      className="flex w-full items-end justify-center gap-[3px]"
+      style={{ height, filter: `drop-shadow(0 0 4px ${color}aa)` }}
+    >
+      {data.map((v, i) => (
+        <div
+          key={i}
+          className="min-w-0 flex-1 rounded-t-[2px]"
+          style={{
+            height: `${Math.max(8, (v / max) * 100)}%`,
+            background: `linear-gradient(to top, ${color}, ${color}88)`,
+            opacity: v > 0 ? 1 : 0.35,
+          }}
         />
-      </AreaChart>
-    </ResponsiveContainer>
+      ))}
+    </div>
   );
 }
 

@@ -11,10 +11,54 @@ import {
   type ActionState,
 } from "@/lib/actions/estoque";
 import { formatCurrency } from "@/lib/utils/currency";
+import { cn } from "@/lib/utils/cn";
+import { Sparkline } from "@/components/financas/charts";
 import type { EstoqueItem, EstoqueMovimentacao } from "@/types/domain";
 
+/** Neon do módulo escuro. */
+const NEON = {
+  cyan: "#22d3ee",
+  violet: "#a855f7",
+  green: "#22c55e",
+  blue: "#38bdf8",
+  red: "#f04f6a",
+} as const;
+
 function inputClass() {
-  return "rounded-md border border-[#383835] bg-[#0d0d0d] px-3 py-1.5 text-sm text-white placeholder:text-[#898781] focus:outline-none focus:ring-1 focus:ring-[#3987e5]";
+  return "rounded-lg border border-white/10 bg-[#0a0c14] px-3 py-1.5 text-sm text-white placeholder:text-[#8b93a7] focus:outline-none focus:ring-2 focus:ring-[#22d3ee]/60";
+}
+
+/** Card de vidro escuro com borda/halo neon. */
+function NeonCard({
+  accent,
+  className,
+  children,
+}: {
+  accent: string;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div
+      className={cn("relative rounded-2xl", className)}
+      style={{
+        padding: 1,
+        background: `linear-gradient(150deg, ${accent}, ${accent}22 45%, rgba(255,255,255,0.05) 85%)`,
+        boxShadow: `0 0 28px -14px ${accent}`,
+      }}
+    >
+      <div className="h-full rounded-[15px] bg-[#0a0c14]/95 p-4 backdrop-blur-xl">{children}</div>
+    </div>
+  );
+}
+
+function PanelHeading({ title, accent }: { title: string; accent: string }) {
+  return (
+    <div className="mb-3 flex items-center gap-2">
+      <span className="h-4 w-1 rounded-full" style={{ background: accent, boxShadow: `0 0 8px ${accent}` }} />
+      <p className="text-sm font-medium text-[#c3c7d4]">{title}</p>
+    </div>
+  );
 }
 
 function NovoItemForm() {
@@ -37,7 +81,8 @@ function NovoItemForm() {
       <button
         type="submit"
         disabled={isPending}
-        className="flex items-center gap-1 rounded-md bg-[#3987e5] px-3 py-1.5 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+        className="flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+        style={{ background: `linear-gradient(135deg, ${NEON.cyan}, ${NEON.violet})`, boxShadow: `0 0 20px -6px ${NEON.cyan}` }}
       >
         <Plus size={14} />
         Adicionar item
@@ -62,7 +107,7 @@ function MovimentacaoForm({ itens }: { itens: EstoqueItem[] }) {
   }, [isPending, state, type]);
 
   if (itens.length === 0) {
-    return <p className="text-sm text-[#898781]">Crie um item primeiro pra poder registrar movimentação.</p>;
+    return <p className="text-sm text-[#8b93a7]">Crie um item primeiro pra poder registrar movimentação.</p>;
   }
 
   return (
@@ -71,9 +116,15 @@ function MovimentacaoForm({ itens }: { itens: EstoqueItem[] }) {
         <button
           type="button"
           onClick={() => setType("entrada")}
-          className={`flex flex-1 items-center justify-center gap-1.5 rounded-md border px-3 py-2 text-sm font-medium transition-colors ${
-            type === "entrada" ? "border-[#199e70] bg-[#199e70]/10 text-[#199e70]" : "border-[#383835] text-[#898781]"
-          }`}
+          className={cn(
+            "flex flex-1 items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-medium transition-all",
+            type === "entrada" ? "text-white" : "border-white/10 text-[#8b93a7] hover:text-white",
+          )}
+          style={
+            type === "entrada"
+              ? { borderColor: `${NEON.green}88`, background: `${NEON.green}1a`, color: NEON.green, boxShadow: `0 0 20px -8px ${NEON.green}` }
+              : undefined
+          }
         >
           <PackagePlus size={14} />
           Entrada (compra)
@@ -81,9 +132,15 @@ function MovimentacaoForm({ itens }: { itens: EstoqueItem[] }) {
         <button
           type="button"
           onClick={() => setType("saida")}
-          className={`flex flex-1 items-center justify-center gap-1.5 rounded-md border px-3 py-2 text-sm font-medium transition-colors ${
-            type === "saida" ? "border-[#e66767] bg-[#e66767]/10 text-[#e66767]" : "border-[#383835] text-[#898781]"
-          }`}
+          className={cn(
+            "flex flex-1 items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-medium transition-all",
+            type === "saida" ? "text-white" : "border-white/10 text-[#8b93a7] hover:text-white",
+          )}
+          style={
+            type === "saida"
+              ? { borderColor: `${NEON.blue}88`, background: `${NEON.blue}1a`, color: NEON.blue, boxShadow: `0 0 20px -8px ${NEON.blue}` }
+              : undefined
+          }
         >
           <PackageMinus size={14} />
           Saída
@@ -120,7 +177,8 @@ function MovimentacaoForm({ itens }: { itens: EstoqueItem[] }) {
       <button
         type="submit"
         disabled={isPending}
-        className="w-full rounded-md bg-[#3987e5] px-3 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+        className="w-full rounded-lg px-3 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+        style={{ background: `linear-gradient(135deg, ${NEON.cyan}, ${NEON.violet})`, boxShadow: `0 0 20px -6px ${NEON.cyan}` }}
       >
         {isPending ? "Salvando..." : "Registrar"}
       </button>
@@ -159,7 +217,7 @@ function EditItemForm({
   }
 
   return (
-    <tr className="border-b border-[#2c2c2a] bg-[#0d0d0d] last:border-0">
+    <tr className="border-b border-white/10 bg-white/[0.02] last:border-0">
       <td colSpan={canSeeValues ? 5 : 3} className="py-2 pr-3">
         <form action={formAction} className="flex flex-wrap items-end gap-2">
           <input type="hidden" name="id" value={item.id} />
@@ -190,7 +248,8 @@ function EditItemForm({
           <button
             type="submit"
             disabled={isPending}
-            className="flex items-center gap-1 rounded-md bg-[#199e70] px-2.5 py-1.5 text-xs font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+            className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+            style={{ background: NEON.green, boxShadow: `0 0 16px -6px ${NEON.green}` }}
           >
             <Check size={12} />
             Salvar
@@ -198,7 +257,7 @@ function EditItemForm({
           <button
             type="button"
             onClick={onDone}
-            className="flex items-center gap-1 rounded-md border border-[#383835] px-2.5 py-1.5 text-xs text-[#898781] hover:text-white"
+            className="flex items-center gap-1 rounded-lg border border-white/10 px-2.5 py-1.5 text-xs text-[#8b93a7] hover:text-white"
           >
             <X size={12} />
             Cancelar
@@ -207,7 +266,7 @@ function EditItemForm({
             type="button"
             onClick={handleDelete}
             disabled={isDeleting}
-            className="flex items-center gap-1 rounded-md border border-[#383835] px-2.5 py-1.5 text-xs text-[#898781] transition-colors hover:border-red-400 hover:text-red-400 disabled:opacity-50"
+            className="flex items-center gap-1 rounded-lg border border-white/10 px-2.5 py-1.5 text-xs text-[#8b93a7] transition-colors hover:border-red-400 hover:text-red-400 disabled:opacity-50"
           >
             <Trash2 size={12} />
             Excluir
@@ -235,15 +294,15 @@ function ItemRow({ item, canSeeValues }: { item: EstoqueItem; canSeeValues: bool
   const totalValue = (Number(item.quantity) * item.unit_cost_cents) / 100;
 
   return (
-    <tr className="border-b border-[#2c2c2a] last:border-0">
+    <tr className="border-b border-white/10 transition-colors last:border-0 hover:bg-white/[0.02]">
       <td className="py-2 pr-3 text-white">{item.name}</td>
-      <td className="py-2 pr-3 text-right text-[#c3c2b7]">
+      <td className="py-2 pr-3 text-right text-[#c3c7d4]">
         {Number(item.quantity)} {item.unit}
       </td>
       {canSeeValues && (
         <>
-          <td className="py-2 pr-3 text-right text-[#c3c2b7]">{formatCurrency(item.unit_cost_cents / 100)}</td>
-          <td className="py-2 pr-3 text-right text-white">{formatCurrency(totalValue)}</td>
+          <td className="py-2 pr-3 text-right text-[#c3c7d4]">{formatCurrency(item.unit_cost_cents / 100)}</td>
+          <td className="py-2 pr-3 text-right font-medium text-white">{formatCurrency(totalValue)}</td>
         </>
       )}
       <td className="py-2 text-right">
@@ -251,7 +310,7 @@ function ItemRow({ item, canSeeValues }: { item: EstoqueItem; canSeeValues: bool
           <button
             type="button"
             onClick={() => setIsEditing(true)}
-            className="text-[#898781] transition-colors hover:text-white"
+            className="text-[#8b93a7] transition-colors hover:text-white"
             aria-label={`Editar ${item.name}`}
           >
             <Pencil size={14} />
@@ -260,7 +319,7 @@ function ItemRow({ item, canSeeValues }: { item: EstoqueItem; canSeeValues: bool
             type="button"
             onClick={handleDelete}
             disabled={isDeleting}
-            className="text-[#898781] transition-colors hover:text-red-400 disabled:opacity-50"
+            className="text-[#8b93a7] transition-colors hover:text-red-400 disabled:opacity-50"
             aria-label={`Excluir ${item.name}`}
           >
             <Trash2 size={14} />
@@ -269,6 +328,31 @@ function ItemRow({ item, canSeeValues }: { item: EstoqueItem; canSeeValues: bool
       </td>
     </tr>
   );
+}
+
+/** Série de valor do estoque nos últimos 30 dias — reconstruída a partir das
+ * movimentações (entrada +, saída −) ancorando o último ponto no total atual. */
+function buildValueSparkline(movimentacoes: EstoqueMovimentacao[], currentTotal: number): { value: number }[] {
+  const DAYS = 30;
+  const perDay = new Array(DAYS).fill(0);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  for (const m of movimentacoes) {
+    const d = new Date(m.created_at);
+    d.setHours(0, 0, 0, 0);
+    const diff = Math.round((today.getTime() - d.getTime()) / 86400000);
+    if (diff >= 0 && diff < DAYS) {
+      perDay[DAYS - 1 - diff] += (m.type === "entrada" ? 1 : -1) * (m.total_cents / 100);
+    }
+  }
+  const windowSum = perDay.reduce((s, v) => s + v, 0);
+  let running = currentTotal - windowSum;
+  const points: { value: number }[] = [];
+  for (let i = 0; i < DAYS; i++) {
+    running += perDay[i];
+    points.push({ value: running });
+  }
+  return points;
 }
 
 export function EstoqueManager({
@@ -282,25 +366,34 @@ export function EstoqueManager({
 }) {
   const totalEstoque = itens.reduce((sum, i) => sum + (Number(i.quantity) * i.unit_cost_cents) / 100, 0);
   const itemNameById = new Map(itens.map((i) => [i.id, i.name]));
+  const valueSparkline = buildValueSparkline(movimentacoes, totalEstoque);
 
   return (
     <div className="space-y-4">
       {canSeeValues && (
-        <div className="rounded-xl border border-[#2c2c2a] bg-[#1a1a19] p-4">
-          <p className="text-xs text-[#898781]">Valor total em estoque</p>
-          <p className="mt-1 text-2xl font-semibold text-white">{formatCurrency(totalEstoque)}</p>
-        </div>
+        <NeonCard accent={NEON.cyan}>
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-xs text-[#8b93a7]">Valor total em estoque</p>
+              <p className="mt-1 text-2xl font-semibold text-white">{formatCurrency(totalEstoque)}</p>
+            </div>
+            <div className="w-40 shrink-0 sm:w-64">
+              <p className="mb-1 text-right text-[11px] text-[#8b93a7]">Valor em 30 dias</p>
+              <Sparkline data={valueSparkline} color={NEON.cyan} />
+            </div>
+          </div>
+        </NeonCard>
       )}
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <div className="rounded-xl border border-[#2c2c2a] bg-[#1a1a19] p-4">
-          <p className="mb-3 text-sm font-medium text-[#c3c2b7]">Itens</p>
+        <NeonCard accent={NEON.cyan}>
+          <PanelHeading title="Itens" accent={NEON.cyan} />
           <NovoItemForm />
           {itens.length > 0 && (
             <div className="mt-4 overflow-x-auto">
               <table className="w-full min-w-[420px] text-sm">
                 <thead>
-                  <tr className="border-b border-[#2c2c2a] text-left text-xs text-[#898781]">
+                  <tr className="border-b border-white/10 text-left text-xs text-[#8b93a7]">
                     <th className="pb-2 pr-3 font-normal">Item</th>
                     <th className="pb-2 pr-3 text-right font-normal">Qtd.</th>
                     {canSeeValues && (
@@ -320,36 +413,36 @@ export function EstoqueManager({
               </table>
             </div>
           )}
-        </div>
+        </NeonCard>
 
-        <div className="rounded-xl border border-[#2c2c2a] bg-[#1a1a19] p-4">
-          <p className="mb-3 text-sm font-medium text-[#c3c2b7]">Registrar movimentação</p>
+        <NeonCard accent={NEON.violet}>
+          <PanelHeading title="Registrar movimentação" accent={NEON.violet} />
           <MovimentacaoForm itens={itens} />
-        </div>
+        </NeonCard>
       </div>
 
       {movimentacoes.length > 0 && (
-        <div className="rounded-xl border border-[#2c2c2a] bg-[#1a1a19] p-4">
-          <p className="mb-3 text-sm font-medium text-[#c3c2b7]">Movimentações recentes</p>
+        <NeonCard accent={NEON.blue}>
+          <PanelHeading title="Movimentações recentes" accent={NEON.blue} />
           <div className="space-y-2">
             {movimentacoes.map((m) => (
               <div key={m.id} className="flex items-center justify-between text-sm">
                 <div className="flex items-center gap-2">
                   {m.type === "entrada" ? (
-                    <PackagePlus size={13} className="text-[#199e70]" />
+                    <PackagePlus size={13} style={{ color: NEON.green }} />
                   ) : (
-                    <PackageMinus size={13} className="text-[#e66767]" />
+                    <PackageMinus size={13} style={{ color: NEON.blue }} />
                   )}
                   <span className="text-white">{itemNameById.get(m.item_id) ?? "Item removido"}</span>
-                  <span className="text-xs text-[#898781]">
+                  <span className="text-xs text-[#8b93a7]">
                     {Number(m.quantity)} un · {new Date(m.created_at).toLocaleDateString("pt-BR")}
                   </span>
                 </div>
-                {canSeeValues && <span className="text-xs text-[#c3c2b7]">{formatCurrency(m.total_cents / 100)}</span>}
+                {canSeeValues && <span className="text-xs text-[#c3c7d4]">{formatCurrency(m.total_cents / 100)}</span>}
               </div>
             ))}
           </div>
-        </div>
+        </NeonCard>
       )}
     </div>
   );

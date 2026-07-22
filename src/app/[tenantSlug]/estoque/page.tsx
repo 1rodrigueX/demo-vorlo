@@ -25,14 +25,26 @@ export default async function EstoquePage() {
   const backHref = await resolveHomeRoute();
 
   return (
-    <div className="min-h-screen px-6 py-6" style={{ background: "#0d0d0d", color: "#ffffff" }}>
-      <div className="mx-auto max-w-4xl">
-        <Link href={backHref} className="mb-6 inline-flex items-center gap-1.5 text-sm text-[#898781] hover:text-white">
+    <div className="relative min-h-screen overflow-hidden px-6 py-6" style={{ background: "#05060c", color: "#e8eaf2" }}>
+      {/* Halos neon de fundo */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div
+          className="absolute -left-40 -top-40 h-[520px] w-[520px] rounded-full"
+          style={{ background: "radial-gradient(circle, rgba(34,211,238,0.14), transparent 60%)", filter: "blur(40px)" }}
+        />
+        <div
+          className="absolute -right-40 top-24 h-[520px] w-[520px] rounded-full"
+          style={{ background: "radial-gradient(circle, rgba(168,85,247,0.12), transparent 60%)", filter: "blur(40px)" }}
+        />
+      </div>
+
+      <div className="relative z-10 mx-auto max-w-4xl">
+        <Link href={backHref} className="mb-6 inline-flex items-center gap-1.5 text-sm text-[#8b93a7] transition-colors hover:text-white">
           <ArrowLeft size={14} />
           Voltar
         </Link>
         <h1 className="text-xl font-semibold text-white">Controle de Estoque</h1>
-        <p className="mt-1 text-sm text-[#898781]">
+        <p className="mt-1 text-sm text-[#8b93a7]">
           Toda entrada (compra) já lança automaticamente como saída em Empresarial, se você também tiver o Financeiro
           ativo.
         </p>
