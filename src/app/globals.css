@@ -1,50 +1,122 @@
 @import "tailwindcss";
 
 /*
- * Identidade visual única do sistema: conteúdo claro + sidebar sempre escura
- * (ver Sidebar.tsx) + laranja como cor de marca. Não é mais customizável por
- * tenant — ver AGENTS.md/histórico se precisar entender o tema escuro global
- * que existia antes disso.
+ * ============================================================================
+ * TEMA FALA AI — claro + escuro, identidade "neon violeta"
+ * ============================================================================
  *
- * A cor de marca substitui a rampa "indigo" do próprio Tailwind (em vez de
- * caçar cada "bg-indigo-600"/"text-indigo-700" espalhado pelas ~60 telas do
- * CRM) — como as utilities do v4 resolvem em runtime via var(--color-*),
- * redefinir aqui já muda toda classe indigo-* existente pro laranja novo,
- * sem precisar tocar em cada componente.
+ * O CRM tem ~120 telas que usam utilities neutras do Tailwind direto
+ * (bg-gray-50, text-gray-900, border-gray-200, bg-panel, ...). Em vez de
+ * caçar cada uma delas pra colocar variante `dark:`, o tema inteiro é trocado
+ * redefinindo os *tokens* (var(--color-*)) que essas utilities resolvem em
+ * runtime no Tailwind v4. Trocar o valor da variável no seletor
+ * :root[data-theme="dark"] já vira toda a árvore pro escuro de uma vez.
+ *
+ * Regras:
+ *  - --color-white NUNCA muda (fica #fff). "text-white" é usado em botão/badge
+ *    colorido e precisa continuar branco nos dois modos.
+ *  - A rampa "gray" é INVERTIDA no escuro (50 = fundo mais escuro,
+ *    900 = texto mais claro), porque o código usa gray baixo pra fundo e gray
+ *    alto pra texto de forma consistente.
+ *  - "bg-panel" = fundo de card/topbar/modal/input.
+ *  - A marca substitui a rampa "indigo" do Tailwind (o CRM inteiro chama
+ *    bg-indigo-600/text-indigo-700), agora num violeta neon em vez de laranja.
+ * ============================================================================
  */
+
+/* Permite usar `dark:` nas utilities, dirigido pelo nosso data-theme (toggle
+ * manual) — usado principalmente na landing. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 @theme {
-  --color-indigo-50: #fff3ec;
-  --color-indigo-100: #ffe4d1;
-  --color-indigo-200: #ffc7a3;
-  --color-indigo-300: #ffa873;
-  --color-indigo-400: #ff8f57;
-  --color-indigo-500: #ff8146;
-  --color-indigo-600: #ff7a3d;
-  --color-indigo-700: #e35f27;
-  --color-indigo-800: #b84a1d;
-  --color-indigo-900: #8f3a17;
-  --color-indigo-950: #4d1e0c;
+  /* ---- Marca (violeta neon) — substitui a rampa indigo em todo o CRM ---- */
+  --color-indigo-50: #f1eefe;
+  --color-indigo-100: #e4ddfe;
+  --color-indigo-200: #cabdfd;
+  --color-indigo-300: #ab97fb;
+  --color-indigo-400: #9075f8;
+  --color-indigo-500: #7c5cf6;
+  --color-indigo-600: #6d47f0;
+  --color-indigo-700: #5b33d6;
+  --color-indigo-800: #4826ab;
+  --color-indigo-900: #391f85;
+  --color-indigo-950: #23124f;
 
-  /* Fundo de cards/topbar/modais/inputs — branco de verdade. */
+  /* Fundo de cards/topbar/modais/inputs. Trocado no escuro mais abaixo. */
   --color-panel: #ffffff;
-}
 
-:root {
-  --background: var(--color-gray-50);
-  --foreground: var(--color-gray-900);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+}
+
+/* ---- MODO CLARO (padrão) --------------------------------------------- */
+:root {
+  --background: #f6f7fb;
+  --foreground: #101828;
+  /* Halo neon usado no fundo da landing / seções escuras. */
+  --brand-glow: 109, 71, 240;
+  color-scheme: light;
+}
+
+/* ---- MODO ESCURO ----------------------------------------------------- */
+/*
+ * Rampa "gray" invertida + panel escuro. Especificidade :root[data-theme]
+ * (0,2,0) ganha do @theme que gera em :root (0,1,0), e vem depois na ordem.
+ */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --background: #070a13;
+  --foreground: #eef1f8;
+
+  /* Fundo de painel: slate profundo com leve tom violeta. */
+  --color-panel: #121826;
+
+  /* gray invertido: 50 = mais escuro (fundos), 950 = mais claro (texto). */
+  --color-gray-50: #0a0e18;
+  --color-gray-100: #111726;
+  --color-gray-200: #1e2536; /* bordas / hairlines (muito usado) */
+  --color-gray-300: #2b3346; /* bordas fortes / borda de input */
+  --color-gray-400: #5d6678; /* placeholder / texto bem apagado */
+  --color-gray-500: #808a9e; /* texto muted */
+  --color-gray-600: #9ba4b8; /* texto secundário (muito usado) */
+  --color-gray-700: #bac2d2;
+  --color-gray-800: #d6dbe6;
+  --color-gray-900: #eef1f8; /* títulos / texto principal (muito usado) */
+  --color-gray-950: #ffffff;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+/* Barra de rolagem / seleção acompanham o tema. */
+::selection {
+  background: rgba(var(--brand-glow), 0.35);
+}
+:root[data-theme="dark"] {
+  --brand-glow: 124, 92, 246;
+}
+:root[data-theme="dark"] ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+:root[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: #2a3346;
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+:root[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+  background: #394358;
+  background-clip: padding-box;
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -61,5 +133,16 @@ body {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+/* Brilho pulsante suave pros elementos neon da landing. */
+@keyframes brand-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 0.9;
   }
 }

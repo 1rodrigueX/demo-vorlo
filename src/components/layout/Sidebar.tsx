@@ -39,8 +39,11 @@ export function Sidebar({
 
   return (
     <aside
-      style={{ background: "linear-gradient(160deg, #0b1220, #16213a)" }}
-      className="hidden w-64 shrink-0 md:flex md:flex-col"
+      style={{
+        background:
+          "radial-gradient(120% 55% at 50% 0%, rgba(124,92,246,0.20), transparent 60%), linear-gradient(165deg, #0c0a1e 0%, #120e2b 55%, #0a0918 100%)",
+      }}
+      className="hidden w-64 shrink-0 border-r border-white/5 md:flex md:flex-col"
     >
       <div className="flex h-20 items-center gap-2.5 border-b border-white/10 px-5">
         <div
@@ -69,7 +72,7 @@ export function Sidebar({
               className={cn(
                 "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150",
                 isActive
-                  ? "text-white shadow-md shadow-black/20"
+                  ? "text-white shadow-lg shadow-indigo-500/40"
                   : "text-white/70 hover:translate-x-0.5 hover:bg-white/10 hover:text-white",
               )}
             >

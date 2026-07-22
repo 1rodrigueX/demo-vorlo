@@ -2,8 +2,9 @@
 
 import { createContext, useContext } from "react";
 
-/** Cor de marca única do sistema — não é mais customizável por tenant. */
-export const BRAND_COLOR = "#ff7a3d";
+/** Cor de marca única do sistema — não é mais customizável por tenant.
+ * Violeta neon (antes era laranja) — casa com a rampa indigo do globals.css. */
+export const BRAND_COLOR = "#6d47f0";
 
 const TenantThemeContext = createContext<{ brandColor: string }>({ brandColor: BRAND_COLOR });
 

@@ -1,7 +1,17 @@
 import Link from "next/link";
-import { CheckCircle2, KeyRound, Bot, Send, Sparkles as SparklesIcon, Crown, PlugZap } from "lucide-react";
+import {
+  CheckCircle2,
+  KeyRound,
+  Bot,
+  Send,
+  Sparkles as SparklesIcon,
+  Crown,
+  PlugZap,
+  Quote,
+} from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
+import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { formatCentsBrl } from "@/lib/billing/pricing";
 import { getPlanCopy } from "@/lib/billing/plan-copy";
 import { FEATURES, HOW_IT_WORKS } from "@/lib/marketing/content";
@@ -13,20 +23,39 @@ const TRUST_POINTS = [
   "Suporte pelo próprio FALA AI, direto no CRM",
 ];
 
+/** Cores de destaque neon de cada card de recurso (segue a imagem: azul,
+ * verde, roxo, laranja/rosa). Casa 1-a-1 com FEATURES por índice. */
+const FEATURE_ACCENTS = ["#6d5cff", "#22c55e", "#a855f7", "#fb7185"] as const;
+
 export function LandingPage({ plans }: { plans: BillingPlan[] }) {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="border-b border-gray-200 bg-panel">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-sm font-bold text-white">
-              F
-            </div>
-            <span className="text-base font-semibold text-gray-900">FALA AI CRM</span>
+    <div className="min-h-screen bg-background text-foreground">
+      {/* HEADER */}
+      <header className="sticky top-0 z-40 border-b border-gray-200/60 bg-background/70 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3.5">
+          <div className="flex items-center gap-2.5">
+            <BrandMark />
+            <span className="text-base font-semibold tracking-tight text-gray-900">FALA AI CRM</span>
           </div>
-          <div className="flex items-center gap-4">
-            <Link href="/login" className="text-sm font-medium text-gray-600 hover:text-gray-900">
-              Já sou cliente — Entrar
+          <div className="flex items-center gap-2 sm:gap-4">
+            <a
+              href="#recursos"
+              className="hidden text-sm font-medium text-gray-600 transition-colors hover:text-gray-900 sm:block"
+            >
+              Recursos
+            </a>
+            <a
+              href="#planos"
+              className="hidden text-sm font-medium text-gray-600 transition-colors hover:text-gray-900 sm:block"
+            >
+              Planos
+            </a>
+            <ThemeToggle />
+            <Link
+              href="/login"
+              className="hidden text-sm font-medium text-gray-600 transition-colors hover:text-gray-900 sm:block"
+            >
+              Entrar
             </Link>
             <Link href="/signup">
               <Button size="sm">Criar conta grátis</Button>
@@ -37,102 +66,122 @@ export function LandingPage({ plans }: { plans: BillingPlan[] }) {
 
       {/* HERO */}
       <section className="relative overflow-hidden">
-        <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-50 via-gray-50 to-gray-50" />
-        <div className="mx-auto max-w-5xl px-4 pt-16 pb-8 text-center">
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-            Simplifique <span className="text-indigo-600">suas vendas</span> com o FALA AI CRM
+        <HeroBackground />
+        <div className="mx-auto max-w-5xl px-4 pt-20 pb-10 text-center sm:pt-28">
+          <div className="mx-auto mb-6 inline-flex items-center gap-2 rounded-full border border-indigo-400/30 bg-indigo-500/10 px-3.5 py-1.5 text-xs font-medium text-indigo-500 backdrop-blur">
+            <SparklesIcon size={13} />
+            CRM de vendas com agentes de IA
+          </div>
+          <h1 className="text-balance text-4xl font-bold tracking-tight sm:text-6xl">
+            Simplifique{" "}
+            <span className="bg-gradient-to-r from-indigo-400 via-violet-500 to-sky-400 bg-clip-text text-transparent">
+              suas vendas
+            </span>
+            <br className="hidden sm:block" /> com o FALA AI CRM
           </h1>
-          <p className="mx-auto mt-4 max-w-2xl text-base text-gray-600">
+          <p className="mx-auto mt-5 max-w-2xl text-pretty text-base text-gray-600 sm:text-lg">
             Pipeline, WhatsApp e agentes de IA que atendem, qualificam e cobram por você — o FALA AI administra
             tudo isso a partir de uma conversa.
           </p>
-          <div className="mt-8 flex items-center justify-center gap-3">
+          <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
             <Link href="/signup">
-              <Button size="md">Criar conta grátis</Button>
+              <Button size="md" className="shadow-lg shadow-indigo-500/30">
+                Criar conta grátis
+              </Button>
             </Link>
-            <a href="#planos" className="text-sm font-medium text-gray-600 hover:text-gray-900">
-              Ver planos e preços
+            <a
+              href="#recursos"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:border-gray-400 hover:bg-gray-100"
+            >
+              Ver recursos
             </a>
           </div>
         </div>
 
-        <div className="mx-auto max-w-5xl px-4 pb-20">
+        {/* Mockup do produto — sempre "dark glass" (é a tela real do CRM). */}
+        <div className="relative mx-auto max-w-5xl px-4 pb-6">
+          <div className="pointer-events-none absolute -inset-x-10 top-1/2 -z-10 h-[80%] -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(124,92,246,0.4),transparent_65%)] blur-2xl" />
           <PipelineMockup />
         </div>
-      </section>
 
-      {/* CONFIANÇA — pontos reais, sem selo/nota inventada */}
-      <section className="border-y border-gray-200 bg-panel py-8">
-        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-center gap-x-8 gap-y-3 px-4">
-          {TRUST_POINTS.map((point) => (
-            <div key={point} className="flex items-center gap-2 text-sm text-gray-600">
-              <CheckCircle2 size={16} className="shrink-0 text-emerald-600" />
-              {point}
-            </div>
-          ))}
+        {/* 4 CARDS DE RECURSO com glow colorido, direto sob o mockup (imagem). */}
+        <div id="recursos" className="mx-auto max-w-5xl scroll-mt-20 px-4 pt-6 pb-24">
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {FEATURES.map((f, i) => (
+              <GlowCard key={f.title} accent={FEATURE_ACCENTS[i]}>
+                <div
+                  className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl text-white"
+                  style={{
+                    background: `linear-gradient(140deg, ${FEATURE_ACCENTS[i]}, ${FEATURE_ACCENTS[i]}bb)`,
+                    boxShadow: `0 8px 24px -6px ${FEATURE_ACCENTS[i]}88`,
+                  }}
+                >
+                  <f.icon size={21} />
+                </div>
+                <h3 className="text-sm font-semibold text-white">{f.title}</h3>
+                <p className="mt-1.5 text-sm leading-relaxed text-white/55">{f.description}</p>
+              </GlowCard>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* FEATURES — bloco colorido, igual ao "centralizamos tudo" */}
-      <section className="bg-[linear-gradient(160deg,#0b1220,#16213a)] py-16 text-white">
+      {/* CONFIANÇA — abre com o "Cada empresa fica isolada" da imagem, em destaque */}
+      <section className="relative border-y border-gray-200/70 bg-panel py-14">
         <div className="mx-auto max-w-5xl px-4">
-          <h2 className="text-center text-2xl font-bold sm:text-3xl">
-            Centralizamos toda a rotina de vendas em um só lugar
-          </h2>
-          <p className="mx-auto mt-2 max-w-xl text-center text-sm text-white/60">
-            Do primeiro contato no WhatsApp até o fechamento — sem planilha, sem numero espalhado por vendedor.
-          </p>
-
-          <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {FEATURES.map((f) => (
-              <div
-                key={f.title}
-                className="rounded-xl border border-white/10 bg-white/5 p-5 transition-colors hover:bg-white/10"
-              >
-                <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-600 text-white">
-                  <f.icon size={20} />
-                </div>
-                <h3 className="text-sm font-semibold text-white">{f.title}</h3>
-                <p className="mt-1 text-sm text-white/60">{f.description}</p>
+          <div className="mx-auto max-w-3xl text-center">
+            <Quote size={30} className="mx-auto mb-4 text-indigo-500" />
+            <p className="text-2xl font-semibold tracking-tight text-gray-900 sm:text-3xl">
+              Cada empresa fica <span className="text-indigo-500">isolada</span>.
+            </p>
+            <p className="mt-2 text-sm text-gray-500">
+              Seus dados, seus números e suas conversas nunca se misturam com os de outro CRM.
+            </p>
+          </div>
+          <div className="mt-10 flex flex-wrap items-center justify-center gap-x-8 gap-y-3">
+            {TRUST_POINTS.map((point) => (
+              <div key={point} className="flex items-center gap-2 text-sm text-gray-600">
+                <CheckCircle2 size={16} className="shrink-0 text-emerald-500" />
+                {point}
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ALTERNANDO TEXTO + MOCKUP — atendimento via WhatsApp */}
-      <section className="py-16">
-        <div className="mx-auto grid max-w-5xl items-center gap-10 px-4 lg:grid-cols-2">
+      {/* ATENDIMENTO — texto + mockup de chat */}
+      <section className="py-20">
+        <div className="mx-auto grid max-w-5xl items-center gap-12 px-4 lg:grid-cols-2">
           <ChatMockup />
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-indigo-600">Atendimento</p>
-            <h2 className="mt-2 text-2xl font-bold text-gray-900">
+            <p className="text-xs font-semibold uppercase tracking-wider text-indigo-500">Atendimento</p>
+            <h2 className="mt-2 text-3xl font-bold tracking-tight text-gray-900">
               A IA responde no WhatsApp antes do lead esfriar
             </h2>
-            <p className="mt-3 text-sm text-gray-600">
+            <p className="mt-4 text-base text-gray-600">
               O FALA AI qualifica, tira dúvida e já registra o contato no pipeline — tudo isso enquanto sua equipe
               está ocupada em outra ligação. Você só entra na conversa quando o negócio já está quente.
             </p>
-            <Link href="/signup" className="mt-5 inline-block">
+            <Link href="/signup" className="mt-6 inline-block">
               <Button>Criar conta grátis</Button>
             </Link>
           </div>
         </div>
       </section>
 
-      {/* ALTERNANDO TEXTO + MOCKUP — automação/organização */}
-      <section className="border-y border-gray-200 bg-panel py-16">
-        <div className="mx-auto grid max-w-5xl items-center gap-10 px-4 lg:grid-cols-2">
+      {/* ORGANIZAÇÃO — texto + mockup de automação */}
+      <section className="border-y border-gray-200/70 bg-panel py-20">
+        <div className="mx-auto grid max-w-5xl items-center gap-12 px-4 lg:grid-cols-2">
           <div className="order-2 lg:order-1">
-            <p className="text-xs font-semibold uppercase tracking-wide text-indigo-600">Organização</p>
-            <h2 className="mt-2 text-2xl font-bold text-gray-900">
+            <p className="text-xs font-semibold uppercase tracking-wider text-indigo-500">Organização</p>
+            <h2 className="mt-2 text-3xl font-bold tracking-tight text-gray-900">
               Ganho de tempo pra equipe inteira
             </h2>
-            <p className="mt-3 text-sm text-gray-600">
+            <p className="mt-4 text-base text-gray-600">
               Cada negócio já nasce no estágio certo, com histórico completo da conversa. Gestores acompanham tudo
               num kanban só, sem precisar cobrar planilha de ninguém.
             </p>
-            <Link href="/signup" className="mt-5 inline-block">
+            <Link href="/signup" className="mt-6 inline-block">
               <Button>Criar conta grátis</Button>
             </Link>
           </div>
@@ -142,21 +191,21 @@ export function LandingPage({ plans }: { plans: BillingPlan[] }) {
         </div>
       </section>
 
-      {/* ALTERNANDO TEXTO + MOCKUP — conta, plano e integrações */}
-      <section className="py-16">
-        <div className="mx-auto grid max-w-5xl items-center gap-10 px-4 lg:grid-cols-2">
+      {/* CONTA — texto + mockup de conta/integrações */}
+      <section className="py-20">
+        <div className="mx-auto grid max-w-5xl items-center gap-12 px-4 lg:grid-cols-2">
           <AccountMockup />
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-indigo-600">Sua conta</p>
-            <h2 className="mt-2 text-2xl font-bold text-gray-900">
+            <p className="text-xs font-semibold uppercase tracking-wider text-indigo-500">Sua conta</p>
+            <h2 className="mt-2 text-3xl font-bold tracking-tight text-gray-900">
               Equipe, plano e integrações — tudo sob seu controle
             </h2>
-            <p className="mt-3 text-sm text-gray-600">
+            <p className="mt-4 text-base text-gray-600">
               Convide vendedores e gestores com permissões próprias, acompanhe o plano atual da sua empresa e
               conecte Bling, WhatsApp, e-mail e Power BI direto pelas configurações — sem precisar chamar
               suporte técnico.
             </p>
-            <Link href="/signup" className="mt-5 inline-block">
+            <Link href="/signup" className="mt-6 inline-block">
               <Button>Criar conta grátis</Button>
             </Link>
           </div>
@@ -164,27 +213,36 @@ export function LandingPage({ plans }: { plans: BillingPlan[] }) {
       </section>
 
       {/* COMO FUNCIONA */}
-      <section className="py-16">
+      <section className="border-t border-gray-200/70 bg-panel py-20">
         <div className="mx-auto max-w-5xl px-4">
-          <h2 className="text-center text-2xl font-bold text-gray-900">Como funciona</h2>
-          <div className="mt-10 grid grid-cols-1 gap-8 sm:grid-cols-3">
+          <h2 className="text-center text-3xl font-bold tracking-tight text-gray-900">Como funciona</h2>
+          <div className="mt-12 grid grid-cols-1 gap-8 sm:grid-cols-3">
             {HOW_IT_WORKS.map((step, i) => (
-              <div key={step.title} className="text-center">
-                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-indigo-600 text-white">
+              <div
+                key={step.title}
+                className="relative rounded-2xl border border-gray-200/70 bg-background p-6 text-center"
+              >
+                <div
+                  className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full text-white"
+                  style={{
+                    background: "linear-gradient(140deg, #7c5cf6, #6d47f0)",
+                    boxShadow: "0 8px 24px -6px rgba(124,92,246,0.6)",
+                  }}
+                >
                   <step.icon size={22} />
                 </div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-indigo-600">Passo {i + 1}</p>
+                <p className="text-xs font-semibold uppercase tracking-wider text-indigo-500">Passo {i + 1}</p>
                 <h3 className="mt-1 text-base font-semibold text-gray-900">{step.title}</h3>
                 <p className="mt-2 text-sm text-gray-500">{step.description}</p>
               </div>
             ))}
           </div>
 
-          <div className="mx-auto mt-12 flex max-w-2xl items-start gap-3 rounded-xl border border-indigo-200 bg-indigo-50 p-5">
-            <KeyRound size={20} className="mt-0.5 shrink-0 text-indigo-600" />
+          <div className="mx-auto mt-12 flex max-w-2xl items-start gap-3 rounded-2xl border border-indigo-400/30 bg-indigo-500/10 p-5">
+            <KeyRound size={20} className="mt-0.5 shrink-0 text-indigo-500" />
             <div>
-              <h3 className="text-sm font-semibold text-indigo-900">Traga sua própria chave de IA</h3>
-              <p className="mt-1 text-sm text-indigo-800">
+              <h3 className="text-sm font-semibold text-gray-900">Traga sua própria chave de IA</h3>
+              <p className="mt-1 text-sm text-gray-600">
                 Já tem uma conta na Anthropic? Cole sua chave já no cadastro (ou depois, em Configurações) e use ela
                 nos agentes de IA — sem depender de créditos compartilhados.
               </p>
@@ -194,32 +252,38 @@ export function LandingPage({ plans }: { plans: BillingPlan[] }) {
       </section>
 
       {/* PLANOS */}
-      <section id="planos" className="border-t border-gray-200 bg-panel px-4 py-16">
+      <section id="planos" className="scroll-mt-20 px-4 py-20">
         <div className="mx-auto max-w-5xl">
           <div className="text-center">
-            <h2 className="text-2xl font-bold text-gray-900">Planos pra cada tamanho de equipe</h2>
+            <h2 className="text-3xl font-bold tracking-tight text-gray-900">Planos pra cada tamanho de equipe</h2>
             <p className="mt-2 text-sm text-gray-500">Crie sua conta, conheça o CRM e escolha o plano depois.</p>
           </div>
 
           {plans.length === 0 ? (
-            <p className="mt-8 text-center text-sm text-red-600">
+            <p className="mt-8 text-center text-sm text-red-500">
               Não foi possível carregar os planos agora. Tente novamente em instantes.
             </p>
           ) : (
-            <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-3">
+            <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-3">
               {plans.map((plan) => {
                 const copy = getPlanCopy(plan.name);
+                const featured = plan.is_default;
                 return (
                   <div
                     key={plan.id}
                     className={
-                      "flex flex-col rounded-2xl border p-6 shadow-sm transition-shadow hover:shadow-md " +
-                      (plan.is_default ? "border-indigo-300 ring-1 ring-indigo-200" : "border-gray-200")
+                      "relative flex flex-col rounded-2xl border p-6 transition-all hover:-translate-y-1 " +
+                      (featured
+                        ? "border-indigo-400/50 bg-panel shadow-xl shadow-indigo-500/20 ring-1 ring-indigo-400/30"
+                        : "border-gray-200/70 bg-panel shadow-sm hover:shadow-md")
                     }
                   >
+                    {featured && (
+                      <div className="pointer-events-none absolute -inset-px -z-10 rounded-2xl bg-gradient-to-b from-indigo-500/20 to-transparent" />
+                    )}
                     <div className="flex items-center gap-2">
                       <h3 className="text-base font-semibold text-gray-900">{plan.name}</h3>
-                      {plan.is_default && <Badge className="bg-indigo-50 text-indigo-700">Recomendado</Badge>}
+                      {featured && <Badge className="bg-indigo-500/15 text-indigo-500">Recomendado</Badge>}
                     </div>
                     <p className="mt-2 text-3xl font-bold text-gray-900">
                       {formatCentsBrl(plan.base_price_cents)}
@@ -229,7 +293,7 @@ export function LandingPage({ plans }: { plans: BillingPlan[] }) {
                     <ul className="mt-4 flex-1 space-y-2">
                       {copy.bullets.map((bullet) => (
                         <li key={bullet} className="flex items-start gap-2 text-sm text-gray-600">
-                          <CheckCircle2 size={16} className="mt-0.5 shrink-0 text-emerald-600" />
+                          <CheckCircle2 size={16} className="mt-0.5 shrink-0 text-emerald-500" />
                           {bullet}
                         </li>
                       ))}
@@ -249,45 +313,125 @@ export function LandingPage({ plans }: { plans: BillingPlan[] }) {
         </div>
       </section>
 
-      {/* CTA FINAL */}
-      <section className="bg-[linear-gradient(160deg,#0b1220,#16213a)] py-16 text-center text-white">
-        <div className="mx-auto max-w-2xl px-4">
-          <h2 className="text-2xl font-bold">Pronto pra organizar suas vendas?</h2>
-          <p className="mt-2 text-sm text-white/60">
+      {/* CTA FINAL — banda escura neon (igual imagem) */}
+      <section className="relative overflow-hidden bg-[#080611] py-20 text-center text-white">
+        <div className="pointer-events-none absolute left-1/2 top-1/2 h-[400px] w-[700px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(124,92,246,0.45),transparent_65%)] blur-3xl" />
+        <div className="relative mx-auto max-w-2xl px-4">
+          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Pronto pra organizar suas vendas?</h2>
+          <p className="mt-3 text-base text-white/60">
             Crie sua conta agora e conheça o CRM antes de escolher o plano.
           </p>
-          <Link href="/signup" className="mt-6 inline-block">
-            <Button size="md">Criar conta grátis</Button>
+          <Link href="/signup" className="mt-7 inline-block">
+            <Button size="md" className="shadow-lg shadow-indigo-500/40">
+              Criar conta grátis
+            </Button>
           </Link>
         </div>
       </section>
+
+      {/* RODAPÉ */}
+      <footer className="border-t border-gray-200/70 bg-background py-8">
+        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-4 text-sm text-gray-500 sm:flex-row">
+          <div className="flex items-center gap-2">
+            <BrandMark />
+            <span className="font-semibold text-gray-900">FALA AI CRM</span>
+          </div>
+          <p>© {new Date().getFullYear()} FALA AI — CRM de vendas com IA</p>
+        </div>
+      </footer>
     </div>
   );
 }
 
-/** Prévia estilizada do pipeline — não é a tela real, é só uma "vitrine" visual pra hero. */
+/** Logo "F" com brilho violeta. */
+function BrandMark() {
+  return (
+    <div
+      className="flex h-8 w-8 items-center justify-center rounded-lg text-sm font-bold text-white"
+      style={{
+        background: "linear-gradient(140deg, #7c5cf6, #6d47f0)",
+        boxShadow: "0 6px 18px -4px rgba(124,92,246,0.7)",
+      }}
+    >
+      F
+    </div>
+  );
+}
+
+/** Fundo neon do hero: grid que some nas bordas + halos violeta/azul. Funciona
+ * no claro e no escuro (os halos brilham nos dois). */
+function HeroBackground() {
+  return (
+    <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(124,92,246,0.10)_1px,transparent_1px),linear-gradient(to_bottom,rgba(124,92,246,0.10)_1px,transparent_1px)] bg-[size:46px_46px] [mask-image:radial-gradient(ellipse_70%_55%_at_50%_0%,#000_55%,transparent_100%)]" />
+      <div className="absolute left-1/2 top-[-15%] h-[520px] w-[900px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(124,92,246,0.28),transparent_60%)] blur-3xl" />
+      <div className="absolute right-[8%] top-[10%] h-[300px] w-[300px] rounded-full bg-[radial-gradient(circle,rgba(56,189,248,0.20),transparent_60%)] blur-3xl" />
+      <div className="absolute left-[6%] top-[30%] h-[300px] w-[300px] rounded-full bg-[radial-gradient(circle,rgba(168,85,247,0.18),transparent_60%)] blur-3xl" />
+      {/* diamante brilhante decorativo (canto), como na imagem */}
+      <SparklesIcon
+        size={34}
+        className="absolute right-[12%] top-[62%] text-indigo-400/70"
+        style={{ filter: "drop-shadow(0 0 12px rgba(124,92,246,0.8))" }}
+      />
+    </div>
+  );
+}
+
+/** Card de vidro escuro com borda/halo colorido — usado nos 4 recursos. */
+function GlowCard({ accent, children }: { accent: string; children: React.ReactNode }) {
+  return (
+    <div className="group relative rounded-2xl">
+      <div
+        className="pointer-events-none absolute -inset-px rounded-2xl opacity-60 blur-[2px] transition-opacity duration-300 group-hover:opacity-100"
+        style={{ background: `linear-gradient(140deg, ${accent}55, transparent 55%)` }}
+      />
+      <div
+        className="relative h-full rounded-2xl border border-white/10 p-5 backdrop-blur-xl"
+        style={{
+          background: "linear-gradient(160deg, rgba(23,20,42,0.92), rgba(11,10,26,0.92))",
+          boxShadow: `inset 0 1px 0 0 rgba(255,255,255,0.06), 0 20px 40px -20px ${accent}55`,
+        }}
+      >
+        <div
+          className="pointer-events-none absolute inset-x-5 top-0 h-px"
+          style={{ background: `linear-gradient(to right, transparent, ${accent}, transparent)` }}
+        />
+        {children}
+      </div>
+    </div>
+  );
+}
+
+/** Prévia estilizada do pipeline — vitrine dark do hero (não é a tela real). */
 function PipelineMockup() {
   const columns = [
-    { name: "Novo", color: "#6366f1", count: 4 },
-    { name: "Contato", color: "#0ea5e9", count: 3 },
+    { name: "Novo", color: "#6d5cff", count: 4 },
+    { name: "Contato", color: "#f43f5e", count: 3 },
     { name: "Proposta", color: "#f59e0b", count: 2 },
     { name: "Fechado", color: "#22c55e", count: 5 },
   ];
   return (
-    <div className="overflow-hidden rounded-2xl border border-gray-200 bg-panel shadow-2xl shadow-indigo-900/10">
-      <div className="flex items-center gap-1.5 border-b border-gray-200 bg-gray-50 px-4 py-2.5">
-        <span className="h-2.5 w-2.5 rounded-full bg-red-300" />
-        <span className="h-2.5 w-2.5 rounded-full bg-amber-300" />
-        <span className="h-2.5 w-2.5 rounded-full bg-emerald-300" />
-        <span className="ml-3 text-xs text-gray-400">falaai.cloud/pipeline</span>
+    <div
+      className="overflow-hidden rounded-2xl border border-white/10"
+      style={{
+        background: "linear-gradient(160deg, #14122b, #0b0a1a)",
+        boxShadow: "0 40px 80px -30px rgba(124,92,246,0.5), inset 0 1px 0 0 rgba(255,255,255,0.06)",
+      }}
+    >
+      <div className="flex items-center gap-1.5 border-b border-white/10 px-4 py-2.5">
+        <span className="h-2.5 w-2.5 rounded-full bg-red-400/70" />
+        <span className="h-2.5 w-2.5 rounded-full bg-amber-400/70" />
+        <span className="h-2.5 w-2.5 rounded-full bg-emerald-400/70" />
+        <span className="ml-3 text-xs text-white/35">falaai.cloud/pipeline</span>
+        <span className="ml-auto rounded-md bg-white/5 px-2 py-0.5 text-[10px] text-white/40">+ Adicionar</span>
       </div>
       <div className="flex">
-        <div
-          style={{ background: "linear-gradient(160deg,#0b1220,#16213a)" }}
-          className="hidden w-40 shrink-0 flex-col gap-1 p-4 sm:flex"
-        >
+        <div className="hidden w-40 shrink-0 flex-col gap-1 border-r border-white/5 p-4 sm:flex">
           <div className="mb-3 flex items-center gap-2">
-            <div className="flex h-6 w-6 items-center justify-center rounded-md bg-indigo-600 text-[10px] font-bold text-white">
+            <div
+              className="flex h-6 w-6 items-center justify-center rounded-md text-[10px] font-bold text-white"
+              style={{ background: "linear-gradient(140deg,#7c5cf6,#6d47f0)" }}
+            >
               F
             </div>
             <span className="text-[11px] font-semibold text-white">FALA AI CRM</span>
@@ -297,8 +441,9 @@ function PipelineMockup() {
               key={item}
               className={
                 "rounded-md px-2 py-1.5 text-[11px] font-medium " +
-                (i === 1 ? "bg-indigo-600 text-white" : "text-white/60")
+                (i === 1 ? "text-white" : "text-white/45")
               }
+              style={i === 1 ? { background: "linear-gradient(140deg,#7c5cf6,#6d47f0)" } : undefined}
             >
               {item}
             </div>
@@ -307,14 +452,23 @@ function PipelineMockup() {
         <div className="grid flex-1 grid-cols-2 gap-3 p-4 sm:grid-cols-4">
           {columns.map((col) => (
             <div key={col.name} className="min-w-0">
-              <div className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold text-gray-700">
+              <div className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold text-white/80">
                 <span className="h-1.5 w-1.5 rounded-full" style={{ background: col.color }} />
                 {col.name}
-                <span className="text-gray-400">({col.count})</span>
+                <span className="text-white/35">({col.count})</span>
               </div>
               <div className="space-y-1.5">
-                {Array.from({ length: col.name === "Fechado" ? 2 : 2 }).map((_, i) => (
-                  <div key={i} className="h-10 rounded-lg border border-gray-200 bg-gray-50" />
+                {Array.from({ length: 2 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="rounded-lg border border-white/10 bg-white/[0.04] p-2"
+                  >
+                    <div className="mb-1.5 h-1.5 w-3/4 rounded-full bg-white/15" />
+                    <div className="flex items-center gap-1">
+                      <span className="h-4 w-4 rounded-full" style={{ background: `${col.color}55` }} />
+                      <div className="h-1.5 w-1/2 rounded-full bg-white/10" />
+                    </div>
+                  </div>
                 ))}
               </div>
             </div>
@@ -328,9 +482,9 @@ function PipelineMockup() {
 /** Prévia estilizada de conversa no WhatsApp respondida pelo FALA AI. */
 function ChatMockup() {
   return (
-    <div className="mx-auto w-full max-w-sm rounded-2xl border border-gray-200 bg-panel p-4 shadow-xl shadow-indigo-900/10">
-      <div className="mb-3 flex items-center gap-2 border-b border-gray-100 pb-3">
-        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+    <div className="mx-auto w-full max-w-sm rounded-2xl border border-gray-200/70 bg-panel p-4 shadow-xl shadow-indigo-500/10">
+      <div className="mb-3 flex items-center gap-2 border-b border-gray-200/70 pb-3">
+        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-500">
           <Bot size={16} />
         </div>
         <div>
@@ -342,7 +496,10 @@ function ChatMockup() {
         <div className="ml-auto max-w-[80%] rounded-2xl rounded-tr-sm bg-gray-100 px-3 py-2 text-xs text-gray-700">
           Oi, gostaria de saber o valor do plano pra 5 vendedores
         </div>
-        <div className="max-w-[85%] rounded-2xl rounded-tl-sm bg-indigo-600 px-3 py-2 text-xs text-white">
+        <div
+          className="max-w-[85%] rounded-2xl rounded-tl-sm px-3 py-2 text-xs text-white"
+          style={{ background: "linear-gradient(140deg,#7c5cf6,#6d47f0)" }}
+        >
           Oi! Pro seu tamanho de equipe o plano Pro costuma encaixar bem — já te passo os detalhes e deixo
           registrado aqui no seu funil 👍
         </div>
@@ -350,15 +507,15 @@ function ChatMockup() {
           Perfeito, manda os detalhes
         </div>
       </div>
-      <div className="mt-3 flex items-center gap-2 rounded-full border border-gray-200 px-3 py-1.5">
-        <span className="flex-1 text-xs text-gray-300">Mensagem...</span>
-        <Send size={14} className="text-indigo-600" />
+      <div className="mt-3 flex items-center gap-2 rounded-full border border-gray-200/70 px-3 py-1.5">
+        <span className="flex-1 text-xs text-gray-400">Mensagem...</span>
+        <Send size={14} className="text-indigo-500" />
       </div>
     </div>
   );
 }
 
-/** Prévia estilizada da tela de conta: equipe, plano atual e integrações conectadas. */
+/** Prévia estilizada da tela de conta: equipe, plano atual e integrações. */
 function AccountMockup() {
   const team = [
     { initials: "MO", name: "Marcos", role: "Owner" },
@@ -372,24 +529,27 @@ function AccountMockup() {
     { name: "Power BI", tone: "sky" },
   ] as const;
   const toneClasses = {
-    emerald: "bg-emerald-50 text-emerald-700",
-    amber: "bg-amber-50 text-amber-700",
-    indigo: "bg-indigo-50 text-indigo-700",
-    sky: "bg-sky-50 text-sky-700",
+    emerald: "bg-emerald-500/15 text-emerald-500",
+    amber: "bg-amber-500/15 text-amber-500",
+    indigo: "bg-indigo-500/15 text-indigo-500",
+    sky: "bg-sky-500/15 text-sky-500",
   };
 
   return (
-    <div className="mx-auto w-full max-w-sm overflow-hidden rounded-2xl border border-gray-200 bg-panel shadow-xl shadow-indigo-900/10">
-      <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
+    <div className="mx-auto w-full max-w-sm overflow-hidden rounded-2xl border border-gray-200/70 bg-panel shadow-xl shadow-indigo-500/10">
+      <div className="flex items-center justify-between border-b border-gray-200/70 px-4 py-3">
         <p className="text-xs font-semibold text-gray-900">Sua equipe</p>
-        <span className="flex items-center gap-1 rounded-full bg-indigo-50 px-2 py-0.5 text-[11px] font-medium text-indigo-700">
+        <span className="flex items-center gap-1 rounded-full bg-indigo-500/15 px-2 py-0.5 text-[11px] font-medium text-indigo-500">
           <Crown size={11} /> Plano Pro
         </span>
       </div>
       <div className="space-y-2.5 px-4 py-3">
         {team.map((m) => (
           <div key={m.name} className="flex items-center gap-2.5">
-            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-[10px] font-semibold text-white">
+            <div
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold text-white"
+              style={{ background: "linear-gradient(140deg,#7c5cf6,#6d47f0)" }}
+            >
               {m.initials}
             </div>
             <p className="flex-1 text-xs font-medium text-gray-800">{m.name}</p>
@@ -397,7 +557,7 @@ function AccountMockup() {
           </div>
         ))}
       </div>
-      <div className="border-t border-gray-100 px-4 py-3">
+      <div className="border-t border-gray-200/70 px-4 py-3">
         <p className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold text-gray-500">
           <PlugZap size={12} /> Integrações conectadas
         </p>
@@ -416,7 +576,7 @@ function AccountMockup() {
   );
 }
 
-/** Prévia estilizada de notificações automáticas (lead qualificado, proposta enviada). */
+/** Prévia estilizada de notificações automáticas (lead qualificado etc.). */
 function AutomationMockup() {
   const cards = [
     { icon: SparklesIcon, title: "Lead qualificado", desc: "Maria Ferreira · Estética Vitalle", tone: "indigo" },
@@ -424,19 +584,19 @@ function AutomationMockup() {
     { icon: CheckCircle2, title: "Negócio ganho", desc: "R$ 5.000 · Torres Odonto", tone: "emerald" },
   ] as const;
   const toneClasses = {
-    indigo: "bg-indigo-50 text-indigo-600",
-    amber: "bg-amber-50 text-amber-600",
-    emerald: "bg-emerald-50 text-emerald-600",
+    indigo: "bg-indigo-500/15 text-indigo-500",
+    amber: "bg-amber-500/15 text-amber-500",
+    emerald: "bg-emerald-500/15 text-emerald-500",
   };
   return (
     <div className="mx-auto flex max-w-sm flex-col gap-3">
       {cards.map((c, i) => (
         <div
           key={c.title}
-          className="flex items-center gap-3 rounded-xl border border-gray-200 bg-panel p-3.5 shadow-md shadow-indigo-900/5"
+          className="flex items-center gap-3 rounded-2xl border border-gray-200/70 bg-panel p-3.5 shadow-lg shadow-indigo-500/5"
           style={{ marginLeft: i % 2 === 0 ? 0 : 24 }}
         >
-          <div className={"flex h-9 w-9 shrink-0 items-center justify-center rounded-lg " + toneClasses[c.tone]}>
+          <div className={"flex h-9 w-9 shrink-0 items-center justify-center rounded-xl " + toneClasses[c.tone]}>
             <c.icon size={16} />
           </div>
           <div className="min-w-0">
