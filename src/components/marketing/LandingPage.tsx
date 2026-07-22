@@ -8,6 +8,11 @@ import {
   Crown,
   PlugZap,
   Quote,
+  Truck,
+  Wallet,
+  Boxes,
+  Factory,
+  ArrowRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -27,7 +32,55 @@ const TRUST_POINTS = [
  * verde, roxo, laranja/rosa). Casa 1-a-1 com FEATURES por índice. */
 const FEATURE_ACCENTS = ["#6d5cff", "#22c55e", "#a855f7", "#fb7185"] as const;
 
-export function LandingPage({ plans }: { plans: BillingPlan[] }) {
+/** Produtos além do CRM — nome/descrição/link vêm de getAccountServices
+ * (lib/auth/current-user). Só a Transportadora tem preço real hoje; os demais
+ * ainda são placeholders ("em preparação"), então aparecem como "Em breve". */
+const MODULES = [
+  {
+    key: "transportadora",
+    name: "Transportadora",
+    description: "App de gestão de fretes, clientes e motoristas.",
+    icon: Truck,
+    accent: "#38bdf8",
+    href: "/comprar-transportadora",
+    hasPrice: true,
+  },
+  {
+    key: "financas",
+    name: "Finanças",
+    description: "Controle financeiro completo — fluxo de caixa, contas e boletos.",
+    icon: Wallet,
+    accent: "#22c55e",
+    href: "/comprar-financas",
+    hasPrice: false,
+  },
+  {
+    key: "estoque",
+    name: "Estoque",
+    description: "Controle de estoque, itens, entradas e saídas.",
+    icon: Boxes,
+    accent: "#f59e0b",
+    href: "/comprar-estoque",
+    hasPrice: false,
+  },
+  {
+    key: "producao",
+    name: "Produção",
+    description: "Turnos, máquinas, produtos e apontamento de produção.",
+    icon: Factory,
+    accent: "#a855f7",
+    href: "/comprar-producao",
+    hasPrice: false,
+  },
+] as const;
+
+export function LandingPage({
+  plans,
+  transportadoraPriceCents,
+}: {
+  plans: BillingPlan[];
+  transportadoraPriceCents: number | null;
+}) {
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* HEADER */}
@@ -310,6 +363,58 @@ export function LandingPage({ plans }: { plans: BillingPlan[] }) {
               })}
             </div>
           )}
+
+          {/* MAIS PRODUTOS — módulos além do CRM (transportadora, finanças, ...) */}
+          <div className="mt-20">
+            <div className="text-center">
+              <h3 className="text-2xl font-bold tracking-tight text-gray-900">Mais produtos FALA AI</h3>
+              <p className="mt-2 text-sm text-gray-500">
+                Módulos que você contrata à parte, quando a operação precisar.
+              </p>
+            </div>
+
+            <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+              {MODULES.map((m) => {
+                const price =
+                  m.hasPrice && transportadoraPriceCents != null
+                    ? `${formatCentsBrl(transportadoraPriceCents)}/mês`
+                    : m.hasPrice
+                      ? "Sob consulta"
+                      : "Em breve";
+                return (
+                  <div
+                    key={m.key}
+                    className="group relative flex flex-col rounded-2xl border border-gray-200/70 bg-panel p-5 transition-all hover:-translate-y-1 hover:shadow-lg"
+                    style={{ boxShadow: `0 24px 48px -32px ${m.accent}77` }}
+                  >
+                    <div
+                      className="pointer-events-none absolute inset-x-5 top-0 h-px opacity-70"
+                      style={{ background: `linear-gradient(to right, transparent, ${m.accent}, transparent)` }}
+                    />
+                    <div
+                      className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl text-white"
+                      style={{
+                        background: `linear-gradient(140deg, ${m.accent}, ${m.accent}bb)`,
+                        boxShadow: `0 8px 24px -6px ${m.accent}88`,
+                      }}
+                    >
+                      <m.icon size={21} />
+                    </div>
+                    <h4 className="text-base font-semibold text-gray-900">{m.name}</h4>
+                    <p className="mt-1.5 flex-1 text-sm leading-relaxed text-gray-500">{m.description}</p>
+                    <p className="mt-4 text-sm font-semibold text-gray-900">{price}</p>
+                    <Link
+                      href={m.href}
+                      className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-indigo-500 transition-colors hover:text-indigo-400"
+                    >
+                      {m.hasPrice ? "Assinar" : "Saiba mais"}
+                      <ArrowRight size={14} className="transition-transform group-hover:translate-x-0.5" />
+                    </Link>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </section>
 

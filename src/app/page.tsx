@@ -13,7 +13,15 @@ export default async function Home() {
     redirect(await resolveHomeRoute());
   }
 
-  const { data: plans } = await supabase.from("billing_plans").select("*").order("base_price_cents");
+  const [{ data: plans }, { data: transportadoraPlan }] = await Promise.all([
+    supabase.from("billing_plans").select("*").order("base_price_cents"),
+    supabase.from("transportadora_plans").select("monthly_price_cents").eq("is_default", true).maybeSingle(),
+  ]);
 
-  return <LandingPage plans={plans ?? []} />;
+  return (
+    <LandingPage
+      plans={plans ?? []}
+      transportadoraPriceCents={transportadoraPlan?.monthly_price_cents ?? null}
+    />
+  );
 }
