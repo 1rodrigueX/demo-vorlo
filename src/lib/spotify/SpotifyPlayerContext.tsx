@@ -52,7 +52,7 @@ export function SpotifyPlayerProvider({ enabled, children }: { enabled: boolean;
       if (!window.Spotify) return;
 
       const player = new window.Spotify.Player({
-        name: "Synexa CRM",
+        name: "Synexa ",
         volume: 0.7,
         getOAuthToken: (cb) => {
           getSpotifyPlaybackToken().then((result) => {

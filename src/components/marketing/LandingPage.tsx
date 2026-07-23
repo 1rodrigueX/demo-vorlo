@@ -88,7 +88,7 @@ export function LandingPage({
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3.5">
           <div className="flex items-center gap-2.5">
             <BrandMark />
-            <span className="text-base font-semibold tracking-tight text-gray-900">Synexa CRM</span>
+            <span className="text-base font-semibold tracking-tight text-gray-900">Synexa</span>
           </div>
           <div className="flex items-center gap-2 sm:gap-4">
             <a
