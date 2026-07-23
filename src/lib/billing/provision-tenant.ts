@@ -13,12 +13,18 @@ import { grantFreeFinancasEmpresarial } from "@/lib/billing/grant-financas";
 // "Não Qualificado" sozinha (ver sdrPipelineStage.ts) — "Não Qualificado" é
 // is_lost pra reaproveitar o mesmo comportamento de fechamento que qualquer
 // etapa is_lost já tem.
+// "Fechamento" e "Inativo" alimentam as automações de funil (ver
+// src/lib/automations/funnel.ts): o follow-up de proposta move o lead pra
+// "Fechamento" e a checagem de inatividade pra "Inativo". Ambas são etapas
+// abertas (nem is_won nem is_lost).
 const DEFAULT_STAGES = [
   { name: "Atendimento SDR", position: 1, color: "#6366f1", is_won: false, is_lost: false },
   { name: "Qualificado", position: 2, color: "#0ea5e9", is_won: false, is_lost: false },
   { name: "Não Qualificado", position: 3, color: "#ef4444", is_won: false, is_lost: true },
   { name: "Proposta", position: 4, color: "#f59e0b", is_won: false, is_lost: false },
-  { name: "Fechado", position: 5, color: "#22c55e", is_won: true, is_lost: false },
+  { name: "Fechamento", position: 5, color: "#a855f7", is_won: false, is_lost: false },
+  { name: "Fechado", position: 6, color: "#22c55e", is_won: true, is_lost: false },
+  { name: "Inativo", position: 7, color: "#64748b", is_won: false, is_lost: false },
 ] as const;
 
 const DIACRITIC_MARKS_REGEX = new RegExp("[\\u0300-\\u036f]", "g");
@@ -143,6 +149,8 @@ export async function provisionTenantFromCheckout(
   }
 
   await admin.from("pipeline_stages").insert(DEFAULT_STAGES.map((stage) => ({ ...stage, tenant_id: tenantId })));
+  // Config de automação de funil com os defaults (ver funnel_automation_settings).
+  await admin.from("funnel_automation_settings").insert({ tenant_id: tenantId });
   await grantFreeFinancasEmpresarial(admin, tenantId);
 
   if (pending.anthropic_api_key) {

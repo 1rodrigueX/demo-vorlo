@@ -2408,11 +2408,58 @@ export interface Database {
           },
         ];
       };
+      funnel_automation_settings: {
+        Row: {
+          tenant_id: string;
+          enabled: boolean;
+          followup_delay_hours: number;
+          followup_message: string;
+          followup_tag_name: string;
+          inactive_delay_hours: number;
+          inactive_tag_name: string;
+          won_message_enabled: boolean;
+          won_message: string;
+          updated_at: string;
+        };
+        Insert: {
+          tenant_id: string;
+          enabled?: boolean;
+          followup_delay_hours?: number;
+          followup_message?: string;
+          followup_tag_name?: string;
+          inactive_delay_hours?: number;
+          inactive_tag_name?: string;
+          won_message_enabled?: boolean;
+          won_message?: string;
+          updated_at?: string;
+        };
+        Update: {
+          tenant_id?: string;
+          enabled?: boolean;
+          followup_delay_hours?: number;
+          followup_message?: string;
+          followup_tag_name?: string;
+          inactive_delay_hours?: number;
+          inactive_tag_name?: string;
+          won_message_enabled?: boolean;
+          won_message?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "funnel_automation_settings_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: true;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       automation_jobs: {
         Row: {
           id: string;
           tenant_id: string;
-          job_type: "lead_webhook_welcome";
+          job_type: "lead_webhook_welcome" | "proposal_followup" | "inactive_check" | "deal_won_message";
           run_at: string;
           status: "pending" | "processing" | "done" | "failed";
           attempts: number;
@@ -2424,7 +2471,7 @@ export interface Database {
         Insert: {
           id?: string;
           tenant_id: string;
-          job_type: "lead_webhook_welcome";
+          job_type: "lead_webhook_welcome" | "proposal_followup" | "inactive_check" | "deal_won_message";
           run_at?: string;
           status?: "pending" | "processing" | "done" | "failed";
           attempts?: number;
@@ -2436,7 +2483,7 @@ export interface Database {
         Update: {
           id?: string;
           tenant_id?: string;
-          job_type?: "lead_webhook_welcome";
+          job_type?: "lead_webhook_welcome" | "proposal_followup" | "inactive_check" | "deal_won_message";
           run_at?: string;
           status?: "pending" | "processing" | "done" | "failed";
           attempts?: number;

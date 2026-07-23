@@ -8,6 +8,7 @@ import { useTenantSlug } from "@/lib/tenant/useTenantSlug";
 
 const TABS = [
   { href: "/settings", label: "Geral" },
+  { href: "/settings/automacoes", label: "Automações" },
   { href: "/settings/integracoes", label: "Integrações" },
   { href: "/settings/webhooks", label: "Webhooks" },
   { href: "/settings/empresa", label: "Empresa" },

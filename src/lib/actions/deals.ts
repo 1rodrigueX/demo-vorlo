@@ -2,7 +2,14 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { requireTenantId } from "@/lib/auth/current-user";
+import {
+  scheduleProposalFollowup,
+  cancelFunnelJobs,
+  enqueueDealWonMessage,
+  getFunnelSettings,
+} from "@/lib/automations/funnel";
 import { createBlingOrderForDeal } from "@/lib/bling/sync";
 import { createDealWonInboxEntry } from "@/lib/financas/crmInbox";
 import { baixarEstoqueVenda } from "@/lib/estoque/dealStock";
@@ -146,7 +153,9 @@ export async function updateDealStage(input: {
     return { error: "Não foi possível mover o negócio (você só move negócios que é o dono)" };
   }
 
-  if (stage?.is_won && previousDeal && previousDeal.status !== "won") {
+  const justWon = Boolean(stage?.is_won && previousDeal && previousDeal.status !== "won");
+
+  if (justWon && previousDeal) {
     void createDealWonInboxEntry(previousDeal.tenant_id, parsed.data.dealId, previousDeal.title, Number(previousDeal.value));
     void baixarEstoqueVenda(previousDeal.tenant_id, parsed.data.dealId, previousDeal.title);
   }
@@ -157,7 +166,7 @@ export async function updateDealStage(input: {
 
   const { data: deal } = await supabase
     .from("deals")
-    .select("contact_id")
+    .select("contact_id, contact:contacts(name, phone)")
     .eq("id", parsed.data.dealId)
     .single();
 
@@ -172,6 +181,35 @@ export async function updateDealStage(input: {
       body: `Negócio movido para "${stage?.name ?? "novo estágio"}"`,
       created_by: user?.id ?? null,
     });
+  }
+
+  // ── Automações de funil (ver src/lib/automations/funnel.ts) ──────────────
+  const automationTenantId = previousDeal?.tenant_id ?? tenantId;
+  if (automationTenantId && deal) {
+    const admin = createAdminClient();
+    if (stage?.is_won || stage?.is_lost) {
+      // Negócio fechado (ganho/perdido): cancela follow-up/inatividade pendentes.
+      void cancelFunnelJobs(admin, parsed.data.dealId);
+
+      // Mensagem automática de venda ganha.
+      if (justWon && deal.contact?.phone) {
+        void getFunnelSettings(admin, automationTenantId).then((settings) => {
+          if (settings.won_message_enabled && deal.contact?.phone) {
+            return enqueueDealWonMessage(
+              admin,
+              automationTenantId,
+              parsed.data.dealId,
+              deal.contact_id,
+              deal.contact.phone,
+              settings.won_message,
+            );
+          }
+        });
+      }
+    } else if ((stage?.name ?? "").toLowerCase().includes("proposta")) {
+      // Entrou (ou foi arrastado) para "Proposta": agenda/reinicia o follow-up.
+      void scheduleProposalFollowup(admin, automationTenantId, parsed.data.dealId);
+    }
   }
 
   revalidatePath("/[tenantSlug]/pipeline", "page");
@@ -321,6 +359,9 @@ export async function markProposalSent(dealId: string) {
       deal.contact.bling_contact_id,
     );
   }
+
+  // Agenda o follow-up de proposta (ver src/lib/automations/funnel.ts).
+  void scheduleProposalFollowup(createAdminClient(), deal.tenant_id, dealId);
 
   revalidatePath("/[tenantSlug]/pipeline", "page");
   revalidatePath(`/[tenantSlug]/whatsapp/${deal.contact_id}`, "page");
