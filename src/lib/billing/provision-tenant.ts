@@ -8,6 +8,7 @@ import { addOneMonth } from "@/lib/billing/cycle";
 import { isReservedSlug } from "@/lib/tenant/reserved-slugs";
 import { notifyNewCrmTenant } from "@/lib/discord/notify";
 import { grantFreeFinancasEmpresarial } from "@/lib/billing/grant-financas";
+import { CRM_MODULE_COUPLING } from "@/lib/crm/isolation";
 
 // A SDR de IA já move o lead entre "Atendimento SDR" -> "Qualificado" /
 // "Não Qualificado" sozinha (ver sdrPipelineStage.ts) — "Não Qualificado" é
@@ -151,7 +152,9 @@ export async function provisionTenantFromCheckout(
   await admin.from("pipeline_stages").insert(DEFAULT_STAGES.map((stage) => ({ ...stage, tenant_id: tenantId })));
   // Config de automação de funil com os defaults (ver funnel_automation_settings).
   await admin.from("funnel_automation_settings").insert({ tenant_id: tenantId });
-  await grantFreeFinancasEmpresarial(admin, tenantId);
+  // CRM isolado: só concede finanças a novos tenants se o acoplamento estiver
+  // religado (ver src/lib/crm/isolation.ts).
+  if (CRM_MODULE_COUPLING.financas) await grantFreeFinancasEmpresarial(admin, tenantId);
 
   if (pending.anthropic_api_key) {
     const test = await testAnthropicApiKey(pending.anthropic_api_key);

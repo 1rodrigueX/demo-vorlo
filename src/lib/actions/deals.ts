@@ -13,6 +13,7 @@ import {
 import { createBlingOrderForDeal } from "@/lib/bling/sync";
 import { createDealWonInboxEntry } from "@/lib/financas/crmInbox";
 import { baixarEstoqueVenda } from "@/lib/estoque/dealStock";
+import { CRM_MODULE_COUPLING } from "@/lib/crm/isolation";
 import { dealSchema, updateDealOwnerSchema, updateDealStageSchema } from "@/lib/validation/deal";
 
 export type ActionState = { error?: string } | null;
@@ -155,9 +156,13 @@ export async function updateDealStage(input: {
 
   const justWon = Boolean(stage?.is_won && previousDeal && previousDeal.status !== "won");
 
+  // Acoplamento com financeiro/estoque desligado enquanto o CRM está isolado
+  // (ver src/lib/crm/isolation.ts) — o código continua aqui pra religar depois.
   if (justWon && previousDeal) {
-    void createDealWonInboxEntry(previousDeal.tenant_id, parsed.data.dealId, previousDeal.title, Number(previousDeal.value));
-    void baixarEstoqueVenda(previousDeal.tenant_id, parsed.data.dealId, previousDeal.title);
+    if (CRM_MODULE_COUPLING.financas)
+      void createDealWonInboxEntry(previousDeal.tenant_id, parsed.data.dealId, previousDeal.title, Number(previousDeal.value));
+    if (CRM_MODULE_COUPLING.estoque)
+      void baixarEstoqueVenda(previousDeal.tenant_id, parsed.data.dealId, previousDeal.title);
   }
 
   const {

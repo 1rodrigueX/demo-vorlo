@@ -6,6 +6,7 @@ import { isCurrentUserDev } from "@/lib/auth/current-user";
 import { createTenantSchema } from "@/lib/validation/tenant";
 import { notifyNewCrmTenant } from "@/lib/discord/notify";
 import { grantFreeFinancasEmpresarial } from "@/lib/billing/grant-financas";
+import { CRM_MODULE_COUPLING } from "@/lib/crm/isolation";
 
 export type ActionState = { error?: string } | null;
 
@@ -83,7 +84,9 @@ export async function createTenant(_prevState: ActionState, formData: FormData):
   await admin
     .from("pipeline_stages")
     .insert(DEFAULT_STAGES.map((stage) => ({ ...stage, tenant_id: tenant.id })));
-  await grantFreeFinancasEmpresarial(admin, tenant.id);
+  // CRM isolado: finanças só é concedida se o acoplamento estiver religado
+  // (ver src/lib/crm/isolation.ts).
+  if (CRM_MODULE_COUPLING.financas) await grantFreeFinancasEmpresarial(admin, tenant.id);
 
   void notifyNewCrmTenant(parsed.data.name, parsed.data.slug);
 
