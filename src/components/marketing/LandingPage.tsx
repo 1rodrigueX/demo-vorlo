@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
+import { SynexaMark } from "@/components/brand/SynexaLogo";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { formatCentsBrl } from "@/lib/billing/pricing";
 import { getPlanCopy } from "@/lib/billing/plan-copy";
@@ -448,19 +449,9 @@ export function LandingPage({
   );
 }
 
-/** Logo "F" com brilho violeta. */
+/** Marca Synexa (S angular em gradiente azul→violeta). */
 function BrandMark() {
-  return (
-    <div
-      className="flex h-8 w-8 items-center justify-center rounded-lg text-sm font-bold text-white"
-      style={{
-        background: "linear-gradient(140deg, #7c5cf6, #6d47f0)",
-        boxShadow: "0 6px 18px -4px rgba(124,92,246,0.7)",
-      }}
-    >
-      F
-    </div>
-  );
+  return <SynexaMark size={32} style={{ filter: "drop-shadow(0 4px 12px rgba(109,71,240,0.5))" }} />;
 }
 
 /** Fundo neon do hero: grid que some nas bordas + halos violeta/azul. Funciona
@@ -527,18 +518,13 @@ function PipelineMockup() {
         <span className="h-2.5 w-2.5 rounded-full bg-red-400/70" />
         <span className="h-2.5 w-2.5 rounded-full bg-amber-400/70" />
         <span className="h-2.5 w-2.5 rounded-full bg-emerald-400/70" />
-        <span className="ml-3 text-xs text-white/35">falaai.cloud/pipeline</span>
+        <span className="ml-3 text-xs text-white/35">app.synexa.com.br/pipeline</span>
         <span className="ml-auto rounded-md bg-white/5 px-2 py-0.5 text-[10px] text-white/40">+ Adicionar</span>
       </div>
       <div className="flex">
         <div className="hidden w-40 shrink-0 flex-col gap-1 border-r border-white/5 p-4 sm:flex">
           <div className="mb-3 flex items-center gap-2">
-            <div
-              className="flex h-6 w-6 items-center justify-center rounded-md text-[10px] font-bold text-white"
-              style={{ background: "linear-gradient(140deg,#7c5cf6,#6d47f0)" }}
-            >
-              F
-            </div>
+            <SynexaMark size={22} withCircuit={false} />
             <span className="text-[11px] font-semibold text-white">Synexa CRM</span>
           </div>
           {["Dashboard", "Pipeline", "Leads", "E-mails"].map((item, i) => (
