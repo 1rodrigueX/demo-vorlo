@@ -9,6 +9,7 @@ export type ContactAttachment = Database["public"]["Tables"]["contact_attachment
 export type PipelineStage = Database["public"]["Tables"]["pipeline_stages"]["Row"];
 export type Deal = Database["public"]["Tables"]["deals"]["Row"];
 export type WhatsAppMessage = Database["public"]["Tables"]["whatsapp_messages"]["Row"];
+export type LeadTask = Database["public"]["Tables"]["lead_tasks"]["Row"];
 export type WhatsAppConnection = Database["public"]["Tables"]["whatsapp_connections"]["Row"];
 export type BlingConnection = Database["public"]["Tables"]["bling_connections"]["Row"];
 export type Tag = Database["public"]["Tables"]["tags"]["Row"];

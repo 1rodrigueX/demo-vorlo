@@ -940,6 +940,57 @@ export interface Database {
           },
         ];
       };
+      lead_tasks: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          contact_id: string;
+          title: string;
+          due_at: string | null;
+          done: boolean;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          contact_id: string;
+          title: string;
+          due_at?: string | null;
+          done?: boolean;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          contact_id?: string;
+          title?: string;
+          due_at?: string | null;
+          done?: boolean;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "lead_tasks_contact_id_fkey";
+            columns: ["contact_id"];
+            isOneToOne: false;
+            referencedRelation: "contacts";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "lead_tasks_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       whatsapp_messages: {
         Row: {
           id: string;
