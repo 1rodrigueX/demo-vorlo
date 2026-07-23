@@ -146,3 +146,25 @@ body {
     opacity: 0.9;
   }
 }
+
+/* Badge de canal ativo no cabeçalho do lead (omnichannel): brilho suave na cor
+ * do canal (--ch definido inline). "leve animação" pedida no design. */
+@keyframes channel-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--ch, currentColor) 55%, transparent),
+      0 0 0 0 transparent;
+  }
+  50% {
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--ch, currentColor) 70%, transparent),
+      0 0 13px 1px color-mix(in srgb, var(--ch, currentColor) 45%, transparent);
+  }
+}
+.lead-channel-active {
+  animation: channel-pulse 2.4s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .lead-channel-active {
+    animation: none;
+  }
+}

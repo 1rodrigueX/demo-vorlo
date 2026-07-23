@@ -883,6 +883,63 @@ export interface Database {
           },
         ];
       };
+      lead_channels: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          contact_id: string;
+          channel: "whatsapp" | "instagram" | "facebook" | "telegram" | "messenger" | "email" | "sms";
+          external_id: string | null;
+          username: string | null;
+          phone: string | null;
+          avatar: string | null;
+          connected: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          contact_id: string;
+          channel: "whatsapp" | "instagram" | "facebook" | "telegram" | "messenger" | "email" | "sms";
+          external_id?: string | null;
+          username?: string | null;
+          phone?: string | null;
+          avatar?: string | null;
+          connected?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          contact_id?: string;
+          channel?: "whatsapp" | "instagram" | "facebook" | "telegram" | "messenger" | "email" | "sms";
+          external_id?: string | null;
+          username?: string | null;
+          phone?: string | null;
+          avatar?: string | null;
+          connected?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "lead_channels_contact_id_fkey";
+            columns: ["contact_id"];
+            isOneToOne: false;
+            referencedRelation: "contacts";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "lead_channels_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       whatsapp_messages: {
         Row: {
           id: string;
@@ -900,6 +957,7 @@ export interface Database {
           media_storage_path: string | null;
           media_content_type: string | null;
           media_file_name: string | null;
+          channel: "whatsapp" | "instagram" | "facebook" | "telegram" | "messenger" | "email" | "sms";
           created_at: string;
           updated_at: string;
         };
@@ -919,6 +977,7 @@ export interface Database {
           media_storage_path?: string | null;
           media_content_type?: string | null;
           media_file_name?: string | null;
+          channel?: "whatsapp" | "instagram" | "facebook" | "telegram" | "messenger" | "email" | "sms";
           created_at?: string;
           updated_at?: string;
         };
@@ -938,6 +997,7 @@ export interface Database {
           media_storage_path?: string | null;
           media_content_type?: string | null;
           media_file_name?: string | null;
+          channel?: "whatsapp" | "instagram" | "facebook" | "telegram" | "messenger" | "email" | "sms";
           created_at?: string;
           updated_at?: string;
         };

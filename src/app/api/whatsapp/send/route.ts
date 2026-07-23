@@ -106,6 +106,7 @@ export async function POST(request: Request) {
       to_number: result.to,
       body: message || null,
       status: result.initialStatus,
+      channel: "whatsapp",
       error_message: null,
       raw_payload: null,
       sent_by: user.id,
