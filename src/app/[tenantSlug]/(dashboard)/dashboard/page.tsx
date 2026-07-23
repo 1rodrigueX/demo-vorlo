@@ -1,8 +1,13 @@
 import Link from "next/link";
-import { DollarSign, TrendingUp, Briefcase, Users } from "lucide-react";
+import { DollarSign, TrendingUp, Briefcase } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils/cn";
+import { formatCurrency } from "@/lib/utils/currency";
+import { formatMinutes } from "@/lib/utils/duration";
 import { PipelineValueCard } from "@/components/dashboard/PipelineValueCard";
+import { StatTile } from "@/components/dashboard/StatTile";
+import { MessagesReceivedCard } from "@/components/dashboard/MessagesReceivedCard";
+import { LeadSourcesDonut } from "@/components/dashboard/LeadSourcesDonut";
 import { StageCountChart } from "@/components/dashboard/StageCountChart";
 import { ConversionFunnel } from "@/components/dashboard/ConversionFunnel";
 import { OpenProposalsCard } from "@/components/dashboard/OpenProposalsCard";
@@ -12,6 +17,7 @@ import { SalesBySellerChart } from "@/components/dashboard/SalesBySellerChart";
 import { PowerBiExportButton } from "@/components/dashboard/PowerBiExportButton";
 import { DashboardFiltersBar } from "@/components/dashboard/DashboardFiltersBar";
 import { getDashboardData } from "@/lib/dashboard/getDashboardData";
+import { getConversationMetrics } from "@/lib/dashboard/getConversationMetrics";
 import { resolvePeriod, type PeriodPreset } from "@/lib/dashboard/period";
 
 const tabs = [
@@ -58,7 +64,7 @@ export default async function DashboardPage({
     : { data: null };
   const isAdmin = currentProfile?.role === "owner" || currentProfile?.role === "manager";
 
-  const [{ data: apiKeys }, { data: sellerProfiles }, data] = await Promise.all([
+  const [{ data: apiKeys }, { data: sellerProfiles }, data, conversation] = await Promise.all([
     isAdmin
       ? supabase
           .from("tenant_api_keys")
@@ -67,6 +73,7 @@ export default async function DashboardPage({
       : Promise.resolve({ data: null }),
     supabase.from("profiles").select("id, full_name").order("full_name"),
     getDashboardData(supabase, { from, to, ownerId }),
+    getConversationMetrics(supabase, { from, to, ownerId }),
   ]);
 
   const {
@@ -74,6 +81,8 @@ export default async function DashboardPage({
     openDeals,
     wonDeals,
     wonInPeriodValue,
+    wonInPeriodCount,
+    lostDealsCount,
     totalPipelineValue,
     contactsCount,
     revenueTrend,
@@ -82,6 +91,8 @@ export default async function DashboardPage({
     proposals,
     closedDeals,
   } = data;
+
+  const dateRangeLabel = `${from.toLocaleDateString("pt-BR")} — ${to.toLocaleDateString("pt-BR")}`;
 
   const sellers = (sellerProfiles ?? []).map((p) => ({ id: p.id, name: p.full_name || "Sem nome" }));
 
@@ -145,33 +156,52 @@ export default async function DashboardPage({
 
       {activeTab === "overview" ? (
         <>
+          {/* Atendimento — conversas e canais */}
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <PipelineValueCard
-              label="Total em pipeline"
-              value={totalPipelineValue}
-              icon={DollarSign}
-              color="indigo"
+            <MessagesReceivedCard
+              total={conversation.messagesReceived}
+              channels={conversation.messagesByChannel}
+              periodLabel={dateRangeLabel}
             />
-            <PipelineValueCard
-              label={`Ganho ${PERIOD_LABEL[period]}`}
-              value={wonInPeriodValue}
-              icon={TrendingUp}
-              color="emerald"
+            <StatTile
+              label="Conversas em andamento"
+              value={conversation.conversationsActive}
+              sub={dateRangeLabel}
+              accent="cyan"
             />
-            <PipelineValueCard
-              label="Negócios abertos"
+            <StatTile
+              label="Conversas não respondidas"
+              value={conversation.conversationsUnanswered}
+              sub="aguardando resposta da equipe"
+              accent="amber"
+            />
+            <LeadSourcesDonut data={conversation.leadSources} />
+          </div>
+
+          {/* Tempo de atendimento + resultado de leads */}
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <StatTile label="Tempo de resposta" value={formatMinutes(conversation.avgResponseMinutes)} sub="média no período" />
+            <StatTile label="Maior tempo esperando" value={formatMinutes(conversation.longestWaitingMinutes)} sub="conversa sem resposta" accent="red" />
+            <StatTile
+              label="Leads ganhos"
+              value={wonInPeriodCount}
+              sub={formatCurrency(wonInPeriodValue)}
+              accent="green"
+            />
+            <StatTile
+              label="Leads ativos"
               value={openDeals.length}
-              isCurrency={false}
-              icon={Briefcase}
-              color="amber"
+              sub={formatCurrency(totalPipelineValue)}
+              accent="cyan"
             />
-            <PipelineValueCard
-              label={`Leads cadastrados ${PERIOD_LABEL[period]}`}
-              value={contactsCount}
-              isCurrency={false}
-              icon={Users}
-              color="sky"
-            />
+          </div>
+
+          {/* Funil — resumo */}
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <StatTile label="Leads perdidos" value={lostDealsCount} sub={`perdidos ${PERIOD_LABEL[period]}`} accent="red" />
+            <StatTile label={`Leads cadastrados`} value={contactsCount} sub={dateRangeLabel} accent="violet" />
+            <StatTile label="Propostas abertas" value={proposals.length} sub={`enviadas ${PERIOD_LABEL[period]}`} accent="violet" />
+            <StatTile label={`Ganho ${PERIOD_LABEL[period]}`} value={formatCurrency(wonInPeriodValue)} sub={`${wonInPeriodCount} negócio(s)`} accent="green" />
           </div>
 
           <div className="grid gap-4 xl:grid-cols-2">

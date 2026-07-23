@@ -50,6 +50,9 @@ export async function getDashboardData(supabase: SupabaseClient<Database>, filte
   const openDeals = allDeals.filter((d) => d.status === "open");
   const wonDeals = allDeals.filter((d) => d.status === "won");
   const wonInPeriod = wonDeals.filter((d) => d.closed_at && isWithin(new Date(d.closed_at), from, to));
+  const lostInPeriod = allDeals.filter(
+    (d) => d.status === "lost" && d.closed_at && isWithin(new Date(d.closed_at), from, to),
+  );
   const proposalsInPeriod = openDeals.filter((d) => d.proposal_sent_at && isWithin(new Date(d.proposal_sent_at), from, to));
 
   const totalPipelineValue = openDeals.reduce((sum, d) => sum + Number(d.value), 0);
@@ -147,6 +150,8 @@ export async function getDashboardData(supabase: SupabaseClient<Database>, filte
     openDeals,
     wonDeals,
     wonInPeriodValue,
+    wonInPeriodCount: wonInPeriod.length,
+    lostDealsCount: lostInPeriod.length,
     totalPipelineValue,
     contactsCount: contactsCount ?? 0,
     revenueTrend,
