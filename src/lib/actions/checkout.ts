@@ -80,7 +80,7 @@ export async function startCheckout(_prevState: ActionState, formData: FormData)
         items: [
           {
             id: plan.id,
-            title: `Assinatura FALA AI CRM — ${plan.name}`,
+            title: `Assinatura Synexa CRM — ${plan.name}`,
             description: `${plan.included_sellers + parsed.data.extraSellers} vendedores, ${
               plan.included_managers + parsed.data.extraManagers
             } gestores, ${plan.included_agents + parsed.data.extraAgents} agentes de IA, ${

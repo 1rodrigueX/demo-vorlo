@@ -11,7 +11,7 @@ export default async function SugestoesPage() {
     <div className="mx-auto max-w-2xl space-y-6">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight text-gray-900">Sugestões</h1>
-        <p className="mt-1 text-sm text-gray-500">Mande ideias ou pedidos de melhoria pro time do FALA AI.</p>
+        <p className="mt-1 text-sm text-gray-500">Mande ideias ou pedidos de melhoria pro time do Synexa.</p>
       </div>
 
       <Card className="p-6">

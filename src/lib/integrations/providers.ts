@@ -20,7 +20,7 @@ export type OAuthProviderConfig = {
 /**
  * App OAuth único da plataforma (não por tenant, ao contrário do Bling) —
  * cada cliente só faz "login com a conta" Google/Microsoft dele; quem
- * cadastra o app é a própria FALA AI.IA, uma vez só.
+ * cadastra o app é a própria Synexa, uma vez só.
  */
 export function getOAuthProviderConfig(provider: OAuthProviderKey): OAuthProviderConfig {
   switch (provider) {

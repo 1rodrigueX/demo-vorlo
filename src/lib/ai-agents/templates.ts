@@ -1,6 +1,6 @@
 import type { AgentType } from "@/types/domain";
 
-/** Todas as ferramentas que um agente pode ter habilitadas (menos as exclusivas do FALA AI). */
+/** Todas as ferramentas que um agente pode ter habilitadas (menos as exclusivas do Synexa). */
 export const ALL_TOOL_KEYS = [
   "search_contacts",
   "list_open_deals",
@@ -11,7 +11,7 @@ export const ALL_TOOL_KEYS = [
   "remember_fact",
 ] as const;
 
-/** Ferramentas que só o FALA AI pode usar (administram outros agentes/integrações). */
+/** Ferramentas que só o Synexa pode usar (administram outros agentes/integrações). */
 export const FALA_AI_ONLY_TOOL_KEYS = [
   "create_agent",
   "update_agent",
@@ -33,7 +33,7 @@ type AgentTemplate = {
   temperature: number;
 };
 
-/** Configuração default aplicada quando o FALA AI (ou a tela de Agentes) cria um agente de um tipo conhecido. */
+/** Configuração default aplicada quando o Synexa (ou a tela de Agentes) cria um agente de um tipo conhecido. */
 export const AGENT_TEMPLATES: Record<Exclude<AgentType, "fala_ai" | "custom">, AgentTemplate> = {
   sdr: {
     objective: "Qualificar leads recebidos, identificar dor e orçamento, e organizar o histórico pro vendedor assumir.",

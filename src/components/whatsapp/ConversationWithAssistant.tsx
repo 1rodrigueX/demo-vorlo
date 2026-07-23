@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import { ResizableSplit } from "@/components/ui/ResizableSplit";
 
-/** Divide a conversa (flexível) e o painel do FALA AI (arrastável) — a página em si é Server Component. */
+/** Divide a conversa (flexível) e o painel do Synexa (arrastável) — a página em si é Server Component. */
 export function ConversationWithAssistant({
   assistant,
   children,

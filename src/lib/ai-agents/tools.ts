@@ -1,7 +1,7 @@
 import "server-only";
 import type Anthropic from "@anthropic-ai/sdk";
 
-/** Registro central de todas as ferramentas possíveis (as de negócio + as exclusivas do FALA AI). */
+/** Registro central de todas as ferramentas possíveis (as de negócio + as exclusivas do Synexa). */
 export const AGENT_TOOL_REGISTRY: Record<string, Anthropic.Tool> = {
   search_contacts: {
     name: "search_contacts",
@@ -85,7 +85,7 @@ export const AGENT_TOOL_REGISTRY: Record<string, Anthropic.Tool> = {
     description:
       "Cria um novo agente de IA pro tenant. Use type='sdr'|'atendente'|'financeiro'|'cobranca'|'juridico' pra " +
       "aplicar um template pronto, ou type='custom' e informe objective+systemPrompt pra um agente sob medida. " +
-      "Só o FALA AI pode chamar esta ferramenta.",
+      "Só o Synexa pode chamar esta ferramenta.",
     input_schema: {
       type: "object",
       properties: {
@@ -104,7 +104,7 @@ export const AGENT_TOOL_REGISTRY: Record<string, Anthropic.Tool> = {
     name: "update_agent",
     description:
       "Atualiza nome, objetivo, prompt, ferramentas ou temperatura de um agente já existente. Sempre descubra o " +
-      "agentId com list_agents antes de chamar esta ferramenta. Só o FALA AI pode chamar esta ferramenta.",
+      "agentId com list_agents antes de chamar esta ferramenta. Só o Synexa pode chamar esta ferramenta.",
     input_schema: {
       type: "object",
       properties: {
@@ -119,14 +119,14 @@ export const AGENT_TOOL_REGISTRY: Record<string, Anthropic.Tool> = {
   },
   list_agents: {
     name: "list_agents",
-    description: "Lista os agentes de IA deste tenant, com id, nome, tipo e status. Só o FALA AI pode chamar esta ferramenta.",
+    description: "Lista os agentes de IA deste tenant, com id, nome, tipo e status. Só o Synexa pode chamar esta ferramenta.",
     input_schema: { type: "object", properties: {} },
   },
   toggle_agent_status: {
     name: "toggle_agent_status",
     description:
       "Ativa ou desativa um agente existente. Sempre descubra o agentId com list_agents antes. Não é possível " +
-      "desativar o próprio FALA AI. Só o FALA AI pode chamar esta ferramenta.",
+      "desativar o próprio Synexa. Só o Synexa pode chamar esta ferramenta.",
     input_schema: {
       type: "object",
       properties: {
@@ -140,8 +140,8 @@ export const AGENT_TOOL_REGISTRY: Record<string, Anthropic.Tool> = {
     name: "delete_agent",
     description:
       "Exclui um agente definitivamente (apaga também suas mensagens, memória e logs). Sempre descubra o agentId " +
-      "com list_agents e confirme com o usuário antes de excluir. Não é possível excluir o próprio FALA AI. Só o " +
-      "FALA AI pode chamar esta ferramenta.",
+      "com list_agents e confirme com o usuário antes de excluir. Não é possível excluir o próprio Synexa. Só o " +
+      "Synexa pode chamar esta ferramenta.",
     input_schema: {
       type: "object",
       properties: { agentId: { type: "string", description: "id do agente (uuid)" } },
@@ -152,7 +152,7 @@ export const AGENT_TOOL_REGISTRY: Record<string, Anthropic.Tool> = {
     name: "connect_integration",
     description:
       "Informa como conectar uma integração (Bling, Anthropic, Gmail, Outlook, Google Agenda, Microsoft 365). Você " +
-      "nunca completa a conexão sozinho — só orienta onde configurar. Só o FALA AI pode chamar esta ferramenta.",
+      "nunca completa a conexão sozinho — só orienta onde configurar. Só o Synexa pode chamar esta ferramenta.",
     input_schema: {
       type: "object",
       properties: {
@@ -170,7 +170,7 @@ export const AGENT_TOOL_REGISTRY: Record<string, Anthropic.Tool> = {
       "Consulta no banco se uma integração (Bling, Anthropic, Gmail, Outlook) está realmente conectada agora — " +
       "token presente, válido e sem erro no último teste. Use isso pra responder se uma API 'está on ou não', em " +
       "vez de dizer que não tem como saber. Não é um teste ao vivo, é o status salvo da última conexão/teste. Só o " +
-      "FALA AI pode chamar esta ferramenta.",
+      "Synexa pode chamar esta ferramenta.",
     input_schema: {
       type: "object",
       properties: {

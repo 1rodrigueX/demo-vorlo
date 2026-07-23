@@ -196,7 +196,7 @@ export async function executeAgentTool(
       }
 
       case "create_agent": {
-        if (!agent.is_fala_ai) return { content: "Só o FALA AI pode criar agentes.", isError: true };
+        if (!agent.is_fala_ai) return { content: "Só o Synexa pode criar agentes.", isError: true };
 
         const type = String(input.type ?? "");
         if (!CREATABLE_AGENT_TYPES.includes(type as (typeof CREATABLE_AGENT_TYPES)[number])) {
@@ -221,7 +221,7 @@ export async function executeAgentTool(
       }
 
       case "update_agent": {
-        if (!agent.is_fala_ai) return { content: "Só o FALA AI pode atualizar agentes.", isError: true };
+        if (!agent.is_fala_ai) return { content: "Só o Synexa pode atualizar agentes.", isError: true };
 
         const agentId = String(input.agentId ?? "");
         if (!agentId) return { content: "agentId é obrigatório (use list_agents pra descobrir)", isError: true };
@@ -241,7 +241,7 @@ export async function executeAgentTool(
       }
 
       case "list_agents": {
-        if (!agent.is_fala_ai) return { content: "Só o FALA AI pode listar agentes.", isError: true };
+        if (!agent.is_fala_ai) return { content: "Só o Synexa pode listar agentes.", isError: true };
 
         const { data, error } = await supabase
           .from("ai_agents")
@@ -257,7 +257,7 @@ export async function executeAgentTool(
       }
 
       case "toggle_agent_status": {
-        if (!agent.is_fala_ai) return { content: "Só o FALA AI pode ativar/desativar agentes.", isError: true };
+        if (!agent.is_fala_ai) return { content: "Só o Synexa pode ativar/desativar agentes.", isError: true };
 
         const agentId = String(input.agentId ?? "");
         const status = String(input.status ?? "");
@@ -277,7 +277,7 @@ export async function executeAgentTool(
       }
 
       case "delete_agent": {
-        if (!agent.is_fala_ai) return { content: "Só o FALA AI pode excluir agentes.", isError: true };
+        if (!agent.is_fala_ai) return { content: "Só o Synexa pode excluir agentes.", isError: true };
 
         const agentId = String(input.agentId ?? "");
         if (!agentId) return { content: "agentId é obrigatório (use list_agents pra descobrir)", isError: true };
@@ -291,7 +291,7 @@ export async function executeAgentTool(
       }
 
       case "connect_integration": {
-        if (!agent.is_fala_ai) return { content: "Só o FALA AI pode orientar sobre integrações.", isError: true };
+        if (!agent.is_fala_ai) return { content: "Só o Synexa pode orientar sobre integrações.", isError: true };
 
         const provider = String(input.provider ?? "");
         const guidance = INTEGRATION_GUIDANCE[provider];
@@ -300,7 +300,7 @@ export async function executeAgentTool(
       }
 
       case "check_integration_status": {
-        if (!agent.is_fala_ai) return { content: "Só o FALA AI pode checar status de integrações.", isError: true };
+        if (!agent.is_fala_ai) return { content: "Só o Synexa pode checar status de integrações.", isError: true };
 
         const provider = String(input.provider ?? "");
 

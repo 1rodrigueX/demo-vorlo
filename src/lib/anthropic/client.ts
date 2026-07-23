@@ -40,8 +40,8 @@ export async function getAnthropicClientForTenant(tenantId: string): Promise<Ant
 
 /**
  * Igual a getAnthropicClientForTenant, mas com fallback pra chave da
- * plataforma (PLATFORM_ANTHROPIC_API_KEY) quando o agente é o FALA AI e o
- * tenant não conectou a própria chave — o FALA AI funciona out-of-the-box em
+ * plataforma (PLATFORM_ANTHROPIC_API_KEY) quando o agente é o Synexa e o
+ * tenant não conectou a própria chave — o Synexa funciona out-of-the-box em
  * todo CRM, sem custo pro tenant. Outros tipos de agente (SDR etc.) exigem a
  * chave do próprio tenant, sem fallback, pra não gerar custo de negócio do
  * cliente na conta da plataforma.

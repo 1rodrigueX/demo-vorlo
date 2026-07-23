@@ -7,7 +7,7 @@
 export const PLAN_COPY: Record<string, { tagline: string; bullets: string[] }> = {
   Starter: {
     tagline: "Pra começar a organizar as vendas sem complicação.",
-    bullets: ["Pipeline visual completo", "WhatsApp integrado", "1 agente de IA (FALA AI)"],
+    bullets: ["Pipeline visual completo", "WhatsApp integrado", "1 agente de IA (Synexa)"],
   },
   Pro: {
     tagline: "O mais escolhido — equipe maior, mais agentes de IA.",
@@ -31,7 +31,7 @@ export const PLAN_COPY: Record<string, { tagline: string; bullets: string[] }> =
 
 export const DEFAULT_PLAN_COPY = {
   tagline: "Monte o plano do jeito que sua equipe precisa.",
-  bullets: ["Pipeline de vendas", "WhatsApp integrado", "Agentes de IA (FALA AI)"],
+  bullets: ["Pipeline de vendas", "WhatsApp integrado", "Agentes de IA (Synexa)"],
 };
 
 export function getPlanCopy(planName: string) {

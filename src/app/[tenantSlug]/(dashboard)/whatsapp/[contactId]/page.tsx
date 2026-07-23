@@ -39,7 +39,7 @@ export default async function WhatsAppConversationPage({
     <AgentChatPanel
       agentId={falaAi.id}
       mode="inline"
-      title="FALA AI"
+      title="Synexa"
       subtitle="Tire dúvidas sobre este lead ou sobre o CRM"
       emptyStateHint='Pergunte algo como "qual valor sugerir pra esse lead?" ou "como eu marco uma venda como ganha?".'
       contextHint={`Contexto desta conversa: o vendedor está vendo agora, no WhatsApp, a conversa com o lead "${contact.name}"${contact.phone ? ` (${contact.phone})` : ""}, contactId ${contact.id}. Se a dúvida for sobre esse lead especificamente, use as ferramentas de busca/negócio com esse contactId em vez de perguntar o nome de novo.`}

@@ -25,7 +25,7 @@ export default async function DevLayout({ children }: { children: React.ReactNod
             D
           </div>
           <span className="text-base font-semibold tracking-tight text-gray-900">
-            Painel Dev <span className="font-normal text-gray-400">FALA AI.IA</span>
+            Painel Dev <span className="font-normal text-gray-400">Synexa</span>
           </span>
         </div>
         <div className="flex items-center gap-4">

@@ -30,10 +30,10 @@ export async function sendWelcomeEmail({
   const { error } = await resend.emails.send({
     from,
     to,
-    subject: `Sua conta no FALA AI CRM está pronta, ${ownerName.split(" ")[0]}!`,
+    subject: `Sua conta no Synexa CRM está pronta, ${ownerName.split(" ")[0]}!`,
     html: `
       <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; color: #111827;">
-        <h1 style="font-size: 20px;">Bem-vindo(a) ao FALA AI CRM 🎉</h1>
+        <h1 style="font-size: 20px;">Bem-vindo(a) ao Synexa CRM 🎉</h1>
         <p>Olá, ${ownerName}! O pagamento da assinatura da <strong>${tenantName}</strong> foi confirmado e seu CRM já está liberado.</p>
         <p>É só entrar com o e-mail e senha (ou Google) que você já usou pra criar sua conta:</p>
         <p style="text-align: center; margin: 24px 0;">

@@ -42,7 +42,7 @@ export function OnboardingTabs({
     <div className="min-h-screen bg-gray-50 px-4 py-6">
       <div className="mx-auto max-w-5xl">
         <header className="mb-6 flex items-center justify-between">
-          <span className="text-sm font-semibold text-gray-900">FALA AI CRM</span>
+          <span className="text-sm font-semibold text-gray-900">Synexa CRM</span>
           <UserMenu name={ownerName || email || "Usuário"} email={email} />
         </header>
 
@@ -51,7 +51,7 @@ export function OnboardingTabs({
             {ownerName ? `Bem-vindo(a), ${ownerName.split(" ")[0]}!` : "Bem-vindo(a)!"}
           </h1>
           <p className="mt-1 text-sm text-gray-500">
-            Dá uma olhada em como o FALA AI CRM funciona antes de escolher o plano — sem pressa.
+            Dá uma olhada em como o Synexa CRM funciona antes de escolher o plano — sem pressa.
           </p>
         </div>
 

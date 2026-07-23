@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "FALA AI.IA",
+  title: "Synexa",
   description: "CRM de vendas com assistente de IA",
 };
 

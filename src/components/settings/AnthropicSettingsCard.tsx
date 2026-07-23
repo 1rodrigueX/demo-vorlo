@@ -68,7 +68,7 @@ export function AnthropicSettingsCard({
   return (
     <div className="space-y-4">
       <p className="text-sm text-gray-500">
-        O FALA AI (aba Suporte) já funciona automaticamente neste CRM. Conecte sua própria chave
+        O Synexa (aba Suporte) já funciona automaticamente neste CRM. Conecte sua própria chave
         da API da Anthropic se quiser usar outros agentes de IA (SDR, atendente, etc). Gere uma
         em{" "}
         <a

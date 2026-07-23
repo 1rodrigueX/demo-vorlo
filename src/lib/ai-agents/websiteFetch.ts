@@ -45,7 +45,7 @@ export async function fetchWebsiteText(rawUrl: string): Promise<{ text: string }
     const response = await fetch(url.toString(), {
       signal: controller.signal,
       redirect: "follow",
-      headers: { "User-Agent": "Mozilla/5.0 (compatible; FalaAiCrmBot/1.0)" },
+      headers: { "User-Agent": "Mozilla/5.0 (compatible; SynexaCrmBot/1.0)" },
     });
     if (!response.ok) return { error: `O site respondeu com erro ${response.status}` };
 

@@ -24,7 +24,7 @@ function friendlyError(message: string, code?: string): string {
 }
 
 /**
- * O FALA AI às vezes chama create_agent com type="custom" mesmo quando o
+ * O Synexa às vezes chama create_agent com type="custom" mesmo quando o
  * nome corresponde a um template conhecido (ex: pedir "crie um agente SDR"
  * gerou name="SDR" + type="custom"). Sem essa correção, recursos que
  * dependem do type real (ex: o SDR automático de leads no WhatsApp) nunca
@@ -147,7 +147,7 @@ export async function toggleAgentStatus(
     .select("is_fala_ai")
     .eq("id", agentId)
     .maybeSingle();
-  if (target?.is_fala_ai) return { error: "Não é possível desativar o FALA AI" };
+  if (target?.is_fala_ai) return { error: "Não é possível desativar o Synexa" };
 
   const { data, error } = await supabase
     .from("ai_agents")
@@ -176,7 +176,7 @@ export async function deleteAgent(agentId: string): Promise<Result<{ name: strin
     .eq("id", agentId)
     .maybeSingle();
   if (!target) return { error: "Agente não encontrado" };
-  if (target.is_fala_ai) return { error: "Não é possível excluir o FALA AI" };
+  if (target.is_fala_ai) return { error: "Não é possível excluir o Synexa" };
 
   const { error } = await supabase.from("ai_agents").delete().eq("id", agentId);
   if (error) return { error: friendlyError(`Não foi possível excluir: ${error.message}`, error.code) };

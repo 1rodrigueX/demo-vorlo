@@ -43,7 +43,7 @@ const FAQ_ITEMS = [
   {
     question: "E se eu tiver uma dúvida depois de assinar?",
     answer:
-      "O FALA AI (nosso agente de IA principal) fica disponível dentro do CRM, na aba Suporte, pra tirar dúvidas de uso a qualquer hora. E essa aba de Feedback aqui também chega direto pra gente.",
+      "O Synexa (nosso agente de IA principal) fica disponível dentro do CRM, na aba Suporte, pra tirar dúvidas de uso a qualquer hora. E essa aba de Feedback aqui também chega direto pra gente.",
   },
 ];
 

@@ -28,7 +28,7 @@ export default async function CentralPage() {
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-6">
       <header className="mx-auto flex max-w-4xl items-center justify-between pb-10">
-        <span className="text-sm font-semibold text-gray-900">FALA AI</span>
+        <span className="text-sm font-semibold text-gray-900">Synexa</span>
         <UserMenu name={ownerName || email || "Usuário"} email={email} role={profile?.role} />
       </header>
 

@@ -45,7 +45,7 @@ export async function POST(request: Request) {
           items: [
             {
               id: tenant.id,
-              title: `Mensalidade FALA AI CRM — ${tenant.name}`,
+              title: `Mensalidade Synexa CRM — ${tenant.name}`,
               quantity: 1,
               currency_id: "BRL",
               unit_price: (tenant.monthly_amount_cents ?? 0) / 100,
@@ -71,7 +71,7 @@ export async function POST(request: Request) {
 
       await sendBillingEmail({
         to: ownerEmail,
-        subject: `Sua mensalidade do FALA AI CRM já está disponível — ${tenant.name}`,
+        subject: `Sua mensalidade do Synexa CRM já está disponível — ${tenant.name}`,
         heading: "Hora de renovar sua assinatura",
         message: `A mensalidade da <strong>${tenant.name}</strong> já pode ser paga. Você tem ${GRACE_PERIOD_DAYS} dias antes do acesso ser suspenso.`,
         ctaLabel: "Pagar agora",
@@ -134,7 +134,7 @@ export async function POST(request: Request) {
           items: [
             {
               id: row.tenant_id,
-              title: `Mensalidade FALA AI Transportadora — ${tenantName}`,
+              title: `Mensalidade Synexa Transportadora — ${tenantName}`,
               quantity: 1,
               currency_id: "BRL",
               unit_price: (row.monthly_amount_cents ?? 0) / 100,

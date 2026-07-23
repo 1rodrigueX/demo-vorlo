@@ -80,7 +80,7 @@ export async function getTenantSlug(
 }
 
 /**
- * Decide pra onde mandar um usuário já autenticado. FALA AI é uma central
+ * Decide pra onde mandar um usuário já autenticado. Synexa é uma central
  * com vários produtos independentes (CRM, Transportadora, e futuramente
  * mais) — quem tem profile (cliente "normal", com ou sem produto ativo) cai
  * sempre na central de contas, de onde escolhe qual acessar ou assina um

@@ -7,7 +7,7 @@ export function AboutTab() {
       <div className="text-center">
         <h2 className="text-xl font-bold text-gray-900">O CRM com IA multi-agente pra sua equipe de vendas</h2>
         <p className="mx-auto mt-2 max-w-2xl text-sm text-gray-600">
-          Pipeline, WhatsApp e agentes de IA que atendem, qualificam e cobram por você — o FALA AI administra
+          Pipeline, WhatsApp e agentes de IA que atendem, qualificam e cobram por você — o Synexa administra
           tudo isso a partir de uma conversa. Dá uma olhada no que vem incluso antes de escolher o plano.
         </p>
       </div>
@@ -55,7 +55,7 @@ export function AboutTab() {
         {[
           "Cada empresa fica isolada — ninguém vê dado de outro CRM",
           "Pagamento via PIX, boleto ou cartão, sem precisar ter conta no Mercado Pago",
-          "Suporte pelo próprio FALA AI, direto no CRM",
+          "Suporte pelo próprio Synexa, direto no CRM",
         ].map((item) => (
           <li key={item} className="flex items-start gap-2 text-sm text-gray-600">
             <CheckCircle2 size={16} className="mt-0.5 shrink-0 text-emerald-600" />

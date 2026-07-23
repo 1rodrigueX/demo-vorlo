@@ -12,7 +12,7 @@ export async function buildStatusMessage() {
 
   const embed = {
     color: healthy ? 0x22c55e : 0xef4444,
-    author: { name: "FALA AI", icon_url: `${SITE_URL}/favicon.ico` },
+    author: { name: "Synexa", icon_url: `${SITE_URL}/favicon.ico` },
     title: "Status da plataforma",
     description: "CRM com IA para equipes de vendas — Transportadora, automações e tudo mais.",
     thumbnail: { url: `${SITE_URL}/favicon.ico` },
@@ -38,7 +38,7 @@ export async function buildStatusMessage() {
           ]
         : []),
     ],
-    footer: { text: "FALA AI" },
+    footer: { text: "Synexa" },
     timestamp: new Date().toISOString(),
   };
 
@@ -47,7 +47,7 @@ export async function buildStatusMessage() {
       type: 1, // ACTION_ROW
       components: [
         { type: 2, style: 5, label: "Painel Dev", url: `${SITE_URL}/dev` },
-        { type: 2, style: 5, label: "Central FALA AI", url: `${SITE_URL}/central` },
+        { type: 2, style: 5, label: "Central Synexa", url: `${SITE_URL}/central` },
         { type: 2, style: 5, label: "Site", url: SITE_URL },
       ],
     },

@@ -25,7 +25,7 @@ import type { BillingPlan } from "@/types/domain";
 const TRUST_POINTS = [
   "Cada empresa fica isolada — ninguém vê dado de outro CRM",
   "Pagamento via PIX, boleto ou cartão",
-  "Suporte pelo próprio FALA AI, direto no CRM",
+  "Suporte pelo próprio Synexa, direto no CRM",
 ];
 
 /** Cores de destaque neon de cada card de recurso (segue a imagem: azul,
@@ -88,7 +88,7 @@ export function LandingPage({
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3.5">
           <div className="flex items-center gap-2.5">
             <BrandMark />
-            <span className="text-base font-semibold tracking-tight text-gray-900">FALA AI CRM</span>
+            <span className="text-base font-semibold tracking-tight text-gray-900">Synexa CRM</span>
           </div>
           <div className="flex items-center gap-2 sm:gap-4">
             <a
@@ -130,10 +130,10 @@ export function LandingPage({
             <span className="bg-gradient-to-r from-indigo-400 via-violet-500 to-sky-400 bg-clip-text text-transparent">
               suas vendas
             </span>
-            <br className="hidden sm:block" /> com o FALA AI CRM
+            <br className="hidden sm:block" /> com o Synexa CRM
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-pretty text-base text-gray-600 sm:text-lg">
-            Pipeline, WhatsApp e agentes de IA que atendem, qualificam e cobram por você — o FALA AI administra
+            Pipeline, WhatsApp e agentes de IA que atendem, qualificam e cobram por você — o Synexa administra
             tudo isso a partir de uma conversa.
           </p>
           <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
@@ -212,7 +212,7 @@ export function LandingPage({
               A IA responde no WhatsApp antes do lead esfriar
             </h2>
             <p className="mt-4 text-base text-gray-600">
-              O FALA AI qualifica, tira dúvida e já registra o contato no pipeline — tudo isso enquanto sua equipe
+              O Synexa qualifica, tira dúvida e já registra o contato no pipeline — tudo isso enquanto sua equipe
               está ocupada em outra ligação. Você só entra na conversa quando o negócio já está quente.
             </p>
             <Link href="/signup" className="mt-6 inline-block">
@@ -367,7 +367,7 @@ export function LandingPage({
           {/* MAIS PRODUTOS — módulos além do CRM (transportadora, finanças, ...) */}
           <div className="mt-20">
             <div className="text-center">
-              <h3 className="text-2xl font-bold tracking-tight text-gray-900">Mais produtos FALA AI</h3>
+              <h3 className="text-2xl font-bold tracking-tight text-gray-900">Mais produtos Synexa</h3>
               <p className="mt-2 text-sm text-gray-500">
                 Módulos que você contrata à parte, quando a operação precisar.
               </p>
@@ -439,9 +439,9 @@ export function LandingPage({
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-4 text-sm text-gray-500 sm:flex-row">
           <div className="flex items-center gap-2">
             <BrandMark />
-            <span className="font-semibold text-gray-900">FALA AI CRM</span>
+            <span className="font-semibold text-gray-900">Synexa CRM</span>
           </div>
-          <p>© {new Date().getFullYear()} FALA AI — CRM de vendas com IA</p>
+          <p>© {new Date().getFullYear()} Synexa — CRM de vendas com IA</p>
         </div>
       </footer>
     </div>
@@ -539,7 +539,7 @@ function PipelineMockup() {
             >
               F
             </div>
-            <span className="text-[11px] font-semibold text-white">FALA AI CRM</span>
+            <span className="text-[11px] font-semibold text-white">Synexa CRM</span>
           </div>
           {["Dashboard", "Pipeline", "Leads", "E-mails"].map((item, i) => (
             <div
@@ -584,7 +584,7 @@ function PipelineMockup() {
   );
 }
 
-/** Prévia estilizada de conversa no WhatsApp respondida pelo FALA AI. */
+/** Prévia estilizada de conversa no WhatsApp respondida pelo Synexa. */
 function ChatMockup() {
   return (
     <div className="mx-auto w-full max-w-sm rounded-2xl border border-gray-200/70 bg-panel p-4 shadow-xl shadow-indigo-500/10">
@@ -593,7 +593,7 @@ function ChatMockup() {
           <Bot size={16} />
         </div>
         <div>
-          <p className="text-xs font-semibold text-gray-900">FALA AI</p>
+          <p className="text-xs font-semibold text-gray-900">Synexa</p>
           <p className="text-[11px] text-gray-400">respondendo agora</p>
         </div>
       </div>
