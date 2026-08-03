@@ -2281,6 +2281,47 @@ export interface Database {
           },
         ];
       };
+      module_pending_checkouts: {
+        Row: {
+          id: string;
+          user_id: string;
+          tenant_id: string;
+          module: "financas" | "estoque" | "producao";
+          status: "pending" | "completed";
+          monthly_amount_cents: number;
+          mp_preference_id: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          tenant_id: string;
+          module: "financas" | "estoque" | "producao";
+          status?: "pending" | "completed";
+          monthly_amount_cents: number;
+          mp_preference_id?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          tenant_id?: string;
+          module?: "financas" | "estoque" | "producao";
+          status?: "pending" | "completed";
+          monthly_amount_cents?: number;
+          mp_preference_id?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "module_pending_checkouts_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       transportadora_pending_checkouts: {
         Row: {
           id: string;

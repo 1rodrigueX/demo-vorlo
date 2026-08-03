@@ -4,6 +4,7 @@ import { getMercadoPagoConfig } from "@/lib/mercadopago/client";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { provisionTenantFromCheckout } from "@/lib/billing/provision-tenant";
 import { provisionTransportadoraFromCheckout } from "@/lib/billing/provision-transportadora";
+import { provisionModuleFromCheckout } from "@/lib/billing/provision-module";
 import { addOneMonth } from "@/lib/billing/cycle";
 import { getTenantOwnerEmail } from "@/lib/billing/tenant-owner";
 import { sendBillingEmail } from "@/lib/email/resend";
@@ -98,6 +99,16 @@ export async function POST(request: Request) {
           message: `A mensalidade da <strong>${tenant.name}</strong> foi confirmada. Seu CRM continua liberado normalmente.`,
         }).catch((err) => console.error("Mercado Pago webhook: e-mail de confirmação falhou", err));
       }
+    }
+  } else if (externalReference.startsWith("module_checkout:")) {
+    const pendingCheckoutId = externalReference.slice("module_checkout:".length);
+    const result = await provisionModuleFromCheckout({
+      pendingCheckoutId,
+      mpPaymentId: String(paymentData.id),
+      mpPayerId: payerId,
+    });
+    if ("error" in result) {
+      console.error("Mercado Pago webhook: provisionamento do módulo falhou pro pagamento", paymentId, result.error);
     }
   } else if (externalReference.startsWith("transportadora_checkout:")) {
     const pendingCheckoutId = externalReference.slice("transportadora_checkout:".length);
