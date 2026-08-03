@@ -1,9 +1,13 @@
+import { cache } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/types/database.types";
 import type { Profile } from "@/types/domain";
 
-export async function getCurrentUser() {
+// cache(): memoiza por request. getCurrentUser/isCurrentUserDev são chamados no
+// layout do dashboard E nas páginas — sem isso, cada navegação repete o
+// getUser + as queries de profile/dev. Mesmo resultado, menos ida ao banco.
+export const getCurrentUser = cache(async () => {
   const supabase = await createClient();
   const {
     data: { user },
@@ -51,10 +55,10 @@ export async function getCurrentUser() {
   }
 
   return { user, profile: null, isDevViewing: false as const };
-}
+});
 
 /** Confere se o usuário logado é dev da plataforma (fora do modelo de tenant). */
-export async function isCurrentUserDev() {
+export const isCurrentUserDev = cache(async () => {
   const supabase = await createClient();
   const {
     data: { user },
@@ -68,7 +72,7 @@ export async function isCurrentUserDev() {
     .maybeSingle();
 
   return !!data;
-}
+});
 
 /** Busca o slug de um tenant pelo id — usado pra montar caminhos prefixados com o slug. */
 export async function getTenantSlug(
