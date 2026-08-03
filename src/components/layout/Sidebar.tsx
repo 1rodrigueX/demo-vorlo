@@ -41,7 +41,7 @@ export function Sidebar({
     <aside
       style={{
         background:
-          "radial-gradient(120% 55% at 50% 0%, rgba(124,92,246,0.20), transparent 60%), linear-gradient(165deg, #0c0a1e 0%, #120e2b 55%, #0a0918 100%)",
+          "radial-gradient(120% 55% at 50% 0%, rgba(255,87,34,0.18), transparent 60%), linear-gradient(165deg, #1a0f08 0%, #241610 55%, #140b06 100%)",
       }}
       className="hidden w-64 shrink-0 border-r border-white/5 md:flex md:flex-col"
     >

@@ -231,7 +231,7 @@ export function WhatsAppChatPanel({
                         ? "rounded-2xl rounded-br-md text-white shadow-indigo-500/20"
                         : "rounded-2xl rounded-bl-md border border-gray-200 bg-panel text-gray-900",
                     )}
-                    style={isOutbound ? { background: "linear-gradient(135deg, #7c5cf6, #6d47f0)" } : undefined}
+                    style={isOutbound ? { background: "linear-gradient(135deg, #ff7a4d, #ff5722)" } : undefined}
                   >
                     {msg.media_storage_path && (
                       <div className="mb-1">
@@ -312,7 +312,7 @@ export function WhatsAppChatPanel({
             <button
               type="submit"
               disabled={isPending || !text.trim()}
-              style={{ background: "linear-gradient(135deg, #7c5cf6, #6d47f0)" }}
+              style={{ background: "linear-gradient(135deg, #ff7a4d, #ff5722)" }}
               className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white shadow-md shadow-indigo-500/30 transition-all hover:-translate-y-0.5 hover:brightness-110 disabled:opacity-40 disabled:shadow-none"
             >
               <Send size={16} />

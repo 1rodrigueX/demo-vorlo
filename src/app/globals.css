@@ -29,18 +29,19 @@
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 @theme {
-  /* ---- Marca (violeta neon) — substitui a rampa indigo em todo o CRM ---- */
-  --color-indigo-50: #f1eefe;
-  --color-indigo-100: #e4ddfe;
-  --color-indigo-200: #cabdfd;
-  --color-indigo-300: #ab97fb;
-  --color-indigo-400: #9075f8;
-  --color-indigo-500: #7c5cf6;
-  --color-indigo-600: #6d47f0;
-  --color-indigo-700: #5b33d6;
-  --color-indigo-800: #4826ab;
-  --color-indigo-900: #391f85;
-  --color-indigo-950: #23124f;
+  /* ---- Marca (laranja "ignite" #ff5722, igual ao site) — substitui a rampa
+   * indigo em todo o CRM ---- */
+  --color-indigo-50: #fff2ed;
+  --color-indigo-100: #ffe2d5;
+  --color-indigo-200: #ffc4ac;
+  --color-indigo-300: #ff9f78;
+  --color-indigo-400: #ff7a4d;
+  --color-indigo-500: #ff5f30;
+  --color-indigo-600: #ff5722;
+  --color-indigo-700: #e2430f;
+  --color-indigo-800: #b3350f;
+  --color-indigo-900: #7a2410;
+  --color-indigo-950: #431307;
 
   /* Fundo de cards/topbar/modais/inputs. Trocado no escuro mais abaixo. */
   --color-panel: #ffffff;
@@ -72,8 +73,8 @@
 :root {
   --background: #f6f7fb;
   --foreground: #101828;
-  /* Halo neon usado no fundo da landing / seções escuras. */
-  --brand-glow: 109, 71, 240;
+  /* Halo usado no fundo da landing / seções escuras. */
+  --brand-glow: 255, 87, 34;
   color-scheme: light;
 }
 
@@ -116,7 +117,7 @@ body {
   background: rgba(var(--brand-glow), 0.35);
 }
 :root[data-theme="dark"] {
-  --brand-glow: 124, 92, 246;
+  --brand-glow: 255, 122, 77;
 }
 :root[data-theme="dark"] ::-webkit-scrollbar {
   width: 10px;
@@ -154,12 +155,12 @@ body {
  * distinta do fundo padrão do WhatsApp. Acompanha claro/escuro. */
 .synexa-chat-bg {
   background-color: var(--color-gray-50);
-  background-image: radial-gradient(rgba(124, 92, 246, 0.07) 1px, transparent 1px);
+  background-image: radial-gradient(rgba(255, 87, 34, 0.06) 1px, transparent 1px);
   background-size: 22px 22px;
 }
 :root[data-theme="dark"] .synexa-chat-bg {
-  background-color: #090a12;
-  background-image: radial-gradient(rgba(124, 92, 246, 0.12) 1px, transparent 1px);
+  background-color: #0f0b08;
+  background-image: radial-gradient(rgba(255, 87, 34, 0.1) 1px, transparent 1px);
 }
 
 /* Bolha de saída (violeta) — entrada suave. */

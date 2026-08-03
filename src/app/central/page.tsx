@@ -1,17 +1,11 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { ArrowRight, LayoutDashboard, Lock, Truck, Wallet, Boxes, Factory } from "lucide-react";
+import { Home } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { getAccountServices, type AccountService } from "@/lib/auth/current-user";
+import { getAccountServices } from "@/lib/auth/current-user";
 import { UserMenu } from "@/components/layout/UserMenu";
-
-const ICONS: Record<AccountService["key"], typeof LayoutDashboard> = {
-  crm: LayoutDashboard,
-  transportadora: Truck,
-  financas: Wallet,
-  estoque: Boxes,
-  producao: Factory,
-};
+import { CentralServices } from "@/components/central/CentralServices";
+import { SynexaMark } from "@/components/brand/SynexaLogo";
 
 export default async function CentralPage() {
   const supabase = await createClient();
@@ -21,15 +15,26 @@ export default async function CentralPage() {
   if (!user) redirect("/login");
 
   const { services, ownerName } = await getAccountServices();
-  const hasAnyActive = services.some((service) => service.active);
   const email = user.email ?? "";
   const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
 
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-6">
       <header className="mx-auto flex max-w-4xl items-center justify-between pb-10">
-        <span className="text-sm font-semibold text-gray-900">Synexa</span>
-        <UserMenu name={ownerName || email || "Usuário"} email={email} role={profile?.role} />
+        <Link href="/" className="flex items-center gap-2" aria-label="Voltar ao site Synexa">
+          <SynexaMark size={22} withCircuit={false} />
+          <span className="text-sm font-semibold text-gray-900">Synexa</span>
+        </Link>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/"
+            className="hidden items-center gap-1.5 rounded-lg border border-gray-300 bg-panel px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:border-gray-400 hover:bg-gray-50 sm:inline-flex"
+          >
+            <Home size={14} />
+            Voltar ao site
+          </Link>
+          <UserMenu name={ownerName || email || "Usuário"} email={email} role={profile?.role} />
+        </div>
       </header>
 
       <div className="mx-auto max-w-4xl">
@@ -38,48 +43,16 @@ export default async function CentralPage() {
             {ownerName ? `Olá, ${ownerName.split(" ")[0]}!` : "Sua central"}
           </h1>
           <p className="mt-2 text-sm text-gray-500">
-            {hasAnyActive
-              ? "Escolha qual serviço você quer acessar."
-              : "Você ainda não tem nenhum serviço ativo — assine um abaixo pra começar."}
+            Acesse o que você já tem em <span className="font-medium text-gray-700">Meus acessos</span> ou assine
+            novos em <span className="font-medium text-gray-700">Produtos</span>.
           </p>
         </div>
 
-        <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {services.map((service) => {
-            const Icon = ICONS[service.key];
-            return (
-              <Link
-                key={service.key}
-                href={service.href}
-                className="group rounded-2xl border border-gray-200 bg-panel p-6 transition-colors hover:border-gray-300"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-full bg-indigo-50 text-indigo-600">
-                    <Icon size={20} />
-                  </div>
-                  {service.active ? (
-                    <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
-                      Ativo
-                    </span>
-                  ) : (
-                    <span className="flex items-center gap-1 rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-500">
-                      <Lock size={12} />
-                      Não assinado
-                    </span>
-                  )}
-                </div>
-                <h3 className="mt-4 text-base font-semibold text-gray-900">{service.name}</h3>
-                <p className="mt-1 text-sm text-gray-500">{service.description}</p>
-                <div className="mt-4 flex items-center gap-1 text-sm font-medium text-indigo-600">
-                  {service.active ? "Acessar" : "Assinar"}
-                  <ArrowRight size={14} className="transition-transform group-hover:translate-x-0.5" />
-                </div>
-              </Link>
-            );
-          })}
+        <div className="mt-8">
+          <CentralServices services={services} />
         </div>
 
-        <p className="mt-8 text-center text-sm text-gray-400">
+        <p className="mt-10 text-center text-sm text-gray-400">
           <Link href="/central/seguranca" className="hover:text-gray-600 hover:underline">
             Segurança da conta
           </Link>

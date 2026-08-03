@@ -76,7 +76,7 @@ export function LeadTasks({ contactId, initialTasks }: { contactId: string; init
           <button
             type="submit"
             disabled={pending || !title.trim()}
-            style={{ background: "linear-gradient(135deg,#7c5cf6,#6d47f0)" }}
+            style={{ background: "linear-gradient(135deg,#ff7a4d,#ff5722)" }}
             className="inline-flex shrink-0 items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-medium text-white transition-all hover:brightness-110 disabled:opacity-50"
           >
             <Plus size={13} /> Add

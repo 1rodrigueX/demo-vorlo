@@ -38,21 +38,21 @@ export function SynexaMark({
     >
       <defs>
         <linearGradient id={gid} x1="12" y1="6" x2="54" y2="58" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#5fb0ff" />
-          <stop offset="52%" stopColor="#5a72ff" />
-          <stop offset="100%" stopColor="#6d47f0" />
+          <stop offset="0%" stopColor="#ffb27a" />
+          <stop offset="52%" stopColor="#ff7a4d" />
+          <stop offset="100%" stopColor="#ff5722" />
         </linearGradient>
       </defs>
       {withCircuit && (
-        <g stroke="#5b8cff" strokeWidth="1.4" strokeLinecap="round" opacity="0.85">
+        <g stroke="#ff8a5c" strokeWidth="1.4" strokeLinecap="round" opacity="0.85">
           <path d="M8 13 H2.5" />
           <path d="M8 17.5 H4.5" />
-          <circle cx="1.6" cy="13" r="1.4" fill="#5b8cff" stroke="none" />
-          <circle cx="3.6" cy="17.5" r="1.2" fill="#5b8cff" stroke="none" />
+          <circle cx="1.6" cy="13" r="1.4" fill="#ff8a5c" stroke="none" />
+          <circle cx="3.6" cy="17.5" r="1.2" fill="#ff8a5c" stroke="none" />
           <path d="M56 47 H61.5" />
           <path d="M56 51.5 H59.5" />
-          <circle cx="62.4" cy="47" r="1.4" fill="#5b8cff" stroke="none" />
-          <circle cx="60.4" cy="51.5" r="1.2" fill="#5b8cff" stroke="none" />
+          <circle cx="62.4" cy="47" r="1.4" fill="#ff8a5c" stroke="none" />
+          <circle cx="60.4" cy="51.5" r="1.2" fill="#ff8a5c" stroke="none" />
         </g>
       )}
       <path d={S_PATH} fill={`url(#${gid})`} />
@@ -72,7 +72,7 @@ export function SynexaLogo({
 }) {
   return (
     <span className={"inline-flex items-center gap-2 " + (className ?? "")}>
-      <SynexaMark size={size} style={{ filter: "drop-shadow(0 4px 12px rgba(109,71,240,0.45))" }} />
+      <SynexaMark size={size} style={{ filter: "drop-shadow(0 4px 12px rgba(255,87,34,0.45))" }} />
       {wordmark && (
         <span className="text-base font-bold tracking-[0.14em] text-gray-900">SYNEXA</span>
       )}

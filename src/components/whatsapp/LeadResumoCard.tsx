@@ -38,7 +38,7 @@ export function LeadResumoCard({ contactId }: { contactId: string }) {
             <div className="h-2 overflow-hidden rounded-full bg-gray-200">
               <div
                 className="h-2 rounded-full transition-all"
-                style={{ width: `${resumo.probabilidade}%`, background: "linear-gradient(90deg,#7c5cf6,#6d47f0)" }}
+                style={{ width: `${resumo.probabilidade}%`, background: "linear-gradient(90deg,#ff7a4d,#ff5722)" }}
               />
             </div>
           </div>
@@ -65,7 +65,7 @@ export function LeadResumoCard({ contactId }: { contactId: string }) {
             type="button"
             onClick={handleGenerate}
             disabled={loading}
-            style={{ background: "linear-gradient(135deg,#7c5cf6,#6d47f0)" }}
+            style={{ background: "linear-gradient(135deg,#ff7a4d,#ff5722)" }}
             className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-white shadow-sm shadow-indigo-500/30 transition-all hover:brightness-110 disabled:opacity-50"
           >
             <Sparkles size={13} />

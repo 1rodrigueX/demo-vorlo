@@ -128,7 +128,7 @@ export function LandingPage({
           </div>
           <h1 className="text-balance text-4xl font-bold tracking-tight sm:text-6xl">
             Simplifique{" "}
-            <span className="bg-gradient-to-r from-indigo-400 via-violet-500 to-sky-400 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-[#ff9f78] via-[#ff5722] to-[#ff7a4d] bg-clip-text text-transparent">
               suas vendas
             </span>
             <br className="hidden sm:block" /> com o Synexa CRM
@@ -154,7 +154,7 @@ export function LandingPage({
 
         {/* Mockup do produto — sempre "dark glass" (é a tela real do CRM). */}
         <div className="relative mx-auto max-w-5xl px-4 pb-6">
-          <div className="pointer-events-none absolute -inset-x-10 top-1/2 -z-10 h-[80%] -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(124,92,246,0.4),transparent_65%)] blur-2xl" />
+          <div className="pointer-events-none absolute -inset-x-10 top-1/2 -z-10 h-[80%] -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(255,87,34,0.4),transparent_65%)] blur-2xl" />
           <PipelineMockup />
         </div>
 
@@ -279,8 +279,8 @@ export function LandingPage({
                 <div
                   className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full text-white"
                   style={{
-                    background: "linear-gradient(140deg, #7c5cf6, #6d47f0)",
-                    boxShadow: "0 8px 24px -6px rgba(124,92,246,0.6)",
+                    background: "linear-gradient(140deg, #ff7a4d, #ff5722)",
+                    boxShadow: "0 8px 24px -6px rgba(255,87,34,0.6)",
                   }}
                 >
                   <step.icon size={22} />
@@ -421,7 +421,7 @@ export function LandingPage({
 
       {/* CTA FINAL — banda escura neon (igual imagem) */}
       <section className="relative overflow-hidden bg-[#080611] py-20 text-center text-white">
-        <div className="pointer-events-none absolute left-1/2 top-1/2 h-[400px] w-[700px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(124,92,246,0.45),transparent_65%)] blur-3xl" />
+        <div className="pointer-events-none absolute left-1/2 top-1/2 h-[400px] w-[700px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(255,87,34,0.45),transparent_65%)] blur-3xl" />
         <div className="relative mx-auto max-w-2xl px-4">
           <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Pronto pra organizar suas vendas?</h2>
           <p className="mt-3 text-base text-white/60">
@@ -459,15 +459,15 @@ function BrandMark() {
 function HeroBackground() {
   return (
     <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(124,92,246,0.10)_1px,transparent_1px),linear-gradient(to_bottom,rgba(124,92,246,0.10)_1px,transparent_1px)] bg-[size:46px_46px] [mask-image:radial-gradient(ellipse_70%_55%_at_50%_0%,#000_55%,transparent_100%)]" />
-      <div className="absolute left-1/2 top-[-15%] h-[520px] w-[900px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(124,92,246,0.28),transparent_60%)] blur-3xl" />
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,87,34,0.10)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,87,34,0.10)_1px,transparent_1px)] bg-[size:46px_46px] [mask-image:radial-gradient(ellipse_70%_55%_at_50%_0%,#000_55%,transparent_100%)]" />
+      <div className="absolute left-1/2 top-[-15%] h-[520px] w-[900px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(255,87,34,0.28),transparent_60%)] blur-3xl" />
       <div className="absolute right-[8%] top-[10%] h-[300px] w-[300px] rounded-full bg-[radial-gradient(circle,rgba(56,189,248,0.20),transparent_60%)] blur-3xl" />
       <div className="absolute left-[6%] top-[30%] h-[300px] w-[300px] rounded-full bg-[radial-gradient(circle,rgba(168,85,247,0.18),transparent_60%)] blur-3xl" />
       {/* diamante brilhante decorativo (canto), como na imagem */}
       <SparklesIcon
         size={34}
         className="absolute right-[12%] top-[62%] text-indigo-400/70"
-        style={{ filter: "drop-shadow(0 0 12px rgba(124,92,246,0.8))" }}
+        style={{ filter: "drop-shadow(0 0 12px rgba(255,87,34,0.8))" }}
       />
     </div>
   );
@@ -511,7 +511,7 @@ function PipelineMockup() {
       className="overflow-hidden rounded-2xl border border-white/10"
       style={{
         background: "linear-gradient(160deg, #14122b, #0b0a1a)",
-        boxShadow: "0 40px 80px -30px rgba(124,92,246,0.5), inset 0 1px 0 0 rgba(255,255,255,0.06)",
+        boxShadow: "0 40px 80px -30px rgba(255,87,34,0.5), inset 0 1px 0 0 rgba(255,255,255,0.06)",
       }}
     >
       <div className="flex items-center gap-1.5 border-b border-white/10 px-4 py-2.5">
@@ -534,7 +534,7 @@ function PipelineMockup() {
                 "rounded-md px-2 py-1.5 text-[11px] font-medium " +
                 (i === 1 ? "text-white" : "text-white/45")
               }
-              style={i === 1 ? { background: "linear-gradient(140deg,#7c5cf6,#6d47f0)" } : undefined}
+              style={i === 1 ? { background: "linear-gradient(140deg,#ff7a4d,#ff5722)" } : undefined}
             >
               {item}
             </div>
@@ -589,7 +589,7 @@ function ChatMockup() {
         </div>
         <div
           className="max-w-[85%] rounded-2xl rounded-tl-sm px-3 py-2 text-xs text-white"
-          style={{ background: "linear-gradient(140deg,#7c5cf6,#6d47f0)" }}
+          style={{ background: "linear-gradient(140deg,#ff7a4d,#ff5722)" }}
         >
           Oi! Pro seu tamanho de equipe o plano Pro costuma encaixar bem — já te passo os detalhes e deixo
           registrado aqui no seu funil 👍
@@ -639,7 +639,7 @@ function AccountMockup() {
           <div key={m.name} className="flex items-center gap-2.5">
             <div
               className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold text-white"
-              style={{ background: "linear-gradient(140deg,#7c5cf6,#6d47f0)" }}
+              style={{ background: "linear-gradient(140deg,#ff7a4d,#ff5722)" }}
             >
               {m.initials}
             </div>
