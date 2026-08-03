@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Trophy, FileCheck2 } from "lucide-react";
+import { Trophy, FileCheck2, MessageCircle } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { formatRelative } from "@/lib/utils/dates";
 import { formatCurrency } from "@/lib/utils/currency";
@@ -67,11 +67,11 @@ export function ConversationList({ conversations }: { conversations: Conversatio
             <Link
               href={href}
               className={cn(
-                "flex items-center gap-3 px-4 py-3 hover:bg-gray-50",
-                isActive && "bg-emerald-50",
+                "flex items-center gap-3 border-l-2 px-4 py-3 transition-colors hover:bg-gray-50",
+                isActive ? "border-indigo-500 bg-indigo-500/10" : "border-transparent",
               )}
             >
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-sm font-medium text-emerald-700">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigo-500/15 text-sm font-medium text-indigo-600">
                 {initials || "?"}
               </div>
               <div className="min-w-0 flex-1">
@@ -85,7 +85,13 @@ export function ConversationList({ conversations }: { conversations: Conversatio
                   {lastMessage.direction === "outbound" && "Você: "}
                   {lastMessage.body}
                 </p>
-                <div className="mt-1">
+                <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                  <span
+                    className="inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-semibold"
+                    style={{ background: "rgba(37,211,102,0.14)", color: "#0f9d58" }}
+                  >
+                    <MessageCircle size={9} strokeWidth={2.5} /> WhatsApp
+                  </span>
                   <DealBadge deal={deal} />
                 </div>
               </div>

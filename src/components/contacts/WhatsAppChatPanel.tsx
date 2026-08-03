@@ -193,7 +193,7 @@ export function WhatsAppChatPanel({
   return (
     <div
       className={cn(
-        "flex flex-col overflow-hidden rounded-lg border border-gray-200 bg-[#0b141a]",
+        "flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-panel",
         fillHeight ? "h-full" : "h-[600px]",
       )}
     >
@@ -203,7 +203,7 @@ export function WhatsAppChatPanel({
         </div>
       )}
 
-      <div className="flex-1 space-y-1 overflow-y-auto px-4 py-3">
+      <div className="synexa-chat-bg flex-1 space-y-1.5 overflow-y-auto px-4 py-4">
         {!messages.length ? (
           <p className="mt-8 text-center text-sm text-gray-500">
             Nenhuma mensagem ainda. Envie a primeira abaixo.
@@ -218,7 +218,7 @@ export function WhatsAppChatPanel({
               <div key={msg.id}>
                 {showDivider && (
                   <div className="my-3 flex justify-center">
-                    <span className="rounded-full bg-panel/80 px-3 py-1 text-xs font-medium text-gray-600 shadow-sm">
+                    <span className="rounded-full border border-gray-200 bg-panel/90 px-3 py-1 text-xs font-medium text-gray-500 shadow-sm backdrop-blur">
                       {formatDayDivider(msg.created_at)}
                     </span>
                   </div>
@@ -226,9 +226,12 @@ export function WhatsAppChatPanel({
                 <div className={cn("flex", isOutbound ? "justify-end" : "justify-start")}>
                   <div
                     className={cn(
-                      "max-w-[75%] rounded-lg px-3 py-2 shadow-sm",
-                      isOutbound ? "bg-[#005c4b] text-white" : "bg-panel text-gray-900",
+                      "chat-bubble max-w-[78%] px-3.5 py-2 text-sm shadow-sm",
+                      isOutbound
+                        ? "rounded-2xl rounded-br-md text-white shadow-indigo-500/20"
+                        : "rounded-2xl rounded-bl-md border border-gray-200 bg-panel text-gray-900",
                     )}
+                    style={isOutbound ? { background: "linear-gradient(135deg, #7c5cf6, #6d47f0)" } : undefined}
                   >
                     {msg.media_storage_path && (
                       <div className="mb-1">
@@ -242,8 +245,8 @@ export function WhatsAppChatPanel({
                     {msg.body && <p className="whitespace-pre-wrap break-words text-sm">{msg.body}</p>}
                     <div
                       className={cn(
-                        "mt-1 flex items-center gap-1 text-[11px] text-gray-500",
-                        isOutbound ? "justify-end" : "justify-start",
+                        "mt-1 flex items-center gap-1 text-[11px]",
+                        isOutbound ? "justify-end text-white/70" : "justify-start text-gray-400",
                       )}
                     >
                       <span>{formatTime(msg.created_at)}</span>
@@ -292,7 +295,7 @@ export function WhatsAppChatPanel({
               }}
               placeholder="Escreva uma mensagem..."
               rows={1}
-              className="max-h-32 flex-1 resize-none rounded-full border border-gray-300 bg-panel px-4 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="max-h-32 flex-1 resize-none rounded-2xl border border-gray-300 bg-panel px-4 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
             <button
               type="button"
@@ -309,7 +312,8 @@ export function WhatsAppChatPanel({
             <button
               type="submit"
               disabled={isPending || !text.trim()}
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white transition-colors hover:bg-emerald-500 disabled:bg-emerald-300"
+              style={{ background: "linear-gradient(135deg, #7c5cf6, #6d47f0)" }}
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white shadow-md shadow-indigo-500/30 transition-all hover:-translate-y-0.5 hover:brightness-110 disabled:opacity-40 disabled:shadow-none"
             >
               <Send size={16} />
             </button>

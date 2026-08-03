@@ -136,6 +136,38 @@ body {
   }
 }
 
+/* Fundo do chat de Leads — identidade própria (grid de pontos violeta),
+ * distinta do fundo padrão do WhatsApp. Acompanha claro/escuro. */
+.synexa-chat-bg {
+  background-color: var(--color-gray-50);
+  background-image: radial-gradient(rgba(124, 92, 246, 0.07) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+:root[data-theme="dark"] .synexa-chat-bg {
+  background-color: #090a12;
+  background-image: radial-gradient(rgba(124, 92, 246, 0.12) 1px, transparent 1px);
+}
+
+/* Bolha de saída (violeta) — entrada suave. */
+@keyframes bubble-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.chat-bubble {
+  animation: bubble-in 0.18s ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .chat-bubble {
+    animation: none;
+  }
+}
+
 /* Brilho pulsante suave pros elementos neon da landing. */
 @keyframes brand-pulse {
   0%,
