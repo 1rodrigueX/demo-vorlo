@@ -11,6 +11,7 @@ const PUBLIC_PATHS = [
   "/orcamento",
   "/portfolio",
   "/sobre",
+  "/produtos",
   "/crm",
 ];
 

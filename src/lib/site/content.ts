@@ -13,6 +13,7 @@ export const GITHUB_DESTAQUES: string[] = [];
 
 export const NAV = [
   { label: "Serviços", href: "/#servicos" },
+  { label: "Produtos", href: "/produtos" },
   { label: "Portfólio", href: "/portfolio" },
   { label: "Sobre", href: "/sobre" },
   { label: "Garantias", href: "/#garantias" },
