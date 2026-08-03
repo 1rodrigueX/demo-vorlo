@@ -104,7 +104,7 @@ export const SOBRE = {
     { titulo: "Continuo depois", corpo: "Manutenção e suporte após a entrega. O projeto não vira problema seu no dia seguinte à publicação." },
   ],
   stack: ["TypeScript", "React", "Next.js", "Node.js", "Python", "HTML & CSS", "SQL", "Tailwind"],
-  foto: "",
+  foto: "/sobre/foto.webp",
 } as const;
 
 export const PORTFOLIO = {

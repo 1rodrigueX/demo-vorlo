@@ -63,9 +63,22 @@ export default function SobrePage() {
 
           <motion.div initial={{ opacity: 0, y: 26 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}>
             <div className="overflow-hidden rounded-2xl border border-carbon-700 bg-carbon-800">
-              <div className="grid aspect-[2/3] w-full place-items-center bg-carbon-900">
-                <LogoMark className="h-20 w-auto text-carbon-700" />
-              </div>
+              {SOBRE.foto ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={SOBRE.foto}
+                  alt={`Retrato de ${SOBRE.nome}`}
+                  width={800}
+                  height={1202}
+                  loading="lazy"
+                  decoding="async"
+                  className="aspect-[2/3] w-full object-cover"
+                />
+              ) : (
+                <div className="grid aspect-[2/3] w-full place-items-center bg-carbon-900">
+                  <LogoMark className="h-20 w-auto text-carbon-700" />
+                </div>
+              )}
             </div>
             <div className="mt-8">
               <p className="type-mono-label mb-4 text-[0.68rem] uppercase tracking-[0.2em]">Ferramentas do dia a dia</p>
