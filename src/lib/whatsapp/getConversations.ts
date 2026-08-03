@@ -3,6 +3,8 @@ import { createClient } from "@/lib/supabase/server";
 
 export type Conversation = {
   contact: { id: string; name: string; phone: string | null };
+  /** Vendedor responsável (dono do contato) — usado no filtro da lista. */
+  owner: { id: string; name: string } | null;
   lastMessage: { body: string | null; direction: "outbound" | "inbound"; created_at: string };
   deal: { value: number; status: "open" | "won" | "lost"; proposalSentAt: string | null } | null;
 };
@@ -32,16 +34,18 @@ export async function getConversations(): Promise<Conversation[]> {
 
   const contactIds = [...lastByContact.keys()];
 
-  const [{ data: contacts }, { data: deals }] = await Promise.all([
-    supabase.from("contacts").select("id, name, phone").in("id", contactIds),
+  const [{ data: contacts }, { data: deals }, { data: sellers }] = await Promise.all([
+    supabase.from("contacts").select("id, name, phone, created_by").in("id", contactIds),
     supabase
       .from("deals")
       .select("contact_id, value, status, proposal_sent_at")
       .in("contact_id", contactIds)
       .order("created_at", { ascending: false }),
+    supabase.from("profiles").select("id, full_name"),
   ]);
 
   const contactById = new Map((contacts ?? []).map((c) => [c.id, c]));
+  const sellerName = new Map((sellers ?? []).map((s) => [s.id, s.full_name]));
 
   // A mais recente primeiro (já ordenado na query) — só guarda a primeira por contato.
   const dealByContact = new Map<string, NonNullable<typeof deals>[number]>();
@@ -55,8 +59,10 @@ export async function getConversations(): Promise<Conversation[]> {
     const lastMessage = lastByContact.get(contactId);
     if (!contact || !lastMessage) continue;
     const deal = dealByContact.get(contactId);
+    const ownerId = contact.created_by;
     conversations.push({
-      contact,
+      contact: { id: contact.id, name: contact.name, phone: contact.phone },
+      owner: ownerId ? { id: ownerId, name: sellerName.get(ownerId) || "Sem responsável" } : null,
       lastMessage,
       deal: deal ? { value: Number(deal.value), status: deal.status, proposalSentAt: deal.proposal_sent_at } : null,
     });
