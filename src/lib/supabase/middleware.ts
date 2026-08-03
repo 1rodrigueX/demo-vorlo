@@ -2,7 +2,17 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { resolveHomeRouteFor } from "@/lib/auth/current-user";
 
-const PUBLIC_PATHS = ["/login", "/signup", "/auth/callback", "/compra"];
+const PUBLIC_PATHS = [
+  "/login",
+  "/signup",
+  "/auth/callback",
+  "/compra",
+  // Site institucional público SYNEXA (agência) + página do produto CRM.
+  "/orcamento",
+  "/portfolio",
+  "/sobre",
+  "/crm",
+];
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
