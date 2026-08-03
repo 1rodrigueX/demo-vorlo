@@ -72,6 +72,11 @@ const nextConfig: NextConfig = {
     serverActions: {
       bodySizeLimit: "25mb",
     },
+    // Otimiza os imports de barril dessas libs (transforma "import { X } from
+    // 'lib'" em import direto do módulo do X), cortando o que entra no bundle
+    // por página. lucide-react é importado em quase toda tela; recharts pesa
+    // nos dashboards; motion na landing/site. Sem mudar comportamento.
+    optimizePackageImports: ["lucide-react", "recharts", "motion", "date-fns"],
   },
 };
 

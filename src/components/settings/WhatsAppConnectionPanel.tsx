@@ -22,6 +22,8 @@ export function WhatsAppConnectionPanel() {
     let cancelled = false;
 
     async function poll() {
+      // Pausa quando a aba está em segundo plano (retoma no visibilitychange).
+      if (typeof document !== "undefined" && document.hidden) return;
       try {
         const res = await fetch("/api/whatsapp/baileys/status", { cache: "no-store" });
         if (res.ok && !cancelled) {
@@ -34,10 +36,15 @@ export function WhatsAppConnectionPanel() {
 
     poll();
     intervalRef.current = setInterval(poll, 2000);
+    const onVisible = () => {
+      if (!document.hidden) poll();
+    };
+    document.addEventListener("visibilitychange", onVisible);
 
     return () => {
       cancelled = true;
       if (intervalRef.current) clearInterval(intervalRef.current);
+      document.removeEventListener("visibilitychange", onVisible);
     };
   }, []);
 

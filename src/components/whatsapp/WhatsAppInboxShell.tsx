@@ -32,6 +32,9 @@ export function WhatsAppInboxShell({
     let cancelled = false;
 
     async function poll() {
+      // Pausa quando a aba está em segundo plano — sem rede nem setState à toa
+      // enquanto ninguém está olhando. Retoma no visibilitychange abaixo.
+      if (typeof document !== "undefined" && document.hidden) return;
       try {
         const res = await fetch("/api/whatsapp/baileys/status", { cache: "no-store" });
         if (res.ok && !cancelled) {
@@ -55,9 +58,14 @@ export function WhatsAppInboxShell({
 
     poll();
     const interval = setInterval(poll, 2000);
+    const onVisible = () => {
+      if (!document.hidden) poll();
+    };
+    document.addEventListener("visibilitychange", onVisible);
     return () => {
       cancelled = true;
       clearInterval(interval);
+      document.removeEventListener("visibilitychange", onVisible);
     };
   }, []);
 
