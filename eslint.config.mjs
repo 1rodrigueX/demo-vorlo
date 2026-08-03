@@ -5,6 +5,13 @@ import nextTs from "eslint-config-next/typescript";
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
+  // Site público SYNEXA (agência): usa navegação com <a> de página inteira de
+  // propósito (rotas separadas com tema carbono próprio) — o reload é aceitável
+  // e reseta scroll/estado. Não força next/link nessas páginas de marketing.
+  {
+    files: ["src/app/(site)/**", "src/components/site/**"],
+    rules: { "@next/next/no-html-link-for-pages": "off" },
+  },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:

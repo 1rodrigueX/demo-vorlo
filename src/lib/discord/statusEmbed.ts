@@ -1,7 +1,7 @@
 import "server-only";
 import { getPlatformStats } from "./stats";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://falaai.cloud";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://synexa.cloud";
 const BRAND_COLOR = 0xff7a3d; // mesma cor de marca do site (BRAND_COLOR em TenantThemeContext.tsx)
 
 /** Embed + botões do /status, no estilo "card de status de servidor" pedido — dados reais da plataforma no lugar de jogadores/connect. */

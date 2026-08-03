@@ -47,6 +47,20 @@
 
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* ---- Site público SYNEXA (agência): carbono + laranja "ignite".
+   * Tokens aditivos, isolados do app (que segue violeta). Usados só nas
+   * páginas do grupo (site). ---- */
+  --color-carbon-900: #121212;
+  --color-carbon-850: #161616;
+  --color-carbon-800: #1a1a1a;
+  --color-carbon-700: #242424;
+  --color-carbon-600: #333333;
+  --color-ignite: #ff5722;
+  --color-ignite-soft: #ff7a4d;
+  --color-ignite-deep: #7a2410;
+  --color-white-soft: #f4f4f4;
+  --color-grey: #a0a0a0;
 }
 
 @theme inline {
@@ -176,6 +190,79 @@ body {
   }
   50% {
     opacity: 0.9;
+  }
+}
+
+/* ============================================================================
+ * SITE PÚBLICO SYNEXA (agência) — tipografia + animações. Usadas só nas
+ * páginas do grupo (site); as fontes (--font-montserrat / --font-plex) são
+ * carregadas no layout desse grupo.
+ * ========================================================================== */
+/* Wrapper das páginas do site público: base Montserrat + mono = IBM Plex. */
+.syn-site {
+  font-family: var(--font-montserrat), system-ui, sans-serif;
+  --font-mono: var(--font-plex), ui-monospace, monospace;
+}
+
+.type-display {
+  font-family: var(--font-montserrat), system-ui, sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  line-height: 0.95;
+}
+.type-eyebrow {
+  font-family: var(--font-plex), ui-monospace, monospace;
+  font-weight: 500;
+  font-size: 0.6875rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--color-ignite);
+}
+.type-mono-label {
+  font-family: var(--font-plex), ui-monospace, monospace;
+  font-weight: 400;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  color: var(--color-grey);
+}
+.type-glow {
+  text-shadow: 0 0 44px rgb(255 87 34 / 0.28);
+}
+.glow-ignite {
+  box-shadow:
+    0 0 0 1px rgb(255 87 34 / 0.25),
+    0 0 24px -4px rgb(255 87 34 / 0.45),
+    0 0 60px -12px rgb(255 87 34 / 0.3);
+}
+.cta-pulse::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  animation: cta-pulse 2.6s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+@keyframes cta-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgb(255 87 34 / 0.55);
+  }
+  70% {
+    box-shadow: 0 0 0 14px rgb(255 87 34 / 0);
+  }
+}
+.status-dot {
+  animation: status-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+@keyframes status-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    box-shadow: 0 0 0 0 rgb(255 87 34 / 0.6);
+  }
+  60% {
+    opacity: 0.75;
+    box-shadow: 0 0 0 7px rgb(255 87 34 / 0);
   }
 }
 

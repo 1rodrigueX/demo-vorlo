@@ -21,7 +21,7 @@ export default async function SettingsWebhooksPage() {
       : Promise.resolve({ data: [] }),
   ]);
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://falaai.cloud";
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://synexa.cloud";
 
   return (
     <LeadWebhooksManager webhooks={webhooks ?? []} stages={stages ?? []} siteUrl={siteUrl} />
