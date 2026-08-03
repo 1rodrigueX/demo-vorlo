@@ -67,6 +67,14 @@ export async function login(_prevState: AuthActionState, formData: FormData): Pr
     return { error: "Email ou senha incorretos" };
   }
 
+  // Redireciona pro destino informado (ex.: voltar pro site institucional após
+  // logar), desde que seja um caminho interno seguro. Sem `next`, cai no destino
+  // padrão (dashboard/central conforme o que a conta acessa).
+  const next = formData.get("next");
+  if (typeof next === "string" && next.startsWith("/") && !next.startsWith("//")) {
+    redirect(next);
+  }
+
   redirect(await resolveHomeRoute());
 }
 

@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
+import { Suspense, useActionState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Home } from "lucide-react";
 import { login, type AuthActionState } from "@/lib/actions/auth";
 import { Button } from "@/components/ui/Button";
@@ -10,11 +11,13 @@ import { PasswordInput } from "@/components/ui/PasswordInput";
 import { Label } from "@/components/ui/Label";
 import { GoogleAuthButton } from "@/components/auth/GoogleAuthButton";
 
-export default function LoginPage() {
-  const [state, formAction, isPending] = useActionState<AuthActionState, FormData>(
-    login,
-    null,
-  );
+function LoginForm() {
+  const searchParams = useSearchParams();
+  // Destino pós-login (ex.: voltar pro site institucional). Só caminho interno.
+  const nextRaw = searchParams.get("next") ?? "";
+  const next = nextRaw.startsWith("/") && !nextRaw.startsWith("//") ? nextRaw : "";
+
+  const [state, formAction, isPending] = useActionState<AuthActionState, FormData>(login, null);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
@@ -25,9 +28,9 @@ export default function LoginPage() {
           </Button>
         </Link>
         <h1 className="mb-1 text-xl font-semibold text-gray-900">Entrar</h1>
-        <p className="mb-6 text-sm text-gray-500">Acesse o CRM da equipe.</p>
+        <p className="mb-6 text-sm text-gray-500">Acesse sua conta Synexa.</p>
 
-        <GoogleAuthButton next="/dashboard" />
+        <GoogleAuthButton next={next || "/dashboard"} />
 
         <div className="my-5 flex items-center gap-3">
           <div className="h-px flex-1 bg-gray-200" />
@@ -36,6 +39,7 @@ export default function LoginPage() {
         </div>
 
         <form action={formAction} className="space-y-4">
+          <input type="hidden" name="next" value={next} />
           <div>
             <Label htmlFor="email">Email</Label>
             <Input id="email" name="email" type="email" required autoComplete="email" />
@@ -60,5 +64,13 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
   );
 }

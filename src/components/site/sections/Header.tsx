@@ -3,14 +3,16 @@
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { motion } from "motion/react";
-import { Menu, X, LogIn } from "lucide-react";
+import { Menu, X, LogIn, LayoutGrid } from "lucide-react";
 import { Logo } from "@/components/site/brand/Logo";
 import { CtaButton } from "@/components/site/CtaButton";
+import { SiteAccountMenu } from "@/components/site/SiteAccountMenu";
 import { NAV } from "@/lib/site/content";
 import { cn } from "@/lib/utils/cn";
 
-/** Header fixo do site: marca + nav + CTA. Ganha fundo após 24px de scroll. */
-export function Header() {
+/** Header fixo do site: marca + nav + CTA. Ganha fundo após 24px de scroll.
+ * `user` (do layout) decide entre "Fazer login" e o menu de perfil. */
+export function Header({ user }: { user: { name: string } | null }) {
   const pathname = usePathname();
   const naHome = pathname === "/";
   const [scrolled, setScrolled] = useState(false);
@@ -71,13 +73,19 @@ export function Header() {
         </nav>
 
         <div className="flex items-center gap-3">
-          <a
-            href="/login"
-            className="hidden items-center gap-1.5 text-sm font-medium text-grey transition-colors hover:text-white-soft sm:inline-flex"
-          >
-            <LogIn size={15} />
-            Entrar no CRM
-          </a>
+          {user ? (
+            <div className="hidden sm:block">
+              <SiteAccountMenu name={user.name} />
+            </div>
+          ) : (
+            <a
+              href="/login?next=/"
+              className="hidden items-center gap-1.5 text-sm font-medium text-grey transition-colors hover:text-white-soft sm:inline-flex"
+            >
+              <LogIn size={15} />
+              Fazer login
+            </a>
+          )}
           <CtaButton href="/orcamento" pulse className="hidden px-5 py-2.5 text-[0.82rem] sm:inline-flex">
             Solicitar orçamento
           </CtaButton>
@@ -111,13 +119,25 @@ export function Header() {
               {item.label}
             </a>
           ))}
-          <a
-            href="/login"
-            onClick={() => setOpen(false)}
-            className="rounded-lg px-3 py-3 text-base font-medium text-grey transition-colors hover:bg-carbon-800 hover:text-white-soft"
-          >
-            Entrar no CRM
-          </a>
+          {user ? (
+            <a
+              href="/central"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2 rounded-lg px-3 py-3 text-base font-medium text-grey transition-colors hover:bg-carbon-800 hover:text-white-soft"
+            >
+              <LayoutGrid size={17} className="text-ignite" />
+              Meus acessos
+            </a>
+          ) : (
+            <a
+              href="/login?next=/"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2 rounded-lg px-3 py-3 text-base font-medium text-grey transition-colors hover:bg-carbon-800 hover:text-white-soft"
+            >
+              <LogIn size={17} />
+              Fazer login
+            </a>
+          )}
           <CtaButton href="/orcamento" className="mt-3 w-full">
             Solicitar orçamento
           </CtaButton>

@@ -2,7 +2,7 @@ import { Logo } from "@/components/site/brand/Logo";
 import { NAV } from "@/lib/site/content";
 
 /** Rodapé do site público. */
-export function Footer() {
+export function Footer({ user }: { user: { name: string } | null }) {
   return (
     <footer className="relative border-t border-carbon-700 px-5 py-12 sm:px-8">
       <div className="mx-auto flex w-full max-w-[1240px] flex-col gap-9 sm:flex-row sm:items-end sm:justify-between">
@@ -22,10 +22,10 @@ export function Footer() {
               </a>
             ))}
             <a
-              href="/login"
+              href={user ? "/central" : "/login?next=/"}
               className="inline-flex items-center py-3 text-sm text-grey transition-colors hover:text-ignite"
             >
-              Entrar no CRM
+              {user ? "Meus acessos" : "Fazer login"}
             </a>
           </nav>
           <p className="type-mono-label text-[0.68rem]">© {new Date().getFullYear()} SYNEXA · Soluções digitais</p>
