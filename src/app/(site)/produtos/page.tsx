@@ -12,6 +12,7 @@ const PRODUTOS = [
     nome: "CRM de Vendas com IA",
     descricao: "Pipeline, WhatsApp e agentes de IA que atendem, qualificam e cobram por você.",
     pontos: ["Pipeline + WhatsApp integrados", "Agentes de IA (Synexa)", "Multi-empresa e permissões"],
+    preco: 150,
     href: "/signup",
     cta: "Criar conta grátis",
     destaque: true,
@@ -22,6 +23,7 @@ const PRODUTOS = [
     nome: "Transportadora",
     descricao: "App de gestão de fretes, clientes e motoristas — sua operação de transporte no controle.",
     pontos: ["Gestão de fretes e rotas", "Clientes e motoristas", "App para o dia a dia"],
+    preco: 80,
     href: "/comprar-transportadora",
     cta: "Assinar",
     destaque: false,
@@ -32,6 +34,7 @@ const PRODUTOS = [
     nome: "Finanças",
     descricao: "Controle financeiro completo — fluxo de caixa, contas, boletos e relatórios.",
     pontos: ["Fluxo de caixa", "Contas e boletos", "Relatórios por categoria"],
+    preco: 70,
     href: "/comprar-financas",
     cta: "Assinar",
     destaque: false,
@@ -42,6 +45,7 @@ const PRODUTOS = [
     nome: "Estoque",
     descricao: "Controle de itens, entradas e saídas, com valor total sempre atualizado.",
     pontos: ["Itens e movimentações", "Entradas e saídas", "Valor em estoque"],
+    preco: 50,
     href: "/comprar-estoque",
     cta: "Assinar",
     destaque: false,
@@ -52,6 +56,7 @@ const PRODUTOS = [
     nome: "Produção",
     descricao: "Turnos, máquinas, produtos e apontamento de produção do chão de fábrica.",
     pontos: ["Turnos e máquinas", "Produtos e receitas", "Apontamento de produção"],
+    preco: 50,
     href: "/comprar-producao",
     cta: "Assinar",
     destaque: false,
@@ -120,7 +125,13 @@ export default function ProdutosPage() {
                       </li>
                     ))}
                   </ul>
-                  <CtaButton href={p.href} variant={p.destaque ? "primary" : "ghost"} className="mt-6 w-full">
+                  <p className="mt-6 flex items-baseline gap-1.5 border-t border-carbon-700 pt-5">
+                    <span className="type-display text-[2rem] leading-none text-white-soft">
+                      R$ {p.preco}
+                    </span>
+                    <span className="text-sm text-grey">/mês</span>
+                  </p>
+                  <CtaButton href={p.href} variant={p.destaque ? "primary" : "ghost"} className="mt-5 w-full">
                     {p.cta}
                     <ArrowRight size={16} className="transition-transform duration-200 group-hover:translate-x-1" />
                   </CtaButton>
