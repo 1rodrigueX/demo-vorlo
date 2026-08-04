@@ -163,6 +163,16 @@ body {
   background-image: radial-gradient(rgba(255, 87, 34, 0.1) 1px, transparent 1px);
 }
 
+/* Canvas das Trajetórias (construtor de automação) — grade de pontos discreta
+ * estilo n8n. Acompanha claro/escuro. */
+.synflow-grid {
+  background-image: radial-gradient(rgba(100, 116, 139, 0.22) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+:root[data-theme="dark"] .synflow-grid {
+  background-image: radial-gradient(rgba(148, 163, 184, 0.16) 1px, transparent 1px);
+}
+
 /* Bolha de saída (violeta) — entrada suave. */
 @keyframes bubble-in {
   from {

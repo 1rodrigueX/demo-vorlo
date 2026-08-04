@@ -53,3 +53,7 @@ next-env.d.ts
 # build web gerado do app Flutter (apps/frete-app) — nunca commitado, vai
 # direto pra VPS via GitHub Actions (mesmo esquema do APK), igual node_modules
 /public/app-web/
+
+# chaves SSH do deploy (GitHub Actions → VPS) — NUNCA commitar chave privada
+/github-actions
+/github-actions.pub

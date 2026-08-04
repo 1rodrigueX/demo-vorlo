@@ -10,6 +10,7 @@ import {
   Users,
   MessageCircle,
   Mail,
+  Workflow,
   Sparkles,
   Lightbulb,
   Bug,
@@ -29,6 +30,7 @@ const mainLinks: NavLink[] = [
   { href: "/companies", label: "Empresas", icon: Building2 },
   { href: "/contacts", label: "Contatos", icon: Users },
   { href: "/whatsapp", label: "Leads", icon: MessageCircle },
+  { href: "/trajetorias", label: "Trajetórias", icon: Workflow },
   { href: "/emails", label: "E-mails", icon: Mail },
 ];
 

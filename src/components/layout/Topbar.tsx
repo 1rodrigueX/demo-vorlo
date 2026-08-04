@@ -13,6 +13,7 @@ const baseLinks = [
   { href: "/companies", label: "Empresas" },
   { href: "/contacts", label: "Contatos" },
   { href: "/whatsapp", label: "Leads" },
+  { href: "/trajetorias", label: "Trajetórias" },
 ];
 
 export function Topbar({
