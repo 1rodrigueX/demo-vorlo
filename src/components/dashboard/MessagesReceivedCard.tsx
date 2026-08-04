@@ -12,7 +12,7 @@ export function MessagesReceivedCard({
   return (
     <Card className="p-5">
       <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500">Mensagens recebidas</p>
-      <p className="mt-2 text-3xl font-semibold tracking-tight tabular-nums text-cyan-500">
+      <p className="mt-2 text-3xl font-semibold tracking-tight tabular-nums text-gray-900">
         {total.toLocaleString("pt-BR")}
       </p>
       <p className="mt-0.5 text-xs text-gray-400">{periodLabel}</p>
