@@ -1,0 +1,16 @@
+{
+  "name": "synexa-desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "App desktop (Windows) da Synexa — casca nativa Tauri em volta do site.",
+  "scripts": {
+    "gen:icon": "node scripts/gen-icon.mjs",
+    "tauri": "tauri",
+    "dev": "tauri dev",
+    "build": "tauri build"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.1.0",
+    "sharp": "^0.33.5"
+  }
+}

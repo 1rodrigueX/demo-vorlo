@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Synexa</title>
+    <style>
+      html, body { margin: 0; height: 100%; background: #120a05; color: #ff5722;
+        font-family: system-ui, sans-serif; display: grid; place-items: center; }
+      .dot { width: 14px; height: 14px; border-radius: 50%; background: #ff5722;
+        animation: pulse 1s ease-in-out infinite; }
+      @keyframes pulse { 0%,100% { opacity: .35; transform: scale(.8);} 50% { opacity: 1; transform: scale(1);} }
+    </style>
+  </head>
+  <body>
+    <!-- Placeholder: a janela real é criada em src-tauri/src/lib.rs e carrega o site. -->
+    <div class="dot"></div>
+  </body>
+</html>
