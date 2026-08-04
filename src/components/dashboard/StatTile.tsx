@@ -2,14 +2,16 @@ import type { ReactNode } from "react";
 import { Card } from "@/components/ui/Card";
 import { cn } from "@/lib/utils/cn";
 
-/** Cores de destaque do número grande — tons médios que leem bem no claro e no escuro. */
+/** Cor do número grande. Sem neon: contadores em neutro; cor só pro que é
+ * semântico — verde (positivo), vermelho (negativo), laranja da marca (destaque),
+ * âmbar (atenção). "cyan" mantido no map por compatibilidade, mas neutro. */
 const ACCENTS = {
   default: "text-gray-900",
-  cyan: "text-cyan-500",
+  cyan: "text-gray-900",
   green: "text-emerald-500",
   violet: "text-indigo-500",
   amber: "text-amber-500",
-  red: "text-rose-500",
+  red: "text-red-500",
 } as const;
 
 export type StatAccent = keyof typeof ACCENTS;
