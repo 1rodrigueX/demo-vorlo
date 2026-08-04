@@ -2,7 +2,7 @@ use tauri::{WebviewUrl, WebviewWindowBuilder};
 
 // ⚙️  URL do site que o app abre. Troque para o domínio final (synexa.cloud)
 //     quando o DNS estiver 100% apontado. Precisa ser um endereço ao vivo.
-const APP_URL: &str = "https://synexa.cloud";
+const APP_URL: &str = "https://falaai.cloud";
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
