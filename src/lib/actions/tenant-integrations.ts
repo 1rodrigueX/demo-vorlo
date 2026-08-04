@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireTenantId } from "@/lib/auth/current-user";
 import { saveAnthropicKeySchema } from "@/lib/validation/tenant-integration";
 import { testAnthropicApiKey } from "@/lib/anthropic/client";
+import { encryptSecret, decryptSecret } from "@/lib/crypto/secrets";
 
 export type ActionState = { error?: string } | null;
 
@@ -42,7 +43,9 @@ export async function saveAnthropicKey(
   const payload = {
     tenant_id: tenantId,
     provider: "anthropic" as const,
-    credentials: { apiKey: parsed.data.apiKey },
+    // Chave cifrada em repouso (AES-256-GCM). No-op se SECRETS_ENC_KEY não
+    // estiver configurada — nesse caso segue texto puro, sem quebrar nada.
+    credentials: { apiKey: encryptSecret(parsed.data.apiKey) },
     status: test.ok ? ("connected" as const) : ("error" as const),
     connected_at: test.ok ? now : null,
     last_tested_at: now,
@@ -85,7 +88,14 @@ export async function testAnthropicConnection(): Promise<ActionState> {
     .eq("provider", "anthropic")
     .maybeSingle();
 
-  const apiKey = (integration?.credentials as { apiKey?: string } | null)?.apiKey;
+  const stored = (integration?.credentials as { apiKey?: string } | null)?.apiKey;
+  if (!stored) return { error: "Nenhuma chave salva ainda" };
+  let apiKey: string | null;
+  try {
+    apiKey = decryptSecret(stored);
+  } catch {
+    return { error: "Não foi possível ler a chave salva (verifique SECRETS_ENC_KEY)" };
+  }
   if (!apiKey) return { error: "Nenhuma chave salva ainda" };
 
   const test = await testAnthropicApiKey(apiKey);

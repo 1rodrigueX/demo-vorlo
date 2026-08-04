@@ -1,6 +1,7 @@
 import "server-only";
 import Anthropic from "@anthropic-ai/sdk";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { decryptSecret } from "@/lib/crypto/secrets";
 
 export const ASSISTANT_MODEL = process.env.ANTHROPIC_MODEL || "claude-opus-4-8";
 
@@ -21,8 +22,14 @@ async function getTenantAnthropicApiKey(tenantId: string): Promise<string | null
     .maybeSingle();
 
   if (data?.status !== "connected") return null;
-  const apiKey = (data?.credentials as { apiKey?: string } | null)?.apiKey;
-  return apiKey || null;
+  const stored = (data?.credentials as { apiKey?: string } | null)?.apiKey;
+  if (!stored) return null;
+  try {
+    return decryptSecret(stored) || null;
+  } catch (err) {
+    console.error("getTenantAnthropicApiKey: falha ao descriptografar a chave", err);
+    return null;
+  }
 }
 
 /**
