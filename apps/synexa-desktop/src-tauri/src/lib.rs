@@ -1,8 +1,9 @@
 use tauri::{WebviewUrl, WebviewWindowBuilder};
 
-// ⚙️  URL do site que o app abre. Troque para o domínio final (synexa.cloud)
-//     quando o DNS estiver 100% apontado. Precisa ser um endereço ao vivo.
-const APP_URL: &str = "https://falaai.cloud";
+// ⚙️  URL que o app abre. Vai direto pro login: quem tem o app já é cliente,
+//     loga e cai nos seus acessos. Troque o domínio quando migrar pra
+//     synexa.cloud. Precisa ser um endereço ao vivo.
+const APP_URL: &str = "https://falaai.cloud/login";
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {

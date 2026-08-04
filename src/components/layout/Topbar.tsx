@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Menu, X } from "lucide-react";
 import { UserMenu } from "@/components/layout/UserMenu";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
+import { LiteToggle } from "@/components/layout/LiteToggle";
 import { useTenantSlug } from "@/lib/tenant/useTenantSlug";
 
 const baseLinks = [
@@ -49,6 +50,7 @@ export function Topbar({
       </button>
       <span className="truncate text-sm font-semibold text-gray-900 md:hidden">{tenantName}</span>
       <div className="ml-auto flex items-center gap-2">
+        <LiteToggle />
         <ThemeToggle />
         <UserMenu name={name} email={email} role={role} isDev={isDev} isDevViewing={isDevViewing} />
       </div>

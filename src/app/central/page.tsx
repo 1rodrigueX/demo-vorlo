@@ -4,6 +4,7 @@ import { Home, Download, Monitor } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getAccountServices } from "@/lib/auth/current-user";
 import { UserMenu } from "@/components/layout/UserMenu";
+import { LiteToggle } from "@/components/layout/LiteToggle";
 import { CentralServices } from "@/components/central/CentralServices";
 import { SynexaMark } from "@/components/brand/SynexaLogo";
 
@@ -33,6 +34,7 @@ export default async function CentralPage() {
             <Home size={14} />
             Voltar ao site
           </Link>
+          <LiteToggle />
           <UserMenu name={ownerName || email || "Usuário"} email={email} role={profile?.role} />
         </div>
       </header>
