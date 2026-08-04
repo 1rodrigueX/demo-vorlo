@@ -5,11 +5,7 @@ import { z } from "zod";
 import type Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@/lib/supabase/server";
 import { requireTenantId } from "@/lib/auth/current-user";
-import {
-  getAnthropicClientForPlatform,
-  ASSISTANT_MODEL,
-  AnthropicNotConfiguredError,
-} from "@/lib/anthropic/client";
+import { getAnthropicClientForTenant, ASSISTANT_MODEL, AnthropicNotConfiguredError } from "@/lib/anthropic/client";
 import { FLOW_CATALOG, getNodeDef, defaultConfigFor } from "@/lib/automations/flow-catalog";
 import type { FlowGraph, FlowNode, FlowEdge, FlowNodeConfig } from "@/lib/automations/flow-types";
 
@@ -230,14 +226,16 @@ export async function generateFlowGraph(
     supabase.from("tags").select("name").eq("tenant_id", tenantId),
   ]);
 
+  // Usa a chave Anthropic do PRÓPRIO cliente (a mesma da SDR) — a chave da
+  // Synexa/plataforma é só pro suporte, não pra rodar a trajetória do tenant.
   let client: Anthropic;
   try {
-    client = await getAnthropicClientForPlatform(tenantId);
+    client = await getAnthropicClientForTenant(tenantId);
   } catch (err) {
     if (err instanceof AnthropicNotConfiguredError) {
       return {
         error:
-          "Para usar a criação com IA, conecte uma chave da API Anthropic em Configurações › Inteligência Artificial.",
+          "Para criar com IA, conecte a chave da API Anthropic do seu CRM em Configurações › Inteligência Artificial (a mesma usada pela SDR).",
       };
     }
     return { error: "IA indisponível no momento." };

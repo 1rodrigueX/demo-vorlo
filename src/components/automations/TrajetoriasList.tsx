@@ -9,6 +9,7 @@ import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Card } from "@/components/ui/Card";
+import { Badge } from "@/components/ui/Badge";
 import { useTenantSlug } from "@/lib/tenant/useTenantSlug";
 import { createFlow, createFlowWithGraph, deleteFlow } from "@/lib/actions/automation-flows";
 import { AIFlowModal } from "@/components/automations/AIFlowModal";
@@ -72,7 +73,10 @@ export function TrajetoriasList({ flows, canEdit }: { flows: FlowListItem[]; can
     <div className="space-y-5">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold text-gray-900">Trajetórias</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl font-semibold text-gray-900">Trajetórias</h1>
+            <Badge className="bg-[#ff5722]/10 text-[#ff5722]">Beta</Badge>
+          </div>
           <p className="mt-0.5 text-sm text-gray-500">
             Monte automações visuais: um gatilho dispara uma sequência de ações no CRM.
           </p>

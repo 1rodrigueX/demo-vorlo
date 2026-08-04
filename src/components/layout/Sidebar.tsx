@@ -22,7 +22,7 @@ import { cn } from "@/lib/utils/cn";
 import { useTenantTheme } from "@/lib/theme/TenantThemeContext";
 import { useTenantSlug } from "@/lib/tenant/useTenantSlug";
 
-type NavLink = { href: string; label: string; icon: typeof LayoutDashboard };
+type NavLink = { href: string; label: string; icon: typeof LayoutDashboard; badge?: string };
 
 const mainLinks: NavLink[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -30,7 +30,7 @@ const mainLinks: NavLink[] = [
   { href: "/companies", label: "Empresas", icon: Building2 },
   { href: "/contacts", label: "Contatos", icon: Users },
   { href: "/whatsapp", label: "Leads", icon: MessageCircle },
-  { href: "/trajetorias", label: "Trajetórias", icon: Workflow },
+  { href: "/trajetorias", label: "Trajetórias", icon: Workflow, badge: "Beta" },
   { href: "/emails", label: "E-mails", icon: Mail },
 ];
 
@@ -94,7 +94,19 @@ function NavItem({
           </span>
         </>
       ) : (
-        <span className="truncate">{label}</span>
+        <>
+          <span className="truncate">{label}</span>
+          {link.badge && (
+            <span
+              className={cn(
+                "ml-auto rounded-full px-1.5 py-[1px] text-[9px] font-bold uppercase tracking-wide",
+                isActive ? "bg-white/20 text-white" : "bg-[#ff5722]/15 text-[#ff5722]",
+              )}
+            >
+              {link.badge}
+            </span>
+          )}
+        </>
       )}
     </Link>
   );
@@ -133,7 +145,7 @@ export function Sidebar({
           "radial-gradient(120% 55% at 50% 0%, rgba(255,87,34,0.16), transparent 60%), linear-gradient(165deg, #1a0f08 0%, #241610 55%, #140b06 100%)",
       }}
       className={cn(
-        "hidden shrink-0 border-r border-white/5 transition-[width] duration-200 ease-in-out md:flex md:flex-col",
+        "relative z-40 hidden shrink-0 border-r border-white/5 transition-[width] duration-200 ease-in-out md:flex md:flex-col",
         collapsed ? "w-[68px] overflow-visible" : "w-64 overflow-hidden",
       )}
     >
