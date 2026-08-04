@@ -4,6 +4,7 @@ import { encryptSecret, isEncrypted } from "@/lib/crypto/secrets";
 import type { Database } from "@/types/database.types";
 
 type IntegrationUpdate = Database["public"]["Tables"]["tenant_integrations"]["Update"];
+type BlingUpdate = Database["public"]["Tables"]["bling_connections"]["Update"];
 
 /**
  * Backfill único: cifra segredos que ainda estão em texto puro no banco (ex:
@@ -54,5 +55,29 @@ export async function POST(request: Request) {
     if (!upErr) encrypted++;
   }
 
-  return NextResponse.json({ ok: true, total: rows?.length ?? 0, encrypted, skipped });
+  // Conexões Bling (tabela separada): client_secret + tokens OAuth.
+  const { data: blingRows } = await admin
+    .from("bling_connections")
+    .select("id, client_secret, access_token, refresh_token");
+
+  let blingEncrypted = 0;
+  for (const row of blingRows ?? []) {
+    const update: BlingUpdate = {};
+    if (row.client_secret && !isEncrypted(row.client_secret)) update.client_secret = encryptSecret(row.client_secret);
+    if (row.access_token && !isEncrypted(row.access_token)) update.access_token = encryptSecret(row.access_token);
+    if (row.refresh_token && !isEncrypted(row.refresh_token)) update.refresh_token = encryptSecret(row.refresh_token);
+    if (Object.keys(update).length === 0) {
+      skipped++;
+      continue;
+    }
+    const { error: upErr } = await admin.from("bling_connections").update(update).eq("id", row.id);
+    if (!upErr) blingEncrypted++;
+  }
+
+  return NextResponse.json({
+    ok: true,
+    tenant_integrations: { total: rows?.length ?? 0, encrypted },
+    bling_connections: { total: blingRows?.length ?? 0, encrypted: blingEncrypted },
+    skipped,
+  });
 }

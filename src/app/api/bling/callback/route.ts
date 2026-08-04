@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireTenantId, getTenantSlug } from "@/lib/auth/current-user";
 import { exchangeBlingCode } from "@/lib/bling/client";
+import { encryptSecret } from "@/lib/crypto/secrets";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -55,8 +56,8 @@ export async function GET(request: Request) {
     await admin
       .from("bling_connections")
       .update({
-        access_token: token.access_token,
-        refresh_token: token.refresh_token,
+        access_token: encryptSecret(token.access_token),
+        refresh_token: encryptSecret(token.refresh_token),
         expires_at: new Date(Date.now() + token.expires_in * 1000).toISOString(),
         connected_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),

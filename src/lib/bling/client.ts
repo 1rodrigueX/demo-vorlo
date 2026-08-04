@@ -1,5 +1,6 @@
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { encryptSecret, decryptSecret } from "@/lib/crypto/secrets";
 
 const BLING_AUTHORIZE_URL = "https://www.bling.com.br/Api/v3/oauth/authorize";
 const BLING_TOKEN_URL = "https://www.bling.com.br/Api/v3/oauth/token";
@@ -16,7 +17,14 @@ async function getBlingCredentials(connectionId: string): Promise<BlingCredentia
     .maybeSingle();
 
   if (!data?.client_id || !data.client_secret) return null;
-  return { clientId: data.client_id, clientSecret: data.client_secret };
+  let clientSecret: string | null;
+  try {
+    clientSecret = decryptSecret(data.client_secret); // valores antigos em texto puro passam direto
+  } catch {
+    return null;
+  }
+  if (!clientSecret) return null;
+  return { clientId: data.client_id, clientSecret };
 }
 
 export async function getBlingAuthorizeUrl(
@@ -89,20 +97,34 @@ export async function getValidBlingAccessToken(connectionId: string): Promise<st
   if (!connection?.access_token || !connection.refresh_token) return null;
   if (!connection.client_id || !connection.client_secret) return null;
 
+  // Decifra o que veio do banco (valores antigos em texto puro passam direto).
+  let accessToken: string | null;
+  let refreshToken: string | null;
+  let clientSecret: string | null;
+  try {
+    accessToken = decryptSecret(connection.access_token);
+    refreshToken = decryptSecret(connection.refresh_token);
+    clientSecret = decryptSecret(connection.client_secret);
+  } catch (err) {
+    console.error("getValidBlingAccessToken: falha ao descriptografar", err);
+    return null;
+  }
+  if (!accessToken || !refreshToken || !clientSecret) return null;
+
   const isExpired = !connection.expires_at || new Date(connection.expires_at) <= new Date();
-  if (!isExpired) return connection.access_token;
+  if (!isExpired) return accessToken;
 
   const refreshed = await requestBlingToken(
-    { clientId: connection.client_id, clientSecret: connection.client_secret },
-    { grant_type: "refresh_token", refresh_token: connection.refresh_token },
+    { clientId: connection.client_id, clientSecret },
+    { grant_type: "refresh_token", refresh_token: refreshToken },
   );
   const expiresAt = new Date(Date.now() + refreshed.expires_in * 1000).toISOString();
 
   await admin
     .from("bling_connections")
     .update({
-      access_token: refreshed.access_token,
-      refresh_token: refreshed.refresh_token,
+      access_token: encryptSecret(refreshed.access_token),
+      refresh_token: encryptSecret(refreshed.refresh_token),
       expires_at: expiresAt,
       updated_at: new Date().toISOString(),
     })

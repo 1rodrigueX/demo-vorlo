@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireTenantId } from "@/lib/auth/current-user";
 import { createBlingConnectionSchema, updateBlingCredentialsSchema } from "@/lib/validation/bling";
 import { findOrCreateTagByName } from "@/lib/tags/ensureTag";
+import { encryptSecret } from "@/lib/crypto/secrets";
 
 export type ActionState = { error?: string } | null;
 
@@ -39,7 +40,7 @@ export async function createBlingConnection(
     tenant_id: tenantId,
     name: parsed.data.name,
     client_id: parsed.data.clientId,
-    client_secret: parsed.data.clientSecret,
+    client_secret: encryptSecret(parsed.data.clientSecret),
     tag_id: tagId,
     is_default: false,
   });
@@ -77,7 +78,7 @@ export async function updateBlingCredentials(
     .from("bling_connections")
     .update({
       client_id: parsed.data.clientId,
-      client_secret: parsed.data.clientSecret,
+      client_secret: encryptSecret(parsed.data.clientSecret),
       updated_at: new Date().toISOString(),
     })
     .eq("id", connectionId);
