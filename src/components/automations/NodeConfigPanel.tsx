@@ -61,6 +61,19 @@ export function NodeConfigPanel({
       </div>
 
       <div className="flex-1 space-y-4 overflow-y-auto p-4">
+        <div>
+          <Label htmlFor="f-_label">Nome do passo (opcional)</Label>
+          <Input
+            id="f-_label"
+            placeholder={def.label}
+            value={typeof node.config._label === "string" ? node.config._label : ""}
+            onChange={(e) => set("_label", e.target.value)}
+          />
+          <p className="mt-1 text-[11px] text-gray-400">Personalize como este passo aparece no fluxo.</p>
+        </div>
+
+        <div className="h-px bg-gray-100" />
+
         <p className="text-xs leading-relaxed text-gray-500">{def.description}</p>
 
         {def.fields.length === 0 && (

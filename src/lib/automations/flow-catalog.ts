@@ -1,4 +1,14 @@
-import { Zap, GitBranch, MessageCircle, Move, UserCheck, Tag, ListPlus, Clock } from "lucide-react";
+import {
+  Zap,
+  GitBranch,
+  MessageCircle,
+  Move,
+  UserCheck,
+  Tag,
+  ListPlus,
+  Clock,
+  SlidersHorizontal,
+} from "lucide-react";
 import type { FlowNodeType, FlowNodeConfig } from "@/lib/automations/flow-types";
 
 // lucide-react 1.24.0 não exporta o tipo `LucideIcon` — a convenção do projeto
@@ -148,6 +158,23 @@ const ACTIONS: FlowNodeDef[] = [
           { value: "hours", label: "Horas" },
           { value: "days", label: "Dias" },
         ],
+      },
+    ],
+  },
+  {
+    kind: "custom",
+    type: "action",
+    label: "Personalizado",
+    description: "Um passo do seu jeito — dê um nome e descreva o que ele faz.",
+    icon: SlidersHorizontal,
+    accent: "#475569",
+    fields: [
+      {
+        key: "note",
+        label: "O que este passo faz",
+        kind: "textarea",
+        placeholder: "Ex: enviar um e-mail de agradecimento",
+        help: "Use o campo “Nome do passo” acima para dar um título a ele.",
       },
     ],
   },

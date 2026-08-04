@@ -248,6 +248,7 @@ export function FlowCanvas({
           if (!def) return null;
           const Icon = def.icon;
           const isSelected = selectedId === node.id;
+          const customLabel = typeof node.config._label === "string" ? node.config._label.trim() : "";
           return (
             <div
               key={node.id}
@@ -303,7 +304,7 @@ export function FlowCanvas({
                   <Icon size={18} strokeWidth={2} />
                 </span>
                 <div className="min-w-0">
-                  <p className="truncate text-[13px] font-semibold text-gray-900">{def.label}</p>
+                  <p className="truncate text-[13px] font-semibold text-gray-900">{customLabel || def.label}</p>
                   <p className="truncate text-[11px] text-gray-400">
                     {node.type === "trigger" ? "Gatilho" : "Ação"}
                   </p>

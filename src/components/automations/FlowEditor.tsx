@@ -59,6 +59,8 @@ export function FlowEditor({
           return typeof c.title === "string" && c.title.trim() ? c.title : "Defina o título…";
         case "wait":
           return `${c.amount ?? 1} ${UNIT_LABEL[String(c.unit)] ?? ""}`.trim();
+        case "custom":
+          return typeof c.note === "string" && c.note.trim() ? c.note : "Passo personalizado";
         default:
           return getNodeDef(node.kind)?.description ?? "";
       }
@@ -183,7 +185,7 @@ export function FlowEditor({
       <div className="flex min-h-0 flex-1 gap-3">
         {/* Paleta */}
         {canEdit && (
-          <div className="hidden w-52 shrink-0 flex-col overflow-y-auto rounded-xl border border-gray-200 bg-panel p-3 md:flex">
+          <div className="hidden w-64 shrink-0 flex-col overflow-y-auto rounded-xl border border-gray-200 bg-panel p-3 md:flex">
             <PaletteGroup title="Gatilhos" defs={triggers} onAdd={addNode} />
             <div className="my-3 h-px bg-gray-100" />
             <PaletteGroup title="Ações" defs={actions} onAdd={addNode} />
@@ -238,7 +240,7 @@ function PaletteGroup({
 }) {
   return (
     <div>
-      <p className="px-1 pb-2 text-[10px] font-semibold uppercase tracking-wider text-gray-400">{title}</p>
+      <p className="px-1 pb-2 text-[10px] font-semibold uppercase tracking-wider text-gray-500">{title}</p>
       <div className="space-y-1.5">
         {defs.map((def) => {
           const Icon = def.icon;
@@ -247,16 +249,19 @@ function PaletteGroup({
               key={def.kind}
               type="button"
               onClick={() => onAdd(def.kind)}
-              className="group flex w-full items-center gap-2.5 rounded-lg border border-gray-200 bg-white px-2.5 py-2 text-left transition-colors hover:border-gray-300 hover:bg-gray-50"
+              className="group flex w-full items-start gap-2.5 rounded-lg border border-gray-200 bg-white px-2.5 py-2 text-left transition-colors hover:border-gray-300 hover:bg-gray-50"
             >
               <span
-                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
+                className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
                 style={{ backgroundColor: `${def.accent}1a`, color: def.accent }}
               >
                 <Icon size={16} strokeWidth={2} />
               </span>
-              <span className="min-w-0 flex-1 truncate text-[13px] font-medium text-gray-700">{def.label}</span>
-              <Plus size={14} className="shrink-0 text-gray-300 group-hover:text-gray-500" />
+              <span className="min-w-0 flex-1">
+                <span className="block text-[13px] font-semibold leading-tight text-gray-900">{def.label}</span>
+                <span className="mt-0.5 block text-[11px] leading-snug text-gray-500">{def.description}</span>
+              </span>
+              <Plus size={15} className="mt-0.5 shrink-0 text-gray-300 group-hover:text-gray-500" />
             </button>
           );
         })}
