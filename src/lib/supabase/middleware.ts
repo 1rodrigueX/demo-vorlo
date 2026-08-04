@@ -14,6 +14,8 @@ const PUBLIC_PATHS = [
   "/produtos",
   "/seguranca",
   "/crm",
+  // Instalador do app desktop (público — baixar não exige login).
+  "/downloads",
 ];
 
 export async function updateSession(request: NextRequest) {
