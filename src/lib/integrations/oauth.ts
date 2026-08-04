@@ -1,5 +1,6 @@
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { encryptSecret, decryptSecret } from "@/lib/crypto/secrets";
 import { getOAuthProviderConfig, type OAuthProviderKey } from "./providers";
 
 export function getAuthorizeUrl(provider: OAuthProviderKey, state: string, redirectUri: string): string | null {
@@ -83,9 +84,11 @@ export async function exchangeOAuthCode(
     provider,
     name: email ?? "",
     status: "connected" as const,
-    access_token: token.access_token,
+    // Tokens cifrados em repouso (AES-256-GCM). No-op se SECRETS_ENC_KEY não
+    // estiver configurada. existing?.refresh_token já vem no formato guardado.
+    access_token: encryptSecret(token.access_token),
     // Google só manda refresh_token no primeiro consentimento; se não vier de novo, mantém o que já tinha.
-    refresh_token: token.refresh_token ?? existing?.refresh_token ?? null,
+    refresh_token: token.refresh_token ? encryptSecret(token.refresh_token) : (existing?.refresh_token ?? null),
     expires_at: new Date(Date.now() + token.expires_in * 1000).toISOString(),
     connected_at: now,
     last_error: null,
@@ -114,21 +117,32 @@ export async function getValidOAuthAccessToken(
 
   if (!connection?.access_token) return null;
 
+  // Decifra o que veio do banco (valores antigos em texto puro passam direto).
+  let accessToken: string | null;
+  let refreshToken: string | null;
+  try {
+    accessToken = decryptSecret(connection.access_token);
+    refreshToken = connection.refresh_token ? decryptSecret(connection.refresh_token) : null;
+  } catch (err) {
+    console.error("getValidOAuthAccessToken: falha ao descriptografar tokens", provider, err);
+    return null;
+  }
+
   const isExpired = !connection.expires_at || new Date(connection.expires_at) <= new Date();
-  if (!isExpired) return connection.access_token;
-  if (!connection.refresh_token) return null;
+  if (!isExpired) return accessToken;
+  if (!refreshToken) return null;
 
   const refreshed = await requestToken(provider, {
     grant_type: "refresh_token",
-    refresh_token: connection.refresh_token,
+    refresh_token: refreshToken,
   });
 
   await admin
     .from("tenant_integrations")
     .update({
-      access_token: refreshed.access_token,
+      access_token: encryptSecret(refreshed.access_token),
       // A Microsoft manda um refresh_token novo a cada renovação; o Google mantém o mesmo.
-      refresh_token: refreshed.refresh_token ?? connection.refresh_token,
+      refresh_token: encryptSecret(refreshed.refresh_token ?? refreshToken),
       expires_at: new Date(Date.now() + refreshed.expires_in * 1000).toISOString(),
       updated_at: new Date().toISOString(),
     })

@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { encryptSecret, isEncrypted } from "@/lib/crypto/secrets";
+import type { Database } from "@/types/database.types";
+
+type IntegrationUpdate = Database["public"]["Tables"]["tenant_integrations"]["Update"];
 
 /**
  * Backfill único: cifra segredos que ainda estão em texto puro no banco (ex:
@@ -21,24 +24,33 @@ export async function POST(request: Request) {
   const admin = createAdminClient();
   const { data: rows, error } = await admin
     .from("tenant_integrations")
-    .select("id, credentials")
-    .eq("provider", "anthropic");
+    .select("id, credentials, access_token, refresh_token");
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   let encrypted = 0;
   let skipped = 0;
   for (const row of rows ?? []) {
+    const update: IntegrationUpdate = {};
+
+    // credenciais em JSONB (ex: chave Anthropic em credentials.apiKey)
     const creds = (row.credentials as { apiKey?: string } | null) ?? null;
-    const apiKey = creds?.apiKey;
-    if (!apiKey || isEncrypted(apiKey)) {
+    if (creds?.apiKey && !isEncrypted(creds.apiKey)) {
+      update.credentials = { ...creds, apiKey: encryptSecret(creds.apiKey) };
+    }
+    // tokens OAuth (Gmail/Outlook) nas colunas dedicadas
+    if (row.access_token && !isEncrypted(row.access_token)) {
+      update.access_token = encryptSecret(row.access_token);
+    }
+    if (row.refresh_token && !isEncrypted(row.refresh_token)) {
+      update.refresh_token = encryptSecret(row.refresh_token);
+    }
+
+    if (Object.keys(update).length === 0) {
       skipped++;
       continue;
     }
-    const { error: upErr } = await admin
-      .from("tenant_integrations")
-      .update({ credentials: { ...creds, apiKey: encryptSecret(apiKey) } })
-      .eq("id", row.id);
+    const { error: upErr } = await admin.from("tenant_integrations").update(update).eq("id", row.id);
     if (!upErr) encrypted++;
   }
 
