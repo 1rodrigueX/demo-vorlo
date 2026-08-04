@@ -3,14 +3,16 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Workflow, Plus, Trash2 } from "lucide-react";
+import { Workflow, Plus, Trash2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Card } from "@/components/ui/Card";
 import { useTenantSlug } from "@/lib/tenant/useTenantSlug";
-import { createFlow, deleteFlow } from "@/lib/actions/automation-flows";
+import { createFlow, createFlowWithGraph, deleteFlow } from "@/lib/actions/automation-flows";
+import { AIFlowModal } from "@/components/automations/AIFlowModal";
+import type { FlowGraph } from "@/lib/automations/flow-types";
 
 export type FlowListItem = {
   id: string;
@@ -24,8 +26,21 @@ export function TrajetoriasList({ flows, canEdit }: { flows: FlowListItem[]; can
   const router = useRouter();
   const tenantSlug = useTenantSlug();
   const [open, setOpen] = useState(false);
+  const [aiOpen, setAiOpen] = useState(false);
   const [name, setName] = useState("");
   const [isPending, startTransition] = useTransition();
+
+  const onAIGenerated = (r: { name: string; graph: FlowGraph }) => {
+    startTransition(async () => {
+      const res = await createFlowWithGraph(r.name, r.graph);
+      if ("error" in res) {
+        toast.error(res.error);
+        return;
+      }
+      setAiOpen(false);
+      router.push(`/${tenantSlug}/trajetorias/${res.id}`);
+    });
+  };
 
   const onCreate = () => {
     startTransition(async () => {
@@ -63,10 +78,16 @@ export function TrajetoriasList({ flows, canEdit }: { flows: FlowListItem[]; can
           </p>
         </div>
         {canEdit && (
-          <Button onClick={() => setOpen(true)}>
-            <Plus size={16} />
-            Nova trajetória
-          </Button>
+          <div className="flex shrink-0 items-center gap-2">
+            <Button variant="secondary" onClick={() => setAiOpen(true)}>
+              <Sparkles size={16} />
+              Criar com a IA
+            </Button>
+            <Button onClick={() => setOpen(true)}>
+              <Plus size={16} />
+              Nova trajetória
+            </Button>
+          </div>
         )}
       </div>
 
@@ -83,10 +104,16 @@ export function TrajetoriasList({ flows, canEdit }: { flows: FlowListItem[]; can
             </p>
           </div>
           {canEdit && (
-            <Button onClick={() => setOpen(true)} className="mt-1">
-              <Plus size={16} />
-              Criar primeira trajetória
-            </Button>
+            <div className="mt-1 flex flex-wrap items-center justify-center gap-2">
+              <Button onClick={() => setAiOpen(true)}>
+                <Sparkles size={16} />
+                Criar com a IA
+              </Button>
+              <Button variant="secondary" onClick={() => setOpen(true)}>
+                <Plus size={16} />
+                Criar manualmente
+              </Button>
+            </div>
           )}
         </Card>
       ) : (
@@ -155,6 +182,8 @@ export function TrajetoriasList({ flows, canEdit }: { flows: FlowListItem[]; can
           </div>
         </div>
       </Modal>
+
+      <AIFlowModal open={aiOpen} onClose={() => setAiOpen(false)} onGenerated={onAIGenerated} />
     </div>
   );
 }

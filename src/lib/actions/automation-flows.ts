@@ -81,6 +81,31 @@ export async function createFlow(name: string): Promise<{ id: string } | { error
   return { id: data.id };
 }
 
+/** Cria uma trajetória já com um grafo pronto (usado pelo "Criar com a IA"). */
+export async function createFlowWithGraph(
+  name: string,
+  graph: unknown,
+): Promise<{ id: string } | { error: string }> {
+  const parsedName = z.string().trim().min(1, "Dê um nome à trajetória").max(120).safeParse(name);
+  if (!parsedName.success) return { error: parsedName.error.issues[0]?.message ?? "Nome inválido" };
+  const parsedGraph = graphSchema.safeParse(graph);
+  if (!parsedGraph.success) return { error: "Fluxo gerado inválido" };
+
+  const { supabase, tenantId, userId } = await tenantForCurrentUser();
+  if (!tenantId || !userId) return { error: "Sessão expirada, faça login novamente" };
+
+  const { data, error } = await supabase
+    .from("automation_flows")
+    .insert({ tenant_id: tenantId, name: parsedName.data, graph: parsedGraph.data, created_by: userId })
+    .select("id")
+    .single();
+
+  if (error || !data) return { error: mapFlowError(error?.message, "criar") };
+
+  revalidatePath("/[tenantSlug]/trajetorias", "page");
+  return { id: data.id };
+}
+
 /** Salva o grafo inteiro (nome, status e nós/arestas) de uma trajetória. */
 export async function saveFlow(input: SaveFlowInput): Promise<FlowActionResult> {
   const parsed = saveSchema.safeParse(input);

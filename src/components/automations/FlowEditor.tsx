@@ -2,11 +2,12 @@
 
 import { useCallback, useMemo, useState, useTransition } from "react";
 import Link from "next/link";
-import { ArrowLeft, Plus, Check } from "lucide-react";
+import { ArrowLeft, Plus, Check, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/Button";
 import { useTenantSlug } from "@/lib/tenant/useTenantSlug";
 import { FlowCanvas } from "@/components/automations/FlowCanvas";
+import { AIFlowModal } from "@/components/automations/AIFlowModal";
 import { NodeConfigPanel, type FlowOptions } from "@/components/automations/NodeConfigPanel";
 import { FLOW_CATALOG, getNodeDef, defaultConfigFor } from "@/lib/automations/flow-catalog";
 import type { FlowNode, FlowEdge, FlowNodeConfig, FlowGraph } from "@/lib/automations/flow-types";
@@ -36,7 +37,19 @@ export function FlowEditor({
   const [edges, setEdges] = useState<FlowEdge[]>(initialGraph.edges);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [dirty, setDirty] = useState(false);
+  const [aiOpen, setAiOpen] = useState(false);
   const [isSaving, startSave] = useTransition();
+
+  const onAIGenerated = (r: { name: string; graph: FlowGraph }) => {
+    if (nodes.length > 0 && !confirm("Isso vai substituir os passos atuais desta trajetória. Continuar?")) return;
+    setNodes(r.graph.nodes);
+    setEdges(r.graph.edges);
+    if (!name.trim()) setName(r.name);
+    setSelectedId(null);
+    setDirty(true);
+    setAiOpen(false);
+    toast.success("Trajetória gerada — revise os passos e salve");
+  };
 
   const stageName = useMemo(() => new Map(options.stages.map((s) => [s.id, s.name])), [options.stages]);
   const memberName = useMemo(() => new Map(options.members.map((m) => [m.id, m.name])), [options.members]);
@@ -175,6 +188,12 @@ export function FlowEditor({
           </select>
         </label>
         {canEdit && (
+          <Button size="sm" variant="secondary" onClick={() => setAiOpen(true)}>
+            <Sparkles size={16} />
+            Gerar com IA
+          </Button>
+        )}
+        {canEdit && (
           <Button size="sm" onClick={onSave} isLoading={isSaving} className={dirty ? "" : "opacity-90"}>
             <Check size={16} />
             Salvar
@@ -225,6 +244,8 @@ export function FlowEditor({
           />
         )}
       </div>
+
+      <AIFlowModal open={aiOpen} onClose={() => setAiOpen(false)} onGenerated={onAIGenerated} />
     </div>
   );
 }

@@ -60,6 +60,20 @@ export async function getAnthropicClientForAgent(
   throw new AnthropicNotConfiguredError();
 }
 
+/**
+ * Client pra features da plataforma (ex: "Criar com IA" nas Trajetórias): usa
+ * a chave do próprio tenant se houver, senão cai na chave da plataforma
+ * (PLATFORM_ANTHROPIC_API_KEY) — igual ao Synexa, funciona out-of-the-box.
+ */
+export async function getAnthropicClientForPlatform(tenantId: string): Promise<Anthropic> {
+  const tenantKey = await getTenantAnthropicApiKey(tenantId);
+  if (tenantKey) return new Anthropic({ apiKey: tenantKey });
+  if (process.env.PLATFORM_ANTHROPIC_API_KEY) {
+    return new Anthropic({ apiKey: process.env.PLATFORM_ANTHROPIC_API_KEY });
+  }
+  throw new AnthropicNotConfiguredError();
+}
+
 /** Faz uma chamada mínima real à API pra confirmar que a chave funciona. */
 export async function testAnthropicApiKey(
   apiKey: string,
