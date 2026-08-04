@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { getCurrentUser, isCurrentUserDev } from "@/lib/auth/current-user";
 import { createClient } from "@/lib/supabase/server";
@@ -65,6 +66,7 @@ export default async function DashboardLayout({
   const logoUrl = tenant?.logo_storage_path ? await getCompanyAssetSignedUrl(tenant.logo_storage_path) : null;
   const clickSoundUrl = tenant?.click_sound_path ? await getCompanyAssetSignedUrl(tenant.click_sound_path) : null;
   const showSettings = current.profile.role === "owner" || current.profile.role === "manager";
+  const sidebarCollapsed = (await cookies()).get("sidebar_collapsed")?.value === "1";
   // const spotifyStatus = await getSpotifyStatus();
 
   return (
@@ -83,7 +85,12 @@ export default async function DashboardLayout({
         </MusicPlayerProvider>
       */}
       <div className="flex min-h-screen">
-        <Sidebar tenantName={tenantName} logoUrl={logoUrl} showSettings={showSettings} />
+        <Sidebar
+          tenantName={tenantName}
+          logoUrl={logoUrl}
+          showSettings={showSettings}
+          defaultCollapsed={sidebarCollapsed}
+        />
         <div className="flex flex-1 flex-col">
           <Topbar
             name={name}

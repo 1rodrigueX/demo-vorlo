@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -13,6 +14,8 @@ import {
   Lightbulb,
   Bug,
   Settings,
+  ChevronsLeft,
+  ChevronsRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { useTenantTheme } from "@/lib/theme/TenantThemeContext";
@@ -40,11 +43,13 @@ function NavItem({
   tenantSlug,
   pathname,
   brandColor,
+  collapsed,
 }: {
   link: NavLink;
   tenantSlug: string;
   pathname: string;
   brandColor: string;
+  collapsed: boolean;
 }) {
   const { href, label, icon: Icon } = link;
   const fullHref = `/${tenantSlug}${href}`;
@@ -54,8 +59,10 @@ function NavItem({
     <Link
       href={fullHref}
       aria-current={isActive ? "page" : undefined}
+      aria-label={collapsed ? label : undefined}
       className={cn(
-        "group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-150",
+        "group relative flex items-center rounded-lg py-2 text-sm font-medium transition-colors duration-150",
+        collapsed ? "justify-center px-0" : "gap-3 px-3",
         isActive ? "text-white" : "text-white/55 hover:bg-white/[0.06] hover:text-white",
       )}
       style={isActive ? { backgroundColor: "rgba(255,87,34,0.13)" } : undefined}
@@ -70,10 +77,23 @@ function NavItem({
       <Icon
         size={18}
         strokeWidth={isActive ? 2.2 : 1.9}
-        className={isActive ? "" : "text-white/60 transition-colors group-hover:text-white/90"}
+        className={cn("shrink-0", isActive ? "" : "text-white/60 transition-colors group-hover:text-white/90")}
         style={isActive ? { color: brandColor } : undefined}
       />
-      <span className="truncate">{label}</span>
+      {collapsed ? (
+        <>
+          <span className="sr-only">{label}</span>
+          {/* Tooltip só no modo recolhido: aparece à direita ao passar o mouse. */}
+          <span
+            role="tooltip"
+            className="pointer-events-none absolute left-full z-50 ml-2 whitespace-nowrap rounded-md border border-white/10 bg-gray-900 px-2 py-1 text-xs font-medium text-white opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100"
+          >
+            {label}
+          </span>
+        </>
+      ) : (
+        <span className="truncate">{label}</span>
+      )}
     </Link>
   );
 }
@@ -82,14 +102,27 @@ export function Sidebar({
   tenantName,
   logoUrl,
   showSettings = false,
+  defaultCollapsed = false,
 }: {
   tenantName: string;
   logoUrl?: string | null;
   showSettings?: boolean;
+  defaultCollapsed?: boolean;
 }) {
   const pathname = usePathname();
   const tenantSlug = useTenantSlug();
   const { brandColor } = useTenantTheme();
+  const [collapsed, setCollapsed] = useState(defaultCollapsed);
+
+  const toggle = () => {
+    setCollapsed((c) => {
+      const next = !c;
+      // Persistência sem "flash" na recarga: o layout (server) lê esse cookie e
+      // já renderiza a sidebar no estado certo, então a hidratação bate.
+      document.cookie = `sidebar_collapsed=${next ? "1" : "0"}; path=/; max-age=31536000; samesite=lax`;
+      return next;
+    });
+  };
 
   return (
     <aside
@@ -97,11 +130,22 @@ export function Sidebar({
         background:
           "radial-gradient(120% 55% at 50% 0%, rgba(255,87,34,0.16), transparent 60%), linear-gradient(165deg, #1a0f08 0%, #241610 55%, #140b06 100%)",
       }}
-      className="hidden w-64 shrink-0 border-r border-white/5 md:flex md:flex-col"
+      className={cn(
+        "hidden shrink-0 border-r border-white/5 transition-[width] duration-200 ease-in-out md:flex md:flex-col",
+        collapsed ? "w-[68px] overflow-visible" : "w-64 overflow-hidden",
+      )}
     >
-      <div className="flex h-20 items-center gap-2.5 border-b border-white/10 px-5">
+      <div
+        className={cn(
+          "flex h-20 items-center border-b border-white/10",
+          collapsed ? "justify-center px-0" : "gap-2.5 px-5",
+        )}
+      >
         <div
-          className="flex h-12 w-20 shrink-0 items-center justify-center overflow-hidden rounded-lg text-sm font-bold text-white shadow-sm"
+          className={cn(
+            "flex shrink-0 items-center justify-center overflow-hidden rounded-lg text-sm font-bold text-white shadow-sm transition-all duration-200",
+            collapsed ? "h-10 w-10" : "h-12 w-20",
+          )}
           style={logoUrl ? undefined : { backgroundColor: brandColor }}
         >
           {logoUrl ? (
@@ -111,36 +155,85 @@ export function Sidebar({
             tenantName[0]?.toUpperCase() ?? "?"
           )}
         </div>
-        <span className="truncate text-base font-semibold tracking-tight text-white">{tenantName}</span>
+        {!collapsed && (
+          <span className="truncate text-base font-semibold tracking-tight text-white">{tenantName}</span>
+        )}
       </div>
 
       <nav className="flex flex-1 flex-col px-3 py-4">
-        <p className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/35">Menu</p>
+        {!collapsed && (
+          <p className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/35">Menu</p>
+        )}
         <div className="space-y-0.5">
           {mainLinks.map((link) => (
-            <NavItem key={link.href} link={link} tenantSlug={tenantSlug} pathname={pathname} brandColor={brandColor} />
+            <NavItem
+              key={link.href}
+              link={link}
+              tenantSlug={tenantSlug}
+              pathname={pathname}
+              brandColor={brandColor}
+              collapsed={collapsed}
+            />
           ))}
         </div>
 
         <div className="my-3 h-px bg-white/[0.06]" />
-        <p className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/35">Ajuda</p>
+        {!collapsed && (
+          <p className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/35">Ajuda</p>
+        )}
         <div className="space-y-0.5">
           {helpLinks.map((link) => (
-            <NavItem key={link.href} link={link} tenantSlug={tenantSlug} pathname={pathname} brandColor={brandColor} />
+            <NavItem
+              key={link.href}
+              link={link}
+              tenantSlug={tenantSlug}
+              pathname={pathname}
+              brandColor={brandColor}
+              collapsed={collapsed}
+            />
           ))}
         </div>
 
-        {showSettings && (
-          <div className="mt-auto pt-3">
-            <div className="mb-3 h-px bg-white/[0.06]" />
+        <div className="mt-auto space-y-0.5 pt-3">
+          <div className="mb-3 h-px bg-white/[0.06]" />
+          {showSettings && (
             <NavItem
               link={{ href: "/settings", label: "Configurações", icon: Settings }}
               tenantSlug={tenantSlug}
               pathname={pathname}
               brandColor={brandColor}
+              collapsed={collapsed}
             />
-          </div>
-        )}
+          )}
+          <button
+            type="button"
+            onClick={toggle}
+            aria-label={collapsed ? "Expandir menu" : "Recolher menu"}
+            className={cn(
+              "group relative flex w-full items-center rounded-lg py-2 text-sm font-medium text-white/55 transition-colors duration-150 hover:bg-white/[0.06] hover:text-white",
+              collapsed ? "justify-center px-0" : "gap-3 px-3",
+            )}
+          >
+            {collapsed ? (
+              <ChevronsRight size={18} strokeWidth={1.9} className="shrink-0 text-white/60 group-hover:text-white/90" />
+            ) : (
+              <ChevronsLeft size={18} strokeWidth={1.9} className="shrink-0 text-white/60 group-hover:text-white/90" />
+            )}
+            {collapsed ? (
+              <>
+                <span className="sr-only">Expandir menu</span>
+                <span
+                  role="tooltip"
+                  className="pointer-events-none absolute left-full z-50 ml-2 whitespace-nowrap rounded-md border border-white/10 bg-gray-900 px-2 py-1 text-xs font-medium text-white opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100"
+                >
+                  Expandir
+                </span>
+              </>
+            ) : (
+              <span className="truncate">Recolher</span>
+            )}
+          </button>
+        </div>
       </nav>
     </aside>
   );
