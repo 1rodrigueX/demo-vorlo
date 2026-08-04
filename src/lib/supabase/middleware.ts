@@ -12,6 +12,7 @@ const PUBLIC_PATHS = [
   "/portfolio",
   "/sobre",
   "/produtos",
+  "/seguranca",
   "/crm",
 ];
 
