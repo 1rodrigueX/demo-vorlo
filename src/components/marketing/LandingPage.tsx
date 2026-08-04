@@ -29,9 +29,8 @@ const TRUST_POINTS = [
   "Suporte pelo próprio Synexa, direto no CRM",
 ];
 
-/** Cores de destaque neon de cada card de recurso (segue a imagem: azul,
- * verde, roxo, laranja/rosa). Casa 1-a-1 com FEATURES por índice. */
-const FEATURE_ACCENTS = ["#6d5cff", "#22c55e", "#a855f7", "#fb7185"] as const;
+/** Acento único da marca (laranja) nos cards de recurso — sem cores neon. */
+const FEATURE_ACCENTS = ["#ff5722", "#ff5722", "#ff5722", "#ff5722"] as const;
 
 /** Produtos além do CRM — nome/descrição/link vêm de getAccountServices
  * (lib/auth/current-user). Só a Transportadora tem preço real hoje; os demais
@@ -42,7 +41,7 @@ const MODULES = [
     name: "Transportadora",
     description: "App de gestão de fretes, clientes e motoristas.",
     icon: Truck,
-    accent: "#38bdf8",
+    accent: "#ff5722",
     href: "/comprar-transportadora",
     hasPrice: true,
   },
@@ -51,7 +50,7 @@ const MODULES = [
     name: "Finanças",
     description: "Controle financeiro completo — fluxo de caixa, contas e boletos.",
     icon: Wallet,
-    accent: "#22c55e",
+    accent: "#ff5722",
     href: "/comprar-financas",
     hasPrice: false,
   },
@@ -60,7 +59,7 @@ const MODULES = [
     name: "Estoque",
     description: "Controle de estoque, itens, entradas e saídas.",
     icon: Boxes,
-    accent: "#f59e0b",
+    accent: "#ff5722",
     href: "/comprar-estoque",
     hasPrice: false,
   },
@@ -69,7 +68,7 @@ const MODULES = [
     name: "Produção",
     description: "Turnos, máquinas, produtos e apontamento de produção.",
     icon: Factory,
-    accent: "#a855f7",
+    accent: "#ff5722",
     href: "/comprar-producao",
     hasPrice: false,
   },
@@ -139,9 +138,7 @@ export function LandingPage({
           </p>
           <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
             <Link href="/signup">
-              <Button size="md" className="shadow-lg shadow-indigo-500/30">
-                Criar conta grátis
-              </Button>
+              <Button size="md">Criar conta grátis</Button>
             </Link>
             <a
               href="#recursos"
@@ -152,23 +149,19 @@ export function LandingPage({
           </div>
         </div>
 
-        {/* Mockup do produto — sempre "dark glass" (é a tela real do CRM). */}
+        {/* Mockup do produto — dark glass (é a tela real do CRM). */}
         <div className="relative mx-auto max-w-5xl px-4 pb-6">
-          <div className="pointer-events-none absolute -inset-x-10 top-1/2 -z-10 h-[80%] -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(255,87,34,0.4),transparent_65%)] blur-2xl" />
           <PipelineMockup />
         </div>
 
-        {/* 4 CARDS DE RECURSO com glow colorido, direto sob o mockup (imagem). */}
+        {/* 4 CARDS DE RECURSO — chapados, acento laranja (sem glow). */}
         <div id="recursos" className="mx-auto max-w-5xl scroll-mt-20 px-4 pt-6 pb-24">
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {FEATURES.map((f, i) => (
-              <GlowCard key={f.title} accent={FEATURE_ACCENTS[i]}>
+              <GlowCard key={f.title}>
                 <div
                   className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl text-white"
-                  style={{
-                    background: `linear-gradient(140deg, ${FEATURE_ACCENTS[i]}, ${FEATURE_ACCENTS[i]}bb)`,
-                    boxShadow: `0 8px 24px -6px ${FEATURE_ACCENTS[i]}88`,
-                  }}
+                  style={{ background: FEATURE_ACCENTS[i] }}
                 >
                   <f.icon size={21} />
                 </div>
@@ -278,10 +271,7 @@ export function LandingPage({
               >
                 <div
                   className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full text-white"
-                  style={{
-                    background: "linear-gradient(140deg, #ff7a4d, #ff5722)",
-                    boxShadow: "0 8px 24px -6px rgba(255,87,34,0.6)",
-                  }}
+                  style={{ background: "linear-gradient(140deg, #ff7a4d, #ff5722)" }}
                 >
                   <step.icon size={22} />
                 </div>
@@ -328,13 +318,10 @@ export function LandingPage({
                     className={
                       "relative flex flex-col rounded-2xl border p-6 transition-all hover:-translate-y-1 " +
                       (featured
-                        ? "border-indigo-400/50 bg-panel shadow-xl shadow-indigo-500/20 ring-1 ring-indigo-400/30"
-                        : "border-gray-200/70 bg-panel shadow-sm hover:shadow-md")
+                        ? "border-indigo-400/60 bg-panel ring-1 ring-indigo-400/30"
+                        : "border-gray-200/70 bg-panel hover:border-gray-300")
                     }
                   >
-                    {featured && (
-                      <div className="pointer-events-none absolute -inset-px -z-10 rounded-2xl bg-gradient-to-b from-indigo-500/20 to-transparent" />
-                    )}
                     <div className="flex items-center gap-2">
                       <h3 className="text-base font-semibold text-gray-900">{plan.name}</h3>
                       {featured && <Badge className="bg-indigo-500/15 text-indigo-500">Recomendado</Badge>}
@@ -385,19 +372,11 @@ export function LandingPage({
                 return (
                   <div
                     key={m.key}
-                    className="group relative flex flex-col rounded-2xl border border-gray-200/70 bg-panel p-5 transition-all hover:-translate-y-1 hover:shadow-lg"
-                    style={{ boxShadow: `0 24px 48px -32px ${m.accent}77` }}
+                    className="group relative flex flex-col rounded-2xl border border-gray-200/70 bg-panel p-5 transition-all hover:-translate-y-1 hover:border-gray-300"
                   >
                     <div
-                      className="pointer-events-none absolute inset-x-5 top-0 h-px opacity-70"
-                      style={{ background: `linear-gradient(to right, transparent, ${m.accent}, transparent)` }}
-                    />
-                    <div
                       className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl text-white"
-                      style={{
-                        background: `linear-gradient(140deg, ${m.accent}, ${m.accent}bb)`,
-                        boxShadow: `0 8px 24px -6px ${m.accent}88`,
-                      }}
+                      style={{ background: m.accent }}
                     >
                       <m.icon size={21} />
                     </div>
@@ -419,18 +398,15 @@ export function LandingPage({
         </div>
       </section>
 
-      {/* CTA FINAL — banda escura neon (igual imagem) */}
-      <section className="relative overflow-hidden bg-[#080611] py-20 text-center text-white">
-        <div className="pointer-events-none absolute left-1/2 top-1/2 h-[400px] w-[700px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(255,87,34,0.45),transparent_65%)] blur-3xl" />
+      {/* CTA FINAL — banda escura (sem glow). */}
+      <section className="relative overflow-hidden bg-[#0b0a12] py-20 text-center text-white">
         <div className="relative mx-auto max-w-2xl px-4">
           <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Pronto pra organizar suas vendas?</h2>
           <p className="mt-3 text-base text-white/60">
             Crie sua conta agora e conheça o CRM antes de escolher o plano.
           </p>
           <Link href="/signup" className="mt-7 inline-block">
-            <Button size="md" className="shadow-lg shadow-indigo-500/40">
-              Criar conta grátis
-            </Button>
+            <Button size="md">Criar conta grátis</Button>
           </Link>
         </div>
       </section>
@@ -451,51 +427,21 @@ export function LandingPage({
 
 /** Marca Synexa (S angular em gradiente azul→violeta). */
 function BrandMark() {
-  return <SynexaMark size={32} style={{ filter: "drop-shadow(0 4px 12px rgba(109,71,240,0.5))" }} />;
+  return <SynexaMark size={32} />;
 }
 
-/** Fundo neon do hero: grid que some nas bordas + halos violeta/azul. Funciona
- * no claro e no escuro (os halos brilham nos dois). */
+/** Fundo do hero: grid sutil que some nas bordas (sem halos neon). */
 function HeroBackground() {
   return (
     <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,87,34,0.10)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,87,34,0.10)_1px,transparent_1px)] bg-[size:46px_46px] [mask-image:radial-gradient(ellipse_70%_55%_at_50%_0%,#000_55%,transparent_100%)]" />
-      <div className="absolute left-1/2 top-[-15%] h-[520px] w-[900px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(255,87,34,0.28),transparent_60%)] blur-3xl" />
-      <div className="absolute right-[8%] top-[10%] h-[300px] w-[300px] rounded-full bg-[radial-gradient(circle,rgba(56,189,248,0.20),transparent_60%)] blur-3xl" />
-      <div className="absolute left-[6%] top-[30%] h-[300px] w-[300px] rounded-full bg-[radial-gradient(circle,rgba(168,85,247,0.18),transparent_60%)] blur-3xl" />
-      {/* diamante brilhante decorativo (canto), como na imagem */}
-      <SparklesIcon
-        size={34}
-        className="absolute right-[12%] top-[62%] text-indigo-400/70"
-        style={{ filter: "drop-shadow(0 0 12px rgba(255,87,34,0.8))" }}
-      />
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,87,34,0.06)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,87,34,0.06)_1px,transparent_1px)] bg-[size:46px_46px] [mask-image:radial-gradient(ellipse_70%_55%_at_50%_0%,#000_55%,transparent_100%)]" />
     </div>
   );
 }
 
-/** Card de vidro escuro com borda/halo colorido — usado nos 4 recursos. */
-function GlowCard({ accent, children }: { accent: string; children: React.ReactNode }) {
-  return (
-    <div className="group relative rounded-2xl">
-      <div
-        className="pointer-events-none absolute -inset-px rounded-2xl opacity-60 blur-[2px] transition-opacity duration-300 group-hover:opacity-100"
-        style={{ background: `linear-gradient(140deg, ${accent}55, transparent 55%)` }}
-      />
-      <div
-        className="relative h-full rounded-2xl border border-white/10 p-5 backdrop-blur-xl"
-        style={{
-          background: "linear-gradient(160deg, rgba(23,20,42,0.92), rgba(11,10,26,0.92))",
-          boxShadow: `inset 0 1px 0 0 rgba(255,255,255,0.06), 0 20px 40px -20px ${accent}55`,
-        }}
-      >
-        <div
-          className="pointer-events-none absolute inset-x-5 top-0 h-px"
-          style={{ background: `linear-gradient(to right, transparent, ${accent}, transparent)` }}
-        />
-        {children}
-      </div>
-    </div>
-  );
+/** Card chapado escuro com borda fina — usado nos 4 recursos (sem glow). */
+function GlowCard({ children }: { children: React.ReactNode }) {
+  return <div className="h-full rounded-2xl border border-white/10 bg-white/[0.04] p-5">{children}</div>;
 }
 
 /** Prévia estilizada do pipeline — vitrine dark do hero (não é a tela real). */
@@ -511,7 +457,7 @@ function PipelineMockup() {
       className="overflow-hidden rounded-2xl border border-white/10"
       style={{
         background: "linear-gradient(160deg, #14122b, #0b0a1a)",
-        boxShadow: "0 40px 80px -30px rgba(255,87,34,0.5), inset 0 1px 0 0 rgba(255,255,255,0.06)",
+        boxShadow: "0 30px 60px -30px rgba(0,0,0,0.7), inset 0 1px 0 0 rgba(255,255,255,0.05)",
       }}
     >
       <div className="flex items-center gap-1.5 border-b border-white/10 px-4 py-2.5">
@@ -573,7 +519,7 @@ function PipelineMockup() {
 /** Prévia estilizada de conversa no WhatsApp respondida pelo Synexa. */
 function ChatMockup() {
   return (
-    <div className="mx-auto w-full max-w-sm rounded-2xl border border-gray-200/70 bg-panel p-4 shadow-xl shadow-indigo-500/10">
+    <div className="mx-auto w-full max-w-sm rounded-2xl border border-gray-200/70 bg-panel p-4 shadow-md shadow-black/10">
       <div className="mb-3 flex items-center gap-2 border-b border-gray-200/70 pb-3">
         <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-500">
           <Bot size={16} />
@@ -627,7 +573,7 @@ function AccountMockup() {
   };
 
   return (
-    <div className="mx-auto w-full max-w-sm overflow-hidden rounded-2xl border border-gray-200/70 bg-panel shadow-xl shadow-indigo-500/10">
+    <div className="mx-auto w-full max-w-sm overflow-hidden rounded-2xl border border-gray-200/70 bg-panel shadow-md shadow-black/10">
       <div className="flex items-center justify-between border-b border-gray-200/70 px-4 py-3">
         <p className="text-xs font-semibold text-gray-900">Sua equipe</p>
         <span className="flex items-center gap-1 rounded-full bg-indigo-500/15 px-2 py-0.5 text-[11px] font-medium text-indigo-500">
@@ -684,7 +630,7 @@ function AutomationMockup() {
       {cards.map((c, i) => (
         <div
           key={c.title}
-          className="flex items-center gap-3 rounded-2xl border border-gray-200/70 bg-panel p-3.5 shadow-lg shadow-indigo-500/5"
+          className="flex items-center gap-3 rounded-2xl border border-gray-200/70 bg-panel p-3.5 shadow-md shadow-black/10"
           style={{ marginLeft: i % 2 === 0 ? 0 : 24 }}
         >
           <div className={"flex h-9 w-9 shrink-0 items-center justify-center rounded-xl " + toneClasses[c.tone]}>

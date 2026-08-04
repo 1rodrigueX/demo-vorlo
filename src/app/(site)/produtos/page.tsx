@@ -135,6 +135,12 @@ export default function ProdutosPage() {
                     {p.cta}
                     <ArrowRight size={16} className="transition-transform duration-200 group-hover:translate-x-1" />
                   </CtaButton>
+                  {p.id === "crm" && (
+                    <CtaButton href="/crm" variant="ghost" className="mt-2.5 w-full">
+                      Saiba mais
+                      <ArrowRight size={15} className="transition-transform duration-200 group-hover:translate-x-1" />
+                    </CtaButton>
+                  )}
                 </div>
               </MagicCard>
             </motion.div>
