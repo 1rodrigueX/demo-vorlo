@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
-import { MessageCircle } from "lucide-react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { MessageCircle, Send } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { apiPost } from "@/lib/api";
 
 type Msg = {
   id: string;
@@ -15,6 +16,8 @@ type Convo = { contactId: string; name: string; phone: string | null; last: Msg 
 export function Leads() {
   const [msgs, setMsgs] = useState<Msg[] | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
+  const [draft, setDraft] = useState("");
+  const [sending, setSending] = useState(false);
 
   useEffect(() => {
     let alive = true;
@@ -58,6 +61,30 @@ export function Leads() {
   }, [msgs, selected]);
 
   const current = convos?.find((c) => c.contactId === selected);
+
+  const send = async (e: FormEvent) => {
+    e.preventDefault();
+    const text = draft.trim();
+    if (!current || !text || sending) return;
+    setSending(true);
+    try {
+      await apiPost("/api/app/whatsapp/send", { contactId: current.contactId, message: text });
+      const optimistic: Msg = {
+        id: `tmp-${Date.now()}`,
+        contact_id: current.contactId,
+        direction: "outbound",
+        body: text,
+        created_at: new Date().toISOString(),
+        contact: null,
+      };
+      setMsgs((prev) => (prev ? [optimistic, ...prev] : [optimistic]));
+      setDraft("");
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Falha ao enviar");
+    } finally {
+      setSending(false);
+    }
+  };
 
   return (
     <div className="flex h-full gap-4">
@@ -124,6 +151,22 @@ export function Leads() {
                 </div>
               ))}
             </div>
+            <form onSubmit={send} className="flex items-center gap-2 border-t border-carbon-800 p-3">
+              <input
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                placeholder="Responder…"
+                className="flex-1 rounded-lg border border-carbon-700 bg-carbon-800 px-3.5 py-2.5 text-sm text-white-soft outline-none placeholder:text-grey-dim focus:border-ignite/60"
+              />
+              <button
+                type="submit"
+                disabled={sending || !draft.trim()}
+                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-ignite text-white transition-all hover:brightness-110 disabled:opacity-40"
+                title="Enviar"
+              >
+                <Send size={17} />
+              </button>
+            </form>
           </>
         )}
       </div>
