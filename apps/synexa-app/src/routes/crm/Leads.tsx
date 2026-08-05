@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
-import { MessageCircle, Send, Paperclip, Mic, Square } from "lucide-react";
+import { MessageCircle, Send, Paperclip, Mic, Square, FileText } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import { apiPostForm } from "@/lib/api";
+import { apiPost, apiPostForm } from "@/lib/api";
+import { formatTime } from "@/lib/format";
 
 type Msg = {
   id: string;
@@ -9,6 +10,9 @@ type Msg = {
   direction: "inbound" | "outbound";
   body: string | null;
   created_at: string;
+  media_storage_path: string | null;
+  media_content_type: string | null;
+  media_file_name: string | null;
   contact: { name: string; phone: string | null } | null;
 };
 type Convo = { contactId: string; name: string; phone: string | null; last: Msg };
@@ -28,7 +32,9 @@ export function Leads() {
     (async () => {
       const { data } = await supabase
         .from("whatsapp_messages")
-        .select("id, contact_id, direction, body, created_at, contact:contacts(name, phone)")
+        .select(
+          "id, contact_id, direction, body, created_at, media_storage_path, media_content_type, media_file_name, contact:contacts(name, phone)",
+        )
         .order("created_at", { ascending: false })
         .limit(400);
       if (alive) setMsgs((data ?? []) as unknown as Msg[]);
@@ -78,6 +84,9 @@ export function Leads() {
         direction: "outbound",
         body: optimisticBody,
         created_at: new Date().toISOString(),
+        media_storage_path: null,
+        media_content_type: null,
+        media_file_name: null,
         contact: null,
       };
       setMsgs((prev) => (prev ? [optimistic, ...prev] : [optimistic]));
@@ -187,15 +196,7 @@ export function Leads() {
             </div>
             <div className="min-h-0 flex-1 space-y-2 overflow-y-auto p-4">
               {thread.map((m) => (
-                <div key={m.id} className={`flex ${m.direction === "outbound" ? "justify-end" : "justify-start"}`}>
-                  <div
-                    className={`max-w-[75%] rounded-2xl px-3.5 py-2 text-sm leading-snug ${
-                      m.direction === "outbound" ? "bg-ignite/90 text-white" : "bg-carbon-800 text-white-soft"
-                    }`}
-                  >
-                    {m.body || "(mídia)"}
-                  </div>
-                </div>
+                <MessageBubble key={m.id} m={m} />
               ))}
             </div>
             <form onSubmit={send} className="flex items-center gap-2 border-t border-carbon-800 p-3">
@@ -240,6 +241,68 @@ export function Leads() {
             </form>
           </>
         )}
+      </div>
+    </div>
+  );
+}
+
+function MessageBubble({ m }: { m: Msg }) {
+  const out = m.direction === "outbound";
+  const ct = m.media_content_type || "";
+  const hasMedia = !!m.media_storage_path;
+  const isImage = ct.startsWith("image/");
+  const isAudio = ct.startsWith("audio/");
+  const [url, setUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!hasMedia || !m.media_storage_path) return;
+    let alive = true;
+    apiPost<{ url: string }>("/api/public/attachment", { storagePath: m.media_storage_path })
+      .then((r) => alive && setUrl(r.url))
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [hasMedia, m.media_storage_path]);
+
+  return (
+    <div className={`flex ${out ? "justify-end" : "justify-start"}`}>
+      <div
+        className={`max-w-[78%] rounded-2xl px-3 py-2 ${out ? "bg-ignite/90 text-white" : "bg-carbon-800 text-white-soft"}`}
+      >
+        {hasMedia && (
+          <div className="mb-1.5">
+            {isImage ? (
+              url ? (
+                <img src={url} alt={m.media_file_name || ""} className="max-h-64 max-w-full rounded-lg" />
+              ) : (
+                <div className="h-40 w-52 animate-pulse rounded-lg bg-black/20" />
+              )
+            ) : isAudio ? (
+              url ? (
+                <audio controls src={url} className="w-56 max-w-full" />
+              ) : (
+                <div className="h-10 w-56 animate-pulse rounded bg-black/20" />
+              )
+            ) : (
+              <a
+                href={url ?? undefined}
+                target="_blank"
+                rel="noreferrer"
+                className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm ${
+                  out ? "bg-black/15 hover:bg-black/25" : "bg-carbon-900 hover:bg-carbon-700"
+                }`}
+              >
+                <FileText size={16} className="shrink-0" />
+                <span className="truncate">{m.media_file_name || "arquivo"}</span>
+              </a>
+            )}
+          </div>
+        )}
+        {m.body && <p className="whitespace-pre-wrap break-words text-sm leading-snug">{m.body}</p>}
+        <p className={`mt-1 text-right text-[10px] ${out ? "text-white/70" : "text-grey-dim"}`}>
+          {formatTime(m.created_at)}
+        </p>
       </div>
     </div>
   );
