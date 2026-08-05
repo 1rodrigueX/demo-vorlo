@@ -7,7 +7,9 @@ import { CrmDashboard } from "@/routes/crm/CrmDashboard";
 import { Pipeline } from "@/routes/crm/Pipeline";
 import { Contatos } from "@/routes/crm/Contatos";
 import { Empresas } from "@/routes/crm/Empresas";
-import { Placeholder } from "@/routes/crm/Placeholder";
+import { Leads } from "@/routes/crm/Leads";
+import { Emails } from "@/routes/crm/Emails";
+import { Trajetorias } from "@/routes/crm/Trajetorias";
 
 function Splash() {
   return (
@@ -40,9 +42,9 @@ export function App() {
         <Route path="pipeline" element={<Pipeline />} />
         <Route path="companies" element={<Empresas />} />
         <Route path="contacts" element={<Contatos />} />
-        <Route path="leads" element={<Placeholder title="Leads" />} />
-        <Route path="emails" element={<Placeholder title="E-mails" />} />
-        <Route path="trajetorias" element={<Placeholder title="Trajetórias" />} />
+        <Route path="leads" element={<Leads />} />
+        <Route path="emails" element={<Emails />} />
+        <Route path="trajetorias" element={<Trajetorias />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
