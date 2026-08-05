@@ -5,8 +5,9 @@ import { sendWhatsAppMessage } from "@/lib/whatsapp/send";
 
 // Endpoint pro app desktop nativo enviar WhatsApp. Operação privilegiada
 // (Twilio/Baileys) que não pode sair do servidor — o app chama aqui passando o
-// JWT do usuário no header Authorization. CORS liberado porque a segurança é o
-// token (Bearer), não a origem, e não usamos cookies.
+// JWT do usuário no header Authorization. Fica sob /api/public/ porque é o
+// prefixo que o nginx expõe externamente; a segurança é o Bearer token (não a
+// origem), então CORS é liberado e não usamos cookies.
 const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
@@ -22,7 +23,6 @@ export async function POST(request: Request) {
   const token = auth?.startsWith("Bearer ") ? auth.slice(7) : null;
   if (!token) return NextResponse.json({ error: "Não autorizado" }, { status: 401, headers: CORS });
 
-  // Cliente com o token do usuário: valida a sessão e aplica RLS nas leituras.
   const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
     global: { headers: { Authorization: `Bearer ${token}` } },
     auth: { persistSession: false, autoRefreshToken: false },
@@ -44,7 +44,6 @@ export async function POST(request: Request) {
   const tenantId = profile?.tenant_id;
   if (!tenantId) return NextResponse.json({ error: "Tenant não encontrado" }, { status: 403, headers: CORS });
 
-  // RLS já garante que o contato é do tenant do usuário; ainda pegamos o telefone.
   const { data: contact } = await sb.from("contacts").select("id, phone").eq("id", contactId).maybeSingle();
   if (!contact?.phone) {
     return NextResponse.json({ error: "Contato sem telefone" }, { status: 400, headers: CORS });

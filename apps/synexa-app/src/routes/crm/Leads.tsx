@@ -68,7 +68,7 @@ export function Leads() {
     if (!current || !text || sending) return;
     setSending(true);
     try {
-      await apiPost("/api/app/whatsapp/send", { contactId: current.contactId, message: text });
+      await apiPost("/api/public/whatsapp-send", { contactId: current.contactId, message: text });
       const optimistic: Msg = {
         id: `tmp-${Date.now()}`,
         contact_id: current.contactId,
