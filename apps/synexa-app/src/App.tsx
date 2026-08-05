@@ -4,6 +4,8 @@ import { Login } from "@/routes/Login";
 import { Acessos } from "@/routes/Acessos";
 import { AppShell } from "@/components/AppShell";
 import { CrmDashboard } from "@/routes/crm/CrmDashboard";
+import { Contatos } from "@/routes/crm/Contatos";
+import { Empresas } from "@/routes/crm/Empresas";
 import { Placeholder } from "@/routes/crm/Placeholder";
 
 function Splash() {
@@ -35,8 +37,8 @@ export function App() {
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<CrmDashboard />} />
         <Route path="pipeline" element={<Placeholder title="Pipeline" />} />
-        <Route path="companies" element={<Placeholder title="Empresas" />} />
-        <Route path="contacts" element={<Placeholder title="Contatos" />} />
+        <Route path="companies" element={<Empresas />} />
+        <Route path="contacts" element={<Contatos />} />
         <Route path="leads" element={<Placeholder title="Leads" />} />
         <Route path="emails" element={<Placeholder title="E-mails" />} />
         <Route path="trajetorias" element={<Placeholder title="Trajetórias" />} />
