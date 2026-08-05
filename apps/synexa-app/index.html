@@ -6,6 +6,10 @@
     <title>Synexa</title>
   </head>
   <body>
+    <script>
+      // Modo Lite aplicado antes do paint (sem flash).
+      (function () { try { if (localStorage.getItem("lite") === "1") document.documentElement.setAttribute("data-lite", "1"); } catch (e) {} })();
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

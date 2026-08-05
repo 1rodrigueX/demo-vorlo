@@ -49,3 +49,21 @@ body {
   scrollbar-width: thin;
   scrollbar-color: var(--color-carbon-600) transparent;
 }
+
+/* Modo Lite — tira o que pesa pra renderizar (blur, sombras, filtros, anim). */
+:root[data-lite="1"] * {
+  box-shadow: none !important;
+  filter: none !important;
+  text-shadow: none !important;
+  --tw-backdrop-blur: initial;
+  backdrop-filter: none !important;
+}
+:root[data-lite="1"] *,
+:root[data-lite="1"] *::before,
+:root[data-lite="1"] *::after {
+  animation-duration: 0.001ms !important;
+  transition-duration: 0.001ms !important;
+}
+:root[data-lite="1"] .brand-aura {
+  background: var(--color-carbon-900) !important;
+}

@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { LayoutDashboard, Truck, Wallet, Boxes, Factory, LogOut, ArrowRight, type LucideIcon } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/auth";
 import { SynexaMark } from "@/components/SynexaMark";
 
-type Service = { key: string; name: string; desc: string; active: boolean; icon: LucideIcon };
+type Service = { key: string; name: string; desc: string; active: boolean; icon: LucideIcon; route?: string };
 
 export function Acessos() {
   const { session, signOut } = useAuth();
+  const navigate = useNavigate();
   const [services, setServices] = useState<Service[]>([]);
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(true);
@@ -37,7 +39,7 @@ export function Acessos() {
       if (!alive) return;
       setName(profile?.full_name || session?.user.email || "");
       setServices([
-        { key: "crm", name: "CRM", desc: "Clientes, vendas e atendimento com IA.", active: crmActive, icon: LayoutDashboard },
+        { key: "crm", name: "CRM", desc: "Clientes, vendas e atendimento com IA.", active: crmActive, icon: LayoutDashboard, route: "/crm" },
         { key: "transportadora", name: "Transportadora", desc: "Fretes, clientes e motoristas.", active: !!tr.data, icon: Truck },
         { key: "financas", name: "Finanças", desc: "Fluxo de caixa, contas e boletos.", active: !!fi.data, icon: Wallet },
         { key: "estoque", name: "Estoque", desc: "Itens, entradas e saídas.", active: !!es.data, icon: Boxes },
@@ -87,7 +89,7 @@ export function Acessos() {
         ) : (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {services.map((s) => (
-              <ServiceCard key={s.key} service={s} />
+              <ServiceCard key={s.key} service={s} onOpen={s.route ? () => navigate(s.route!) : undefined} />
             ))}
           </div>
         )}
@@ -96,11 +98,13 @@ export function Acessos() {
   );
 }
 
-function ServiceCard({ service }: { service: Service }) {
+function ServiceCard({ service, onOpen }: { service: Service; onOpen?: () => void }) {
   const Icon = service.icon;
+  const openable = service.active && !!onOpen;
   return (
     <button
       disabled={!service.active}
+      onClick={openable ? onOpen : undefined}
       className={`group flex flex-col rounded-2xl border p-5 text-left transition-all ${
         service.active
           ? "cursor-pointer border-carbon-700 bg-carbon-800 hover:-translate-y-0.5 hover:border-ignite/40"
