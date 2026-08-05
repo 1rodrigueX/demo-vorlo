@@ -1,0 +1,51 @@
+@import "tailwindcss";
+
+/* Tokens da marca Synexa (porta condensada de globals.css do app web).
+ * O app é DARK por padrão — reforça que é um cliente próprio, não o site. */
+@theme {
+  --color-ignite: #ff5722;
+  --color-ignite-soft: rgba(255, 87, 34, 0.12);
+
+  --color-carbon-950: #0f0b07;
+  --color-carbon-900: #14100b;
+  --color-carbon-850: #181310;
+  --color-carbon-800: #1c1611;
+  --color-carbon-700: #2b241d;
+  --color-carbon-600: #3a3229;
+
+  --color-grey: #a6998d;
+  --color-grey-dim: #7a6f66;
+  --color-white-soft: #f3ede6;
+
+  --font-sans: ui-sans-serif, system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  background: var(--color-carbon-900);
+  color: var(--color-white-soft);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Brilho suave da marca, decorativo (ex: tela de login). */
+.brand-aura {
+  background:
+    radial-gradient(120% 60% at 50% -10%, rgba(255, 87, 34, 0.16), transparent 55%),
+    linear-gradient(165deg, #1a0f08 0%, #14100b 60%, #0f0b07 100%);
+}
+
+/* Sem barra de rolagem "pesada" — visual de app. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-carbon-600) transparent;
+}
