@@ -4,6 +4,7 @@ import { Login } from "@/routes/Login";
 import { Acessos } from "@/routes/Acessos";
 import { AppShell } from "@/components/AppShell";
 import { CrmDashboard } from "@/routes/crm/CrmDashboard";
+import { Pipeline } from "@/routes/crm/Pipeline";
 import { Contatos } from "@/routes/crm/Contatos";
 import { Empresas } from "@/routes/crm/Empresas";
 import { Placeholder } from "@/routes/crm/Placeholder";
@@ -36,7 +37,7 @@ export function App() {
       <Route path="/crm" element={<AppShell />}>
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<CrmDashboard />} />
-        <Route path="pipeline" element={<Placeholder title="Pipeline" />} />
+        <Route path="pipeline" element={<Pipeline />} />
         <Route path="companies" element={<Empresas />} />
         <Route path="contacts" element={<Contatos />} />
         <Route path="leads" element={<Placeholder title="Leads" />} />

@@ -6,3 +6,8 @@ export function formatDate(iso: string | null | undefined): string {
     return "—";
   }
 }
+
+export function formatBRL(n: number | null | undefined): string {
+  const v = typeof n === "number" ? n : 0;
+  return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
