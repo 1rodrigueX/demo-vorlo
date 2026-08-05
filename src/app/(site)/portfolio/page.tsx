@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { motion } from "motion/react";
 import { ArrowLeft, ArrowUpRight, Check } from "lucide-react";
 import { CtaButton } from "@/components/site/CtaButton";
+import { CrmCarousel } from "@/components/site/CrmCarousel";
 import { GithubRepos } from "@/components/site/sections/GithubRepos";
 import { LogoMark } from "@/components/site/brand/LogoMark";
 import { PORTFOLIO } from "@/lib/site/content";
@@ -131,75 +132,7 @@ export default function PortfolioPage() {
             ]}
             stack={["Next.js 16", "React 19", "Supabase", "TypeScript", "IA · Claude", "Tauri"]}
             cta={{ label: "Criar conta grátis", href: "/signup" }}
-            visual={
-              <div className="pf-browser">
-                <div className="pf-browser__bar">
-                  <div className="pf-browser__dots">
-                    <i />
-                    <i />
-                    <i />
-                  </div>
-                  <div className="pf-browser__url">app.synexa.cloud/pipeline</div>
-                </div>
-                <div className="pf-browser__body">
-                  <div className="pf-crm">
-                    <div className="pf-crm__rail">
-                      <i className="on" />
-                      <i />
-                      <i />
-                      <i />
-                      <i />
-                    </div>
-                    <div className="pf-crm__main">
-                      <div className="pf-crm__top">
-                        <span className="pf-crm__title">Pipeline</span>
-                        <span className="pf-crm__avatar" />
-                      </div>
-                      <div className="pf-crm__board">
-                        <div className="pf-crm__col">
-                          <div className="pf-crm__colhead">
-                            <b style={{ background: "#7a6f66" }} />
-                            Novo
-                          </div>
-                          <div className="pf-crm__card">
-                            <div className="pf-crm__line" style={{ width: "82%" }} />
-                            <span className="pf-crm__val">R$ 3,4k</span>
-                          </div>
-                          <div className="pf-crm__card">
-                            <div className="pf-crm__line" style={{ width: "66%" }} />
-                            <span className="pf-crm__val">R$ 1,2k</span>
-                          </div>
-                        </div>
-                        <div className="pf-crm__col">
-                          <div className="pf-crm__colhead">
-                            <b style={{ background: "var(--color-ignite)" }} />
-                            Qualif.
-                          </div>
-                          <div className="pf-crm__card">
-                            <div className="pf-crm__line" style={{ width: "74%" }} />
-                            <span className="pf-crm__val">R$ 8,9k</span>
-                          </div>
-                          <div className="pf-crm__card">
-                            <div className="pf-crm__line" style={{ width: "58%" }} />
-                            <span className="pf-crm__val">R$ 5,0k</span>
-                          </div>
-                        </div>
-                        <div className="pf-crm__col">
-                          <div className="pf-crm__colhead">
-                            <b style={{ background: "#46d17f" }} />
-                            Ganho
-                          </div>
-                          <div className="pf-crm__card">
-                            <div className="pf-crm__line" style={{ width: "78%" }} />
-                            <span className="pf-crm__val">R$ 12k</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            }
+            visual={<CrmCarousel />}
           />
 
           {/* Case 02 — o próprio site */}
@@ -240,15 +173,7 @@ export default function PortfolioPage() {
                     <div className="pf-site__hero">
                       <div className="pf-site__copy">
                         <h4>
-                          Sua empresa,
-                          <br />
-                          uma{" "}
-                          <span>
-                            potência
-                            <br />
-                            digital
-                          </span>
-                          .
+                          Presença digital <span>que vende</span>.
                         </h4>
                         <p>Sites, e-commerce e CRM que vendem.</p>
                         <span className="pf-site__pill">Solicitar orçamento</span>

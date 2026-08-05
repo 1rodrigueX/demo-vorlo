@@ -23,7 +23,7 @@ export const NAV = [
 
 export const HERO = {
   eyebrow: "Sites · CRM · Automações com IA",
-  title: "Sua empresa, uma potência digital.",
+  title: "Presença digital que vende.",
   subtitle: "Sites, e-commerce e CRM que existem pra vender — não só pra estar online.",
   primaryCta: "Solicitar orçamento",
   secondaryCta: "Ver o que fazemos",

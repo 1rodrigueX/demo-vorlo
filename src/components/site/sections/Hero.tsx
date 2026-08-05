@@ -38,10 +38,9 @@ export function Hero() {
           <h1 className="type-display text-[clamp(2.5rem,7vw,4.7rem)] text-white-soft text-balance">
             <span className="sr-only">{HERO.title}</span>
             <span aria-hidden>
-              <WordReveal text="Sua empresa," delay={0.06} start />
+              <WordReveal text="Presença digital" delay={0.06} start />
               <br />
-              <WordReveal text="uma" delay={0.2} start />{" "}
-              <WordReveal text="potência digital." className="text-ignite type-glow-soft" delay={0.265} start />
+              <WordReveal text="que vende." className="text-ignite type-glow-soft" delay={0.2} start />
             </span>
           </h1>
 
