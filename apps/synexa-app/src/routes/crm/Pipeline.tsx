@@ -84,6 +84,19 @@ export function Pipeline() {
                         <p className="text-sm font-medium leading-snug text-white-soft">{d.title}</p>
                         {d.contact?.name && <p className="mt-1 text-xs text-grey">{d.contact.name}</p>}
                         <p className="mt-2 text-xs font-semibold tabular-nums text-ignite">{formatBRL(d.value)}</p>
+                        <select
+                          value={s.id}
+                          onChange={(e) => moveDeal(d.id, e.target.value)}
+                          onPointerDown={(e) => e.stopPropagation()}
+                          title="Mover para outra etapa"
+                          className="mt-2.5 w-full cursor-pointer rounded-md border border-carbon-700 bg-carbon-900 px-2 py-1 text-[11px] text-grey outline-none focus:border-ignite/50"
+                        >
+                          {stages.map((st) => (
+                            <option key={st.id} value={st.id}>
+                              {st.name}
+                            </option>
+                          ))}
+                        </select>
                       </div>
                     ))
                   )}
