@@ -1,17 +1,104 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { motion } from "motion/react";
-import { ArrowLeft, ArrowUpRight } from "lucide-react";
-import { MagicCard } from "@/components/site/MagicCard";
+import { ArrowLeft, ArrowUpRight, Check } from "lucide-react";
 import { CtaButton } from "@/components/site/CtaButton";
 import { GithubRepos } from "@/components/site/sections/GithubRepos";
-import { PORTFOLIO, PROJETOS } from "@/lib/site/content";
+import { LogoMark } from "@/components/site/brand/LogoMark";
+import { PORTFOLIO } from "@/lib/site/content";
+import { cn } from "@/lib/utils/cn";
+
+interface CaseProps {
+  index: string;
+  meta: string;
+  title: string;
+  desc: string;
+  feats: string[];
+  stack: string[];
+  flip?: boolean;
+  cta?: { label: string; href: string };
+  tag?: string;
+  visual: ReactNode;
+}
+
+/** Case-study: texto de um lado, mockup de navegador do outro (alterna com flip). */
+function CaseStudy({ index, meta, title, desc, feats, stack, flip, cta, tag, visual }: CaseProps) {
+  return (
+    <motion.article
+      initial={{ opacity: 0, y: 40 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.2 }}
+      transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+      className={cn(
+        "grid grid-cols-1 items-center gap-8 lg:gap-14",
+        flip ? "lg:grid-cols-[1.18fr_0.82fr]" : "lg:grid-cols-[0.82fr_1.18fr]",
+      )}
+    >
+      <div className={cn(flip ? "lg:order-2" : "lg:order-1")}>
+        <p className="mb-4 font-mono text-[0.72rem] tracking-[0.1em] text-grey/70">
+          <span className="text-ignite">{index}</span> — {meta}
+        </p>
+        <h2 className="type-display text-[clamp(1.7rem,3.6vw,2.5rem)] text-white-soft">{title}</h2>
+        <p className="mt-4 max-w-md text-base leading-relaxed text-grey">{desc}</p>
+
+        <ul className="mt-6 grid gap-2.5">
+          {feats.map((f) => (
+            <li key={f} className="flex items-start gap-2.5 text-sm leading-snug text-white-soft">
+              <Check size={15} className="mt-0.5 shrink-0 text-ignite" />
+              {f}
+            </li>
+          ))}
+        </ul>
+
+        <ul className="mt-7 flex flex-wrap gap-1.5">
+          {stack.map((s) => (
+            <li
+              key={s}
+              className="rounded-md border border-carbon-700 px-2 py-1 font-mono text-[0.66rem] tracking-wide text-grey"
+            >
+              {s}
+            </li>
+          ))}
+        </ul>
+
+        {cta ? (
+          <a
+            href={cta.href}
+            className="group mt-8 inline-flex items-center gap-1.5 text-sm font-semibold text-ignite transition-colors hover:text-ignite-soft"
+          >
+            {cta.label}
+            <ArrowUpRight
+              size={15}
+              className="transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+            />
+          </a>
+        ) : null}
+
+        {tag ? (
+          <span className="mt-8 inline-flex items-center gap-2.5 text-sm text-grey">
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#46d17f] opacity-60" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-[#46d17f]" />
+            </span>
+            {tag}
+          </span>
+        ) : null}
+      </div>
+
+      <div className={cn(flip ? "lg:order-1" : "lg:order-2")}>{visual}</div>
+    </motion.article>
+  );
+}
 
 export default function PortfolioPage() {
   return (
     <section className="relative min-h-[100svh] px-5 pb-28 pt-32 sm:px-8 sm:pt-40">
       <div className="mx-auto w-full max-w-[1240px]">
-        <a href="/" className="mb-10 inline-flex min-h-11 items-center gap-2 text-sm text-grey transition-colors hover:text-ignite">
+        <a
+          href="/"
+          className="mb-10 inline-flex min-h-11 items-center gap-2 text-sm text-grey transition-colors hover:text-ignite"
+        >
           <ArrowLeft size={15} />
           Voltar para o início
         </a>
@@ -20,7 +107,7 @@ export default function PortfolioPage() {
           initial={{ opacity: 0, y: 22 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-          className="mb-14 max-w-2xl"
+          className="mb-16 max-w-2xl sm:mb-20"
         >
           <p className="type-eyebrow mb-4">{PORTFOLIO.eyebrow}</p>
           <h1 className="type-display text-[clamp(2.1rem,5.5vw,3.6rem)] text-white-soft text-balance">
@@ -29,45 +116,150 @@ export default function PortfolioPage() {
           <p className="mt-5 text-base leading-relaxed text-grey sm:text-lg">{PORTFOLIO.intro}</p>
         </motion.header>
 
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
-          {PROJETOS.map((p, i) => (
-            <motion.div
-              key={p.id}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.25 }}
-              transition={{ duration: 0.55, delay: i * 0.08, ease: [0.16, 1, 0.3, 1] }}
-              className="h-full"
-            >
-              <MagicCard className="h-full rounded-xl border border-carbon-700 bg-carbon-800">
-                <div className="flex h-full flex-col p-7">
-                  <p className="type-mono-label mb-3 text-[0.68rem] uppercase tracking-[0.18em] text-ignite">
-                    {p.categoria}
-                    {p.ano ? ` · ${p.ano}` : ""}
-                  </p>
-                  <h2 className="type-display text-[1.4rem] leading-tight text-white-soft">{p.titulo}</h2>
-                  <p className="mt-3 flex-1 text-sm leading-relaxed text-grey">{p.descricao}</p>
-                  <ul className="mt-5 flex flex-wrap gap-1.5">
-                    {p.stack.map((s) => (
-                      <li key={s} className="rounded border border-carbon-700 px-2 py-1 font-mono text-[0.65rem] tracking-wide text-grey">
-                        {s}
-                      </li>
-                    ))}
-                  </ul>
-                  {p.url ? (
-                    <a
-                      href={p.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-ignite"
-                    >
-                      Ver no ar <ArrowUpRight size={15} />
-                    </a>
-                  ) : null}
+        <div className="flex flex-col gap-20 sm:gap-28">
+          {/* Case 01 — CRM */}
+          <CaseStudy
+            index="01"
+            meta="Produto próprio · Plataforma SaaS · 2026"
+            title="Synexa CRM"
+            desc="Um CRM de vendas onde o WhatsApp, o pipeline e agentes de IA trabalham juntos. Multi-empresa, em tempo real, com app desktop nativo."
+            feats={[
+              "Pipeline visual arrastar-e-soltar, com etapas por cliente",
+              "WhatsApp integrado — texto, áudio e arquivos, com IA que atende e qualifica",
+              "Trajetórias no estilo n8n, criadas pelo usuário ou pela própria IA",
+              "Dados sigilosos criptografados (AES-256) e conformidade LGPD",
+            ]}
+            stack={["Next.js 16", "React 19", "Supabase", "TypeScript", "IA · Claude", "Tauri"]}
+            cta={{ label: "Criar conta grátis", href: "/signup" }}
+            visual={
+              <div className="pf-browser">
+                <div className="pf-browser__bar">
+                  <div className="pf-browser__dots">
+                    <i />
+                    <i />
+                    <i />
+                  </div>
+                  <div className="pf-browser__url">app.synexa.cloud/pipeline</div>
                 </div>
-              </MagicCard>
-            </motion.div>
-          ))}
+                <div className="pf-browser__body">
+                  <div className="pf-crm">
+                    <div className="pf-crm__rail">
+                      <i className="on" />
+                      <i />
+                      <i />
+                      <i />
+                      <i />
+                    </div>
+                    <div className="pf-crm__main">
+                      <div className="pf-crm__top">
+                        <span className="pf-crm__title">Pipeline</span>
+                        <span className="pf-crm__avatar" />
+                      </div>
+                      <div className="pf-crm__board">
+                        <div className="pf-crm__col">
+                          <div className="pf-crm__colhead">
+                            <b style={{ background: "#7a6f66" }} />
+                            Novo
+                          </div>
+                          <div className="pf-crm__card">
+                            <div className="pf-crm__line" style={{ width: "82%" }} />
+                            <span className="pf-crm__val">R$ 3,4k</span>
+                          </div>
+                          <div className="pf-crm__card">
+                            <div className="pf-crm__line" style={{ width: "66%" }} />
+                            <span className="pf-crm__val">R$ 1,2k</span>
+                          </div>
+                        </div>
+                        <div className="pf-crm__col">
+                          <div className="pf-crm__colhead">
+                            <b style={{ background: "var(--color-ignite)" }} />
+                            Qualif.
+                          </div>
+                          <div className="pf-crm__card">
+                            <div className="pf-crm__line" style={{ width: "74%" }} />
+                            <span className="pf-crm__val">R$ 8,9k</span>
+                          </div>
+                          <div className="pf-crm__card">
+                            <div className="pf-crm__line" style={{ width: "58%" }} />
+                            <span className="pf-crm__val">R$ 5,0k</span>
+                          </div>
+                        </div>
+                        <div className="pf-crm__col">
+                          <div className="pf-crm__colhead">
+                            <b style={{ background: "#46d17f" }} />
+                            Ganho
+                          </div>
+                          <div className="pf-crm__card">
+                            <div className="pf-crm__line" style={{ width: "78%" }} />
+                            <span className="pf-crm__val">R$ 12k</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            }
+          />
+
+          {/* Case 02 — o próprio site */}
+          <CaseStudy
+            index="02"
+            meta="Marca própria · Site institucional · 2026"
+            title="synexa.cloud"
+            desc="O site que você está navegando. Identidade construída em torno do símbolo-constelação, com movimento sutil e carregamento abaixo de 2 segundos."
+            feats={[
+              "Símbolo da marca em SVG animado — montagem + rotação 360°",
+              "Design system carbono + ignite, modo escuro nativo",
+              "Animações com motion, sem pesar na performance",
+              "Feito à mão em código — sem template, sem construtor",
+            ]}
+            stack={["Next.js", "motion/react", "Tailwind v4", "SVG"]}
+            tag="Você está nele agora"
+            flip
+            visual={
+              <div className="pf-browser">
+                <div className="pf-browser__bar">
+                  <div className="pf-browser__dots">
+                    <i />
+                    <i />
+                    <i />
+                  </div>
+                  <div className="pf-browser__url">synexa.cloud</div>
+                </div>
+                <div className="pf-browser__body">
+                  <div className="pf-site">
+                    <div className="pf-site__bar">
+                      <span className="pf-site__brand">SYNEXA</span>
+                      <div className="pf-site__nav">
+                        <i />
+                        <i />
+                        <i />
+                      </div>
+                    </div>
+                    <div className="pf-site__hero">
+                      <div className="pf-site__copy">
+                        <h4>
+                          Sua empresa,
+                          <br />
+                          uma{" "}
+                          <span>
+                            potência
+                            <br />
+                            digital
+                          </span>
+                          .
+                        </h4>
+                        <p>Sites, e-commerce e CRM que vendem.</p>
+                        <span className="pf-site__pill">Solicitar orçamento</span>
+                      </div>
+                      <LogoMark mode="static" className="pf-site__mark" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            }
+          />
         </div>
 
         <GithubRepos />
@@ -76,7 +268,9 @@ export default function PortfolioPage() {
           <h2 className="type-display text-[clamp(1.5rem,3.5vw,2.2rem)] text-white-soft">
             Seu projeto pode ser o próximo.
           </h2>
-          <CtaButton href="/orcamento" className="shrink-0">Solicitar orçamento</CtaButton>
+          <CtaButton href="/orcamento" className="shrink-0">
+            Solicitar orçamento
+          </CtaButton>
         </div>
       </div>
     </section>

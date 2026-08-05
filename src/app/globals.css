@@ -327,3 +327,245 @@ body {
     animation: none;
   }
 }
+
+/* Brilho de texto suave (menos "neon" que .type-glow) — usado no herói. */
+.type-glow-soft {
+  text-shadow: 0 0 18px rgb(255 87 34 / 0.16);
+}
+
+/* ============================================================================
+ * PORTFÓLIO — mockups de navegador renderizados em CSS (CRM + próprio site).
+ * container-type + unidades cqw fazem o conteúdo escalar junto com o mock.
+ * ========================================================================== */
+.pf-browser {
+  border: 1px solid var(--color-carbon-700);
+  border-radius: 14px;
+  overflow: hidden;
+  background: #0d0d0d;
+  box-shadow: 0 44px 90px -46px rgb(0 0 0 / 0.95);
+  transition: transform 0.35s ease, box-shadow 0.35s ease;
+}
+.pf-browser:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 54px 100px -46px rgb(0 0 0 / 0.95);
+}
+.pf-browser__bar {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.8rem;
+  background: #151515;
+  border-bottom: 1px solid var(--color-carbon-700);
+}
+.pf-browser__dots {
+  display: flex;
+  gap: 0.35rem;
+}
+.pf-browser__dots i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #3a3a3a;
+}
+.pf-browser__url {
+  flex: 1;
+  text-align: center;
+  font-size: 0.64rem;
+  color: var(--color-grey);
+  background: #0d0d0d;
+  border-radius: 6px;
+  padding: 0.34rem 0.6rem;
+  font-family: var(--font-plex), ui-monospace, monospace;
+}
+.pf-browser__body {
+  position: relative;
+  aspect-ratio: 16 / 10.5;
+  overflow: hidden;
+  container-type: inline-size;
+}
+
+/* CRM — kanban */
+.pf-crm {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  background: #0e0e0e;
+}
+.pf-crm__rail {
+  width: 13%;
+  background: #121212;
+  border-right: 1px solid var(--color-carbon-700);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7%;
+  padding: 9% 0;
+}
+.pf-crm__rail i {
+  width: 44%;
+  aspect-ratio: 1;
+  border-radius: 22%;
+  background: #262626;
+}
+.pf-crm__rail i.on {
+  background: var(--color-ignite);
+}
+.pf-crm__main {
+  flex: 1;
+  padding: 4.5%;
+  display: flex;
+  flex-direction: column;
+  gap: 4.5%;
+  min-width: 0;
+}
+.pf-crm__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.pf-crm__title {
+  font-weight: 700;
+  font-size: 3.6cqw;
+  color: var(--color-white-soft);
+}
+.pf-crm__avatar {
+  width: 5cqw;
+  height: 5cqw;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-ignite), var(--color-ignite-deep));
+}
+.pf-crm__board {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3%;
+  min-height: 0;
+}
+.pf-crm__col {
+  background: #141414;
+  border: 1px solid var(--color-carbon-700);
+  border-radius: 2.4cqw;
+  padding: 4.5% 4%;
+  display: flex;
+  flex-direction: column;
+  gap: 7%;
+}
+.pf-crm__colhead {
+  display: flex;
+  align-items: center;
+  gap: 5%;
+  font-size: 2.5cqw;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-grey);
+}
+.pf-crm__colhead b {
+  width: 2cqw;
+  height: 2cqw;
+  border-radius: 50%;
+  flex: none;
+}
+.pf-crm__card {
+  background: #1c1c1c;
+  border: 1px solid #292929;
+  border-radius: 2cqw;
+  padding: 9% 8%;
+  display: flex;
+  flex-direction: column;
+  gap: 1.6cqw;
+}
+.pf-crm__line {
+  height: 1.7cqw;
+  border-radius: 1cqw;
+  background: #3a3a3a;
+}
+.pf-crm__val {
+  font-size: 2.5cqw;
+  font-weight: 700;
+  color: var(--color-ignite);
+  font-family: var(--font-plex), ui-monospace, monospace;
+}
+
+/* Site — mock do próprio herói (o símbolo dentro também gira) */
+.pf-site {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background: radial-gradient(circle at 72% 45%, rgb(255 87 34 / 0.1), transparent 58%), #0d0d0d;
+}
+.pf-site__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4% 5% 0;
+}
+.pf-site__brand {
+  font-weight: 800;
+  letter-spacing: 0.26em;
+  font-size: 2.6cqw;
+  color: var(--color-white-soft);
+}
+.pf-site__nav {
+  display: flex;
+  gap: 3.5%;
+}
+.pf-site__nav i {
+  width: 6cqw;
+  height: 1.7cqw;
+  border-radius: 1cqw;
+  background: #2b2b2b;
+}
+.pf-site__hero {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  align-items: center;
+  padding: 0 5% 6%;
+  gap: 3%;
+}
+.pf-site__copy h4 {
+  font-weight: 800;
+  font-size: 6.6cqw;
+  line-height: 1.04;
+  letter-spacing: -0.02em;
+  margin: 0;
+  color: var(--color-white-soft);
+}
+.pf-site__copy h4 span {
+  color: var(--color-ignite);
+}
+.pf-site__copy p {
+  font-size: 2.4cqw;
+  color: var(--color-grey);
+  margin: 3cqw 0 0;
+  line-height: 1.4;
+}
+.pf-site__pill {
+  display: inline-block;
+  margin-top: 3.5cqw;
+  font-size: 2.3cqw;
+  font-weight: 600;
+  color: #fff;
+  background: var(--color-ignite);
+  border-radius: 2cqw;
+  padding: 1.6cqw 3cqw;
+}
+.pf-site__mark {
+  width: 74%;
+  margin: 0 auto;
+  color: var(--color-ignite);
+  transform-origin: center;
+  animation: pf-spin 14s linear infinite;
+  filter: drop-shadow(0 0 6px rgb(255 87 34 / 0.25));
+}
+@keyframes pf-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pf-site__mark {
+    animation: none;
+  }
+}

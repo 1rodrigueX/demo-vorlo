@@ -22,10 +22,9 @@ export const NAV = [
 ] as const;
 
 export const HERO = {
-  eyebrow: "Soluções digitais · Sites, CRM & Automações",
-  title: "Transformamos sua empresa em uma potência digital",
-  subtitle:
-    "Sites, e-commerce, CRM e plataformas sob medida para empresas que precisam vender — não apenas existir online.",
+  eyebrow: "Sites · CRM · Automações com IA",
+  title: "Sua empresa, uma potência digital.",
+  subtitle: "Sites, e-commerce e CRM que existem pra vender — não só pra estar online.",
   primaryCta: "Solicitar orçamento",
   secondaryCta: "Ver o que fazemos",
 } as const;
@@ -111,9 +110,9 @@ export const SOBRE = {
 
 export const PORTFOLIO = {
   eyebrow: "Portfólio",
-  title: "Trabalho entregue, no ar.",
+  title: "Sem template pra mostrar. Produto no ar.",
   intro:
-    "Cada projeto aqui foi escrito do zero para o negócio do cliente. Sem template comprado, sem construtor de arrastar e soltar.",
+    "Dois projetos escritos do zero e em produção agora: o nosso CRM e este próprio site. Sem construtor de arrastar-e-soltar.",
 } as const;
 
 export interface Projeto {
