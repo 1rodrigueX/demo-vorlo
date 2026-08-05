@@ -83,6 +83,9 @@ export async function startBaileysConnection(tenantId: string) {
     auth: authState,
     logger,
     version,
+    // Nome do aparelho mostrado no WhatsApp ("Aparelhos conectados"). Sem isso,
+    // o Baileys usa o padrão que aparece como "(MAC OS)". [device, browser, ver]
+    browser: ["Synexa", "Chrome", "1.0.0"],
   });
 
   state.sock = sock;

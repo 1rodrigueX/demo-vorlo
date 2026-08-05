@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { MessageCircle, Send } from "lucide-react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { MessageCircle, Send, Paperclip, Mic, Square } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import { apiPost } from "@/lib/api";
+import { apiPostForm } from "@/lib/api";
 
 type Msg = {
   id: string;
@@ -18,6 +18,10 @@ export function Leads() {
   const [selected, setSelected] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
+  const [recording, setRecording] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
 
   useEffect(() => {
     let alive = true;
@@ -62,28 +66,71 @@ export function Leads() {
 
   const current = convos?.find((c) => c.contactId === selected);
 
-  const send = async (e: FormEvent) => {
-    e.preventDefault();
-    const text = draft.trim();
-    if (!current || !text || sending) return;
+  const sendForm = async (form: FormData, optimisticBody: string) => {
+    if (!current || sending) return;
+    form.set("contactId", current.contactId);
     setSending(true);
     try {
-      await apiPost("/api/public/whatsapp-send", { contactId: current.contactId, message: text });
+      await apiPostForm("/api/public/whatsapp-send", form);
       const optimistic: Msg = {
         id: `tmp-${Date.now()}`,
         contact_id: current.contactId,
         direction: "outbound",
-        body: text,
+        body: optimisticBody,
         created_at: new Date().toISOString(),
         contact: null,
       };
       setMsgs((prev) => (prev ? [optimistic, ...prev] : [optimistic]));
-      setDraft("");
     } catch (err) {
       alert(err instanceof Error ? err.message : "Falha ao enviar");
     } finally {
       setSending(false);
     }
+  };
+
+  const send = (e: FormEvent) => {
+    e.preventDefault();
+    const text = draft.trim();
+    if (!text) return;
+    const form = new FormData();
+    form.set("message", text);
+    setDraft("");
+    void sendForm(form, text);
+  };
+
+  const onFilePicked = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    const form = new FormData();
+    form.set("file", file);
+    void sendForm(form, `📎 ${file.name}`);
+  };
+
+  const startRec = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const rec = new MediaRecorder(stream);
+      chunksRef.current = [];
+      rec.ondataavailable = (ev) => ev.data.size && chunksRef.current.push(ev.data);
+      rec.onstop = () => {
+        stream.getTracks().forEach((t) => t.stop());
+        const blob = new Blob(chunksRef.current, { type: rec.mimeType || "audio/webm" });
+        const form = new FormData();
+        form.set("audio", blob, "audio.webm");
+        void sendForm(form, "🎤 Áudio");
+      };
+      recorderRef.current = rec;
+      rec.start();
+      setRecording(true);
+    } catch {
+      alert("Não foi possível acessar o microfone.");
+    }
+  };
+
+  const stopRec = () => {
+    recorderRef.current?.stop();
+    setRecording(false);
   };
 
   return (
@@ -152,15 +199,39 @@ export function Leads() {
               ))}
             </div>
             <form onSubmit={send} className="flex items-center gap-2 border-t border-carbon-800 p-3">
+              <input ref={fileInputRef} type="file" className="hidden" onChange={onFilePicked} />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={sending || recording}
+                title="Anexar arquivo"
+                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-carbon-700 text-grey transition-colors hover:bg-carbon-800 hover:text-white-soft disabled:opacity-40"
+              >
+                <Paperclip size={17} />
+              </button>
+              <button
+                type="button"
+                onClick={recording ? stopRec : startRec}
+                disabled={sending}
+                title={recording ? "Parar e enviar áudio" : "Gravar áudio"}
+                className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border transition-colors disabled:opacity-40 ${
+                  recording
+                    ? "animate-pulse border-red-500/50 bg-red-500/10 text-red-400"
+                    : "border-carbon-700 text-grey hover:bg-carbon-800 hover:text-white-soft"
+                }`}
+              >
+                {recording ? <Square size={15} /> : <Mic size={17} />}
+              </button>
               <input
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
-                placeholder="Responder…"
-                className="flex-1 rounded-lg border border-carbon-700 bg-carbon-800 px-3.5 py-2.5 text-sm text-white-soft outline-none placeholder:text-grey-dim focus:border-ignite/60"
+                placeholder={recording ? "Gravando áudio…" : "Responder…"}
+                disabled={recording}
+                className="flex-1 rounded-lg border border-carbon-700 bg-carbon-800 px-3.5 py-2.5 text-sm text-white-soft outline-none placeholder:text-grey-dim focus:border-ignite/60 disabled:opacity-60"
               />
               <button
                 type="submit"
-                disabled={sending || !draft.trim()}
+                disabled={sending || recording || !draft.trim()}
                 className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-ignite text-white transition-all hover:brightness-110 disabled:opacity-40"
                 title="Enviar"
               >
