@@ -18,7 +18,7 @@
 --    access_token passando por encryptSecret().
 -- ─────────────────────────────────────────────────────────────────────────
 alter table public.tenant_integrations
-  drop constraint tenant_integrations_provider_check;
+  drop constraint if exists tenant_integrations_provider_check;
 
 alter table public.tenant_integrations
   add constraint tenant_integrations_provider_check
@@ -152,7 +152,7 @@ create policy "kommo_entity_map_select_own_admin"
 -- 5) Novo tipo de job na fila (o CHECK anterior é de 0064_funnel_automation)
 -- ─────────────────────────────────────────────────────────────────────────
 alter table public.automation_jobs
-  drop constraint automation_jobs_job_type_check;
+  drop constraint if exists automation_jobs_job_type_check;
 
 alter table public.automation_jobs
   add constraint automation_jobs_job_type_check
