@@ -66,9 +66,11 @@ function authFolderFor(tenantId: string) {
 const logger = pino({ level: "silent" });
 
 // Serializa o processamento dos pedaços de messaging-history.set por tenant —
-// o evento pode disparar várias vezes em sequência, e processá-los em
-// paralelo poderia criar contatos duplicados pro mesmo número (contacts.phone
-// não tem constraint unique).
+// o evento pode disparar várias vezes em sequência, e processá-los em paralelo
+// faria os lotes brigarem pelo mesmo número. Desde 0070_contact_dedupe quem
+// impede a duplicata de fato é o índice único de contacts.phone_key (e o
+// findOrCreateContact trata a colisão); a fila continua aqui pra não desperdiçar
+// trabalho nem embaralhar a ordem das mensagens importadas.
 const historyImportQueues = new Map<string, Promise<void>>();
 
 export async function startBaileysConnection(tenantId: string) {

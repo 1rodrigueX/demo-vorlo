@@ -1,11 +1,16 @@
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { normalizePhone, isDuplicatePhoneError } from "@/lib/crm/phone";
 
 /**
- * Looks up a contact by phone (E.164), auto-creating one if none exists —
- * used anywhere a WhatsApp message arrives (live or historical) with no
- * matching CRM contact. The user doesn't want to pre-register every client
- * before receiving from them.
+ * Looks up a contact by phone, auto-creating one if none exists — used
+ * anywhere a WhatsApp message arrives (live or historical) with no matching
+ * CRM contact. The user doesn't want to pre-register every client before
+ * receiving from them.
+ *
+ * The lookup goes through `phone_key` (the normalized form — see
+ * 0070_contact_dedupe.sql), not the raw string: the same client saved as
+ * "+5511988887777" and "(11) 98888-7777" is one lead, not two.
  *
  * Never overwrites an existing contact's name from WhatsApp data.
  */
@@ -15,21 +20,18 @@ export async function findOrCreateContact(
   phone: string,
   name?: string | null,
 ): Promise<{ id: string; isNew: boolean } | null> {
-  const { data: existing } = await supabase
-    .from("contacts")
-    .select("id")
-    .eq("tenant_id", tenantId)
-    .eq("phone", phone)
-    .maybeSingle();
+  const phoneKey = normalizePhone(phone);
+  if (!phoneKey) return null;
 
-  if (existing) return { id: existing.id, isNew: false };
+  const existingId = await findByPhoneKey(supabase, tenantId, phoneKey);
+  if (existingId) return { id: existingId, isNew: false };
 
   const ownerId = await pickLeastLoadedMember(supabase, tenantId);
   if (!ownerId) return null;
 
   // needs_registration=true: sinaliza pro SDR de IA que este contato ainda
   // precisa ter os dados de cadastro coletados (ver runSdrLeadTurn).
-  const { data: created } = await supabase
+  const { data: created, error } = await supabase
     .from("contacts")
     .insert({
       tenant_id: tenantId,
@@ -42,7 +44,33 @@ export async function findOrCreateContact(
     .select("id")
     .single();
 
-  return created ? { id: created.id, isNew: true } : null;
+  if (created) return { id: created.id, isNew: true };
+
+  // Outra execução criou o mesmo contato entre a busca e o insert (duas
+  // mensagens do mesmo número chegando juntas, import de histórico rodando em
+  // paralelo com uma mensagem ao vivo). O índice único barrou — é o mesmo
+  // lead, então devolve o que já existe em vez de falhar.
+  if (isDuplicatePhoneError(error)) {
+    const raced = await findByPhoneKey(supabase, tenantId, phoneKey);
+    if (raced) return { id: raced, isNew: false };
+  }
+
+  return null;
+}
+
+async function findByPhoneKey(
+  supabase: ReturnType<typeof createAdminClient>,
+  tenantId: string,
+  phoneKey: string,
+): Promise<string | null> {
+  const { data } = await supabase
+    .from("contacts")
+    .select("id")
+    .eq("tenant_id", tenantId)
+    .eq("phone_key", phoneKey)
+    .maybeSingle();
+
+  return data?.id ?? null;
 }
 
 /**

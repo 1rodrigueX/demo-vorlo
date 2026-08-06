@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { pickLeastLoadedMember } from "@/lib/whatsapp/findOrCreateContact";
 import { incomingLeadSchema } from "@/lib/validation/lead-webhook";
 import { checkRateLimit } from "@/lib/utils/rateLimit";
+import { normalizePhone, normalizeEmail, isDuplicatePhoneError } from "@/lib/crm/phone";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -70,22 +71,32 @@ export async function POST(request: Request, { params }: { params: Promise<{ tok
 
   // Dedupe por telefone ou email já existente no tenant, pra não duplicar o
   // mesmo lead a cada novo envio do formulário (retry, dupla submissão etc).
+  // A comparação é pelas chaves normalizadas (ver 0070_contact_dedupe): o
+  // formulário da landing page raramente manda o telefone no mesmo formato
+  // que o CRM guarda.
+  const phoneKey = normalizePhone(lead.phone);
+  const emailKey = normalizeEmail(lead.email);
+
   let existingId: string | null = null;
-  if (lead.phone) {
+  if (phoneKey) {
     const { data } = await admin
       .from("contacts")
       .select("id")
       .eq("tenant_id", webhook.tenant_id)
-      .eq("phone", lead.phone)
+      .eq("phone_key", phoneKey)
       .maybeSingle();
     existingId = data?.id ?? null;
   }
-  if (!existingId && lead.email) {
+  if (!existingId && emailKey) {
+    // E-mail não é chave única (ver 0070): um contato@empresa.com pode estar
+    // em várias pessoas. Reaproveita o mais antigo em vez de criar mais um.
     const { data } = await admin
       .from("contacts")
       .select("id")
       .eq("tenant_id", webhook.tenant_id)
-      .eq("email", lead.email)
+      .eq("email_key", emailKey)
+      .order("created_at", { ascending: true })
+      .limit(1)
       .maybeSingle();
     existingId = data?.id ?? null;
   }
@@ -115,10 +126,25 @@ export async function POST(request: Request, { params }: { params: Promise<{ tok
       })
       .select("id")
       .single();
-    if (error || !contact) {
+
+    if (contact) {
+      contactId = contact.id;
+    } else if (isDuplicatePhoneError(error) && phoneKey) {
+      // Dois envios simultâneos do mesmo formulário: o índice único barrou o
+      // segundo. É o mesmo lead — segue com o que acabou de ser criado.
+      const { data: raced } = await admin
+        .from("contacts")
+        .select("id")
+        .eq("tenant_id", webhook.tenant_id)
+        .eq("phone_key", phoneKey)
+        .maybeSingle();
+      if (!raced) {
+        return NextResponse.json({ error: "Não foi possível criar o lead" }, { status: 500, headers: CORS_HEADERS });
+      }
+      contactId = raced.id;
+    } else {
       return NextResponse.json({ error: "Não foi possível criar o lead" }, { status: 500, headers: CORS_HEADERS });
     }
-    contactId = contact.id;
   }
 
   if (webhook.target_stage_id) {

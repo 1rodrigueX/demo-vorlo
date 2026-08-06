@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { User, Tag as TagIcon, X } from "lucide-react";
+import { User, Tag as TagIcon, X, Copy } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
@@ -49,7 +49,16 @@ export default async function ContactsPage({
     <div className="mx-auto max-w-4xl">
       <div className="mb-6 flex items-center justify-between gap-4">
         <h1 className="text-xl font-semibold text-gray-900">Contatos</h1>
-        <NewContactButton companies={companies ?? []} />
+        <div className="flex items-center gap-3">
+          <Link
+            href={`/${tenantSlug}/contacts/duplicados`}
+            className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700"
+          >
+            <Copy size={14} />
+            Duplicados
+          </Link>
+          <NewContactButton companies={companies ?? []} />
+        </div>
       </div>
 
       <form className="mb-3 flex flex-wrap items-center gap-2">

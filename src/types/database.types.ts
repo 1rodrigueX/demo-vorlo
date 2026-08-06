@@ -636,6 +636,12 @@ export interface Database {
           address_city: string | null;
           address_state: string | null;
           needs_registration: boolean;
+          custom_fields: Json;
+          // Colunas geradas (ver 0070_contact_dedupe): telefone/e-mail
+          // normalizados pra deduplicação. Só leitura — o banco calcula,
+          // por isso não aparecem em Insert/Update.
+          phone_key: string | null;
+          email_key: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -658,6 +664,7 @@ export interface Database {
           address_city?: string | null;
           address_state?: string | null;
           needs_registration?: boolean;
+          custom_fields?: Json;
           created_at?: string;
           updated_at?: string;
         };
@@ -680,6 +687,7 @@ export interface Database {
           address_city?: string | null;
           address_state?: string | null;
           needs_registration?: boolean;
+          custom_fields?: Json;
           created_at?: string;
           updated_at?: string;
         };
@@ -703,6 +711,189 @@ export interface Database {
             columns: ["tenant_id"];
             isOneToOne: false;
             referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      // Importação do Kommo (ver 0071_kommo_import).
+      kommo_imports: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          status: string;
+          scope: Json;
+          cursor: Json;
+          stats: Json;
+          error: string | null;
+          created_by: string | null;
+          created_at: string;
+          started_at: string | null;
+          finished_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          status?: string;
+          scope?: Json;
+          cursor?: Json;
+          stats?: Json;
+          error?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+          started_at?: string | null;
+          finished_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          status?: string;
+          scope?: Json;
+          cursor?: Json;
+          stats?: Json;
+          error?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+          started_at?: string | null;
+          finished_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "kommo_imports_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      kommo_entity_map: {
+        Row: {
+          tenant_id: string;
+          entity: string;
+          kommo_id: string;
+          local_id: string;
+          updated_at: string;
+        };
+        Insert: {
+          tenant_id: string;
+          entity: string;
+          kommo_id: string;
+          local_id: string;
+          updated_at?: string;
+        };
+        Update: {
+          tenant_id?: string;
+          entity?: string;
+          kommo_id?: string;
+          local_id?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "kommo_entity_map_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      custom_field_defs: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          entity: string;
+          key: string;
+          name: string;
+          field_type: string;
+          options: Json;
+          source: string;
+          external_id: string | null;
+          position: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          entity: string;
+          key: string;
+          name: string;
+          field_type?: string;
+          options?: Json;
+          source?: string;
+          external_id?: string | null;
+          position?: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          entity?: string;
+          key?: string;
+          name?: string;
+          field_type?: string;
+          options?: Json;
+          source?: string;
+          external_id?: string | null;
+          position?: number;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "custom_field_defs_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      // Auditoria das mesclagens de contato (ver 0070_contact_dedupe). Só
+      // leitura pelo app: quem escreve é a função merge_contacts.
+      contact_merges: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          winner_id: string;
+          loser_id: string;
+          loser_snapshot: Json;
+          reason: string;
+          merged_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          winner_id: string;
+          loser_id: string;
+          loser_snapshot: Json;
+          reason: string;
+          merged_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          winner_id?: string;
+          loser_id?: string;
+          loser_snapshot?: Json;
+          reason?: string;
+          merged_by?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "contact_merges_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "contact_merges_winner_id_fkey";
+            columns: ["winner_id"];
+            isOneToOne: false;
+            referencedRelation: "contacts";
             referencedColumns: ["id"];
           },
         ];
@@ -817,6 +1008,7 @@ export interface Database {
           closed_at: string | null;
           proposal_sent_at: string | null;
           bling_order_id: string | null;
+          custom_fields: Json;
           created_at: string;
           updated_at: string;
         };
@@ -833,6 +1025,7 @@ export interface Database {
           closed_at?: string | null;
           proposal_sent_at?: string | null;
           bling_order_id?: string | null;
+          custom_fields?: Json;
           created_at?: string;
           updated_at?: string;
         };
@@ -849,6 +1042,7 @@ export interface Database {
           closed_at?: string | null;
           proposal_sent_at?: string | null;
           bling_order_id?: string | null;
+          custom_fields?: Json;
           created_at?: string;
           updated_at?: string;
         };
@@ -1239,7 +1433,7 @@ export interface Database {
         Row: {
           id: string;
           tenant_id: string;
-          provider: "anthropic" | "gmail" | "outlook" | "google_calendar" | "microsoft365" | "custom";
+          provider: "anthropic" | "gmail" | "outlook" | "google_calendar" | "microsoft365" | "kommo" | "custom";
           name: string;
           status: "disconnected" | "connected" | "error";
           credentials: Json;
@@ -1255,7 +1449,7 @@ export interface Database {
         Insert: {
           id?: string;
           tenant_id: string;
-          provider: "anthropic" | "gmail" | "outlook" | "google_calendar" | "microsoft365" | "custom";
+          provider: "anthropic" | "gmail" | "outlook" | "google_calendar" | "microsoft365" | "kommo" | "custom";
           name?: string;
           status?: "disconnected" | "connected" | "error";
           credentials?: Json;
@@ -1271,7 +1465,7 @@ export interface Database {
         Update: {
           id?: string;
           tenant_id?: string;
-          provider?: "anthropic" | "gmail" | "outlook" | "google_calendar" | "microsoft365" | "custom";
+          provider?: "anthropic" | "gmail" | "outlook" | "google_calendar" | "microsoft365" | "kommo" | "custom";
           name?: string;
           status?: "disconnected" | "connected" | "error";
           credentials?: Json;
@@ -2611,7 +2805,7 @@ export interface Database {
         Row: {
           id: string;
           tenant_id: string;
-          job_type: "lead_webhook_welcome" | "proposal_followup" | "inactive_check" | "deal_won_message";
+          job_type: "lead_webhook_welcome" | "proposal_followup" | "inactive_check" | "deal_won_message" | "kommo_import_page";
           run_at: string;
           status: "pending" | "processing" | "done" | "failed";
           attempts: number;
@@ -2623,7 +2817,7 @@ export interface Database {
         Insert: {
           id?: string;
           tenant_id: string;
-          job_type: "lead_webhook_welcome" | "proposal_followup" | "inactive_check" | "deal_won_message";
+          job_type: "lead_webhook_welcome" | "proposal_followup" | "inactive_check" | "deal_won_message" | "kommo_import_page";
           run_at?: string;
           status?: "pending" | "processing" | "done" | "failed";
           attempts?: number;
@@ -2635,7 +2829,7 @@ export interface Database {
         Update: {
           id?: string;
           tenant_id?: string;
-          job_type?: "lead_webhook_welcome" | "proposal_followup" | "inactive_check" | "deal_won_message";
+          job_type?: "lead_webhook_welcome" | "proposal_followup" | "inactive_check" | "deal_won_message" | "kommo_import_page";
           run_at?: string;
           status?: "pending" | "processing" | "done" | "failed";
           attempts?: number;
@@ -3165,6 +3359,14 @@ export interface Database {
       current_tenant_has_estoque: { Args: Record<string, never>; Returns: boolean };
       current_tenant_has_producao: { Args: Record<string, never>; Returns: boolean };
       current_tenant_has_producao_actor: { Args: Record<string, never>; Returns: boolean };
+      merge_contacts: {
+        Args: { winner_id: string; loser_id: string; reason?: string };
+        Returns: undefined;
+      };
+      contact_duplicate_candidates: {
+        Args: Record<string, never>;
+        Returns: { match_type: string; match_value: string; contact_ids: string[]; total: number }[];
+      };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;

@@ -6,8 +6,35 @@ import { createClient } from "@/lib/supabase/server";
 import { requireTenantId, getTenantSlug } from "@/lib/auth/current-user";
 import { syncContactToBling } from "@/lib/bling/sync";
 import { contactSchema } from "@/lib/validation/contact";
+import { normalizePhone, isDuplicatePhoneError } from "@/lib/crm/phone";
 
 export type ActionState = { error?: string } | null;
+
+/**
+ * Mensagem para quando o índice único de telefone (ver 0070_contact_dedupe)
+ * barra o cadastro. Nomeia o contato que já ocupa aquele número — sem isso o
+ * vendedor só vê "erro ao salvar" e cadastra de novo com o telefone torto,
+ * que é exatamente a duplicata que a trava existe pra evitar.
+ */
+async function duplicatePhoneMessage(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  tenantId: string,
+  phone: string | null | undefined,
+): Promise<string> {
+  const phoneKey = normalizePhone(phone);
+  if (!phoneKey) return "Já existe um contato com este telefone.";
+
+  const { data: existing } = await supabase
+    .from("contacts")
+    .select("name")
+    .eq("tenant_id", tenantId)
+    .eq("phone_key", phoneKey)
+    .maybeSingle();
+
+  return existing
+    ? `Este telefone já está cadastrado em "${existing.name}". Abra esse contato em vez de criar outro.`
+    : "Este telefone já está cadastrado em um contato de outro vendedor. Peça para um administrador localizá-lo.";
+}
 
 /**
  * Cria a empresa informada inline no formulário de contato (quando o
@@ -109,6 +136,9 @@ export async function createContact(_prevState: ActionState, formData: FormData)
     .single();
 
   if (error || !data) {
+    if (isDuplicatePhoneError(error)) {
+      return { error: await duplicatePhoneMessage(supabase, tenantId, parsed.data.phone) };
+    }
     console.error("createContact failed:", error);
     return { error: `Não foi possível criar o contato: ${error?.message ?? "erro desconhecido"}` };
   }
@@ -206,6 +236,14 @@ export async function updateContact(
     .eq("id", contactId);
 
   if (error) {
+    if (isDuplicatePhoneError(error)) {
+      const tenantId = await requireTenantId(supabase, user.id);
+      return {
+        error: tenantId
+          ? await duplicatePhoneMessage(supabase, tenantId, parsed.data.phone)
+          : "Este telefone já está cadastrado em outro contato.",
+      };
+    }
     console.error("updateContact failed:", error);
     return { error: `Não foi possível salvar: ${error.message}` };
   }
