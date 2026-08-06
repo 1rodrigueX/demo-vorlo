@@ -637,6 +637,8 @@ export interface Database {
           address_state: string | null;
           needs_registration: boolean;
           custom_fields: Json;
+          opted_out_at: string | null;
+          opted_out_reason: string | null;
           // Colunas geradas (ver 0070_contact_dedupe): telefone/e-mail
           // normalizados pra deduplicação. Só leitura — o banco calcula,
           // por isso não aparecem em Insert/Update.
@@ -665,6 +667,8 @@ export interface Database {
           address_state?: string | null;
           needs_registration?: boolean;
           custom_fields?: Json;
+          opted_out_at?: string | null;
+          opted_out_reason?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -688,6 +692,8 @@ export interface Database {
           address_state?: string | null;
           needs_registration?: boolean;
           custom_fields?: Json;
+          opted_out_at?: string | null;
+          opted_out_reason?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -711,6 +717,115 @@ export interface Database {
             columns: ["tenant_id"];
             isOneToOne: false;
             referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      // Execução das trajetórias (ver 0072_flow_runtime). Escrita só pelo
+      // cron via service role; o app apenas lê.
+      flow_runs: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          flow_id: string;
+          contact_id: string;
+          deal_id: string | null;
+          graph_snapshot: Json;
+          current_node_id: string | null;
+          status: "running" | "waiting" | "done" | "failed" | "canceled";
+          steps_taken: number;
+          context: Json;
+          error: string | null;
+          started_at: string;
+          updated_at: string;
+          finished_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          flow_id: string;
+          contact_id: string;
+          deal_id?: string | null;
+          graph_snapshot: Json;
+          current_node_id?: string | null;
+          status?: "running" | "waiting" | "done" | "failed" | "canceled";
+          steps_taken?: number;
+          context?: Json;
+          error?: string | null;
+          started_at?: string;
+          updated_at?: string;
+          finished_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          flow_id?: string;
+          contact_id?: string;
+          deal_id?: string | null;
+          graph_snapshot?: Json;
+          current_node_id?: string | null;
+          status?: "running" | "waiting" | "done" | "failed" | "canceled";
+          steps_taken?: number;
+          context?: Json;
+          error?: string | null;
+          started_at?: string;
+          updated_at?: string;
+          finished_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "flow_runs_flow_id_fkey";
+            columns: ["flow_id"];
+            isOneToOne: false;
+            referencedRelation: "automation_flows";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "flow_runs_contact_id_fkey";
+            columns: ["contact_id"];
+            isOneToOne: false;
+            referencedRelation: "contacts";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      flow_run_steps: {
+        Row: {
+          id: string;
+          run_id: string;
+          tenant_id: string;
+          node_id: string;
+          kind: string;
+          status: "done" | "skipped" | "failed";
+          detail: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          run_id: string;
+          tenant_id: string;
+          node_id: string;
+          kind: string;
+          status: "done" | "skipped" | "failed";
+          detail?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          run_id?: string;
+          tenant_id?: string;
+          node_id?: string;
+          kind?: string;
+          status?: "done" | "skipped" | "failed";
+          detail?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "flow_run_steps_run_id_fkey";
+            columns: ["run_id"];
+            isOneToOne: false;
+            referencedRelation: "flow_runs";
             referencedColumns: ["id"];
           },
         ];
@@ -2805,7 +2920,7 @@ export interface Database {
         Row: {
           id: string;
           tenant_id: string;
-          job_type: "lead_webhook_welcome" | "proposal_followup" | "inactive_check" | "deal_won_message" | "kommo_import_page";
+          job_type: "lead_webhook_welcome" | "proposal_followup" | "inactive_check" | "deal_won_message" | "kommo_import_page" | "flow_step";
           run_at: string;
           status: "pending" | "processing" | "done" | "failed";
           attempts: number;
@@ -2817,7 +2932,7 @@ export interface Database {
         Insert: {
           id?: string;
           tenant_id: string;
-          job_type: "lead_webhook_welcome" | "proposal_followup" | "inactive_check" | "deal_won_message" | "kommo_import_page";
+          job_type: "lead_webhook_welcome" | "proposal_followup" | "inactive_check" | "deal_won_message" | "kommo_import_page" | "flow_step";
           run_at?: string;
           status?: "pending" | "processing" | "done" | "failed";
           attempts?: number;
@@ -2829,7 +2944,7 @@ export interface Database {
         Update: {
           id?: string;
           tenant_id?: string;
-          job_type?: "lead_webhook_welcome" | "proposal_followup" | "inactive_check" | "deal_won_message" | "kommo_import_page";
+          job_type?: "lead_webhook_welcome" | "proposal_followup" | "inactive_check" | "deal_won_message" | "kommo_import_page" | "flow_step";
           run_at?: string;
           status?: "pending" | "processing" | "done" | "failed";
           attempts?: number;

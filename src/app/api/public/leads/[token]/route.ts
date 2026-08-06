@@ -4,6 +4,7 @@ import { pickLeastLoadedMember } from "@/lib/whatsapp/findOrCreateContact";
 import { incomingLeadSchema } from "@/lib/validation/lead-webhook";
 import { checkRateLimit } from "@/lib/utils/rateLimit";
 import { normalizePhone, normalizeEmail, isDuplicatePhoneError } from "@/lib/crm/phone";
+import { triggerFlows } from "@/lib/automations/runtime";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -175,6 +176,12 @@ export async function POST(request: Request, { params }: { params: Promise<{ tok
       job_type: "lead_webhook_welcome",
       payload: { contactId, phone: lead.phone, message: webhook.welcome_message },
     });
+  }
+
+  // Trajetórias que escutam "novo lead" (ver automations/runtime). Só para
+  // lead novo: reenvio do mesmo formulário não deve reiniciar o fluxo.
+  if (!existingId) {
+    void triggerFlows(admin, webhook.tenant_id, "lead_created", { contactId });
   }
 
   return NextResponse.json({ ok: true, contactId }, { status: 201, headers: CORS_HEADERS });

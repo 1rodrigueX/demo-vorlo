@@ -3,8 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { requireTenantId, getTenantSlug } from "@/lib/auth/current-user";
 import { syncContactToBling } from "@/lib/bling/sync";
+import { triggerFlows } from "@/lib/automations/runtime";
 import { contactSchema } from "@/lib/validation/contact";
 import { normalizePhone, isDuplicatePhoneError } from "@/lib/crm/phone";
 
@@ -142,6 +144,10 @@ export async function createContact(_prevState: ActionState, formData: FormData)
     console.error("createContact failed:", error);
     return { error: `Não foi possível criar o contato: ${error?.message ?? "erro desconhecido"}` };
   }
+
+  // Trajetórias que escutam "novo lead" (ver automations/runtime). Roda com a
+  // service role porque quem executa depois é o cron, sem sessão.
+  void triggerFlows(createAdminClient(), tenantId, "lead_created", { contactId: data.id });
 
   void syncContactToBling(tenantId, {
     id: data.id,

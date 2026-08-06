@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { sendWhatsAppMessage, type SendResult } from "@/lib/whatsapp/send";
+import { sendWhatsAppMessage } from "@/lib/whatsapp/send";
+import { recordOutboundMessage } from "@/lib/whatsapp/recordOutboundMessage";
 import { notifyJobFailure } from "@/lib/discord/notify";
 import {
   getFunnelSettings,
@@ -9,6 +10,7 @@ import {
   moveDealToStageByName,
 } from "@/lib/automations/funnel";
 import { runKommoImportStep } from "@/lib/kommo/import";
+import { advanceFlowRun } from "@/lib/automations/runtime";
 
 const BATCH_SIZE = 20;
 
@@ -19,45 +21,7 @@ type ProposalFollowupPayload = { dealId: string };
 type InactiveCheckPayload = { dealId: string; followupSentAt: string };
 type DealWonMessagePayload = { dealId: string; contactId: string; phone: string; message: string };
 type KommoImportPagePayload = { importId: string };
-
-/**
- * Registra no CRM uma mensagem enviada automaticamente (sent_by/created_by
- * null = automação, mesmo padrão do envio do SDR de IA). Sem isso a mensagem
- * chega no WhatsApp do lead mas some do histórico dentro do CRM.
- */
-async function recordOutboundMessage(
-  admin: Admin,
-  tenantId: string,
-  contactId: string,
-  message: string,
-  result: SendResult,
-): Promise<void> {
-  const { data: waMessage } = await admin
-    .from("whatsapp_messages")
-    .insert({
-      tenant_id: tenantId,
-      contact_id: contactId,
-      twilio_sid: result.externalId,
-      direction: "outbound",
-      from_number: result.from,
-      to_number: result.to,
-      body: message,
-      status: result.initialStatus,
-      sent_by: null,
-    })
-    .select("id")
-    .single();
-
-  await admin.from("activities").insert({
-    tenant_id: tenantId,
-    contact_id: contactId,
-    type: "whatsapp",
-    direction: "outbound",
-    body: message,
-    created_by: null,
-    whatsapp_message_id: waMessage?.id ?? null,
-  });
-}
+type FlowStepPayload = { runId: string };
 
 async function handleLeadWebhookWelcome(admin: Admin, tenantId: string, payload: LeadWebhookWelcomePayload) {
   const result = await sendWhatsAppMessage(tenantId, payload.phone, payload.message);
@@ -182,6 +146,11 @@ export async function POST(request: Request) {
         // seguinte, então a fila avança sozinha até acabar (ver kommo/import).
         case "kommo_import_page":
           await runKommoImportStep(admin, (job.payload as KommoImportPagePayload).importId);
+          break;
+        // Um nó de uma trajetória. O próprio passo agenda o seguinte, então a
+        // fila caminha sozinha até o fim do fluxo (ver automations/runtime).
+        case "flow_step":
+          await advanceFlowRun(admin, (job.payload as FlowStepPayload).runId);
           break;
         default:
           throw new Error(`job_type desconhecido: ${job.job_type}`);

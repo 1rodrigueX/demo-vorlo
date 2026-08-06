@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Workflow, Plus, Trash2, Sparkles } from "lucide-react";
+import { Workflow, Plus, Trash2, Sparkles, Users } from "lucide-react";
 import { toast } from "sonner";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
@@ -21,6 +21,10 @@ export type FlowListItem = {
   status: "draft" | "active";
   updated_at: string;
   nodeCount: number;
+  /** Leads passando por ela agora (running/waiting) — ver 0072_flow_runtime. */
+  activeRuns: number;
+  /** Leads que já terminaram o fluxo. */
+  finishedRuns: number;
 };
 
 export function TrajetoriasList({ flows, canEdit }: { flows: FlowListItem[]; canEdit: boolean }) {
@@ -136,10 +140,18 @@ export function TrajetoriasList({ flows, canEdit }: { flows: FlowListItem[]; can
                     </p>
                   </div>
                 </div>
-                <div className="mt-4 flex items-center gap-2">
+                <div className="mt-4 flex flex-wrap items-center gap-2">
                   <StatusBadge status={flow.status} />
+                  {flow.activeRuns > 0 && (
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-2 py-0.5 text-[11px] font-medium text-indigo-600">
+                      <Users size={11} />
+                      {flow.activeRuns} em andamento
+                    </span>
+                  )}
                   <span className="text-[11px] text-gray-400">
-                    Editada em {new Date(flow.updated_at).toLocaleDateString("pt-BR")}
+                    {flow.finishedRuns > 0
+                      ? `${flow.finishedRuns} ${flow.finishedRuns === 1 ? "lead concluiu" : "leads concluíram"}`
+                      : `Editada em ${new Date(flow.updated_at).toLocaleDateString("pt-BR")}`}
                   </span>
                 </div>
               </Link>

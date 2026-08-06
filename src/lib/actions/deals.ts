@@ -10,6 +10,7 @@ import {
   enqueueDealWonMessage,
   getFunnelSettings,
 } from "@/lib/automations/funnel";
+import { triggerFlows } from "@/lib/automations/runtime";
 import { createBlingOrderForDeal } from "@/lib/bling/sync";
 import { createDealWonInboxEntry } from "@/lib/financas/crmInbox";
 import { baixarEstoqueVenda } from "@/lib/estoque/dealStock";
@@ -215,6 +216,14 @@ export async function updateDealStage(input: {
       // Entrou (ou foi arrastado) para "Proposta": agenda/reinicia o follow-up.
       void scheduleProposalFollowup(admin, automationTenantId, parsed.data.dealId);
     }
+
+    // Trajetórias que escutam "mudou de etapa" (ver automations/runtime).
+    // Vale pra qualquer etapa, inclusive as de fechamento.
+    void triggerFlows(admin, automationTenantId, "stage_changed", {
+      contactId: deal.contact_id,
+      dealId: parsed.data.dealId,
+      stageId: parsed.data.stageId,
+    });
   }
 
   revalidatePath("/[tenantSlug]/pipeline", "page");
