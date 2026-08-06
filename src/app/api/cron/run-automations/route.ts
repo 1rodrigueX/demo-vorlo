@@ -8,6 +8,7 @@ import {
   applyTagToContact,
   moveDealToStageByName,
 } from "@/lib/automations/funnel";
+import { runKommoImportStep } from "@/lib/kommo/import";
 
 const BATCH_SIZE = 20;
 
@@ -17,6 +18,7 @@ type LeadWebhookWelcomePayload = { contactId: string; phone: string; message: st
 type ProposalFollowupPayload = { dealId: string };
 type InactiveCheckPayload = { dealId: string; followupSentAt: string };
 type DealWonMessagePayload = { dealId: string; contactId: string; phone: string; message: string };
+type KommoImportPagePayload = { importId: string };
 
 /**
  * Registra no CRM uma mensagem enviada automaticamente (sent_by/created_by
@@ -175,6 +177,11 @@ export async function POST(request: Request) {
           break;
         case "deal_won_message":
           await handleDealWonMessage(admin, job.tenant_id, job.payload as DealWonMessagePayload);
+          break;
+        // Uma página da importação do Kommo. O próprio passo agenda o
+        // seguinte, então a fila avança sozinha até acabar (ver kommo/import).
+        case "kommo_import_page":
+          await runKommoImportStep(admin, (job.payload as KommoImportPagePayload).importId);
           break;
         default:
           throw new Error(`job_type desconhecido: ${job.job_type}`);

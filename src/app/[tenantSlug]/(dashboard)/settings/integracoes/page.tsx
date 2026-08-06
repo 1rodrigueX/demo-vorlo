@@ -8,6 +8,7 @@ import { AnthropicSettingsCard } from "@/components/settings/AnthropicSettingsCa
 // Música desativada temporariamente (volta como atualização beta mais pra frente).
 // import { YoutubeSettingsCard } from "@/components/settings/YoutubeSettingsCard";
 import { EmailIntegrationsCard } from "@/components/settings/EmailIntegrationsCard";
+import { KommoIntegrationCard } from "@/components/settings/KommoIntegrationCard";
 import { PowerBiExportButton } from "@/components/dashboard/PowerBiExportButton";
 
 function maskApiKey(apiKey: string): string {
@@ -65,6 +66,7 @@ export default async function SettingsIntegracoesPage({
     { data: blingConnections },
     { data: anthropicIntegration },
     { data: emailIntegrations },
+    { data: kommoIntegration },
     { data: tags },
     { data: sellerMappings },
     { data: apiKeys },
@@ -96,6 +98,12 @@ export default async function SettingsIntegracoesPage({
       .select("provider, name, access_token")
       .eq("tenant_id", current.profile.tenant_id)
       .in("provider", ["gmail", "outlook"]),
+    supabase
+      .from("tenant_integrations")
+      .select("status, name, credentials, last_error, last_tested_at")
+      .eq("tenant_id", current.profile.tenant_id)
+      .eq("provider", "kommo")
+      .maybeSingle(),
     supabase.from("tags").select("*").eq("tenant_id", current.profile.tenant_id).order("name"),
     supabase
       .from("bling_connection_sellers")
@@ -164,6 +172,18 @@ export default async function SettingsIntegracoesPage({
         <EmailIntegrationsCard
           gmailEmail={gmailIntegration?.access_token ? gmailIntegration.name || "conta conectada" : null}
           outlookEmail={outlookIntegration?.access_token ? outlookIntegration.name || "conta conectada" : null}
+        />
+      </Card>
+
+      <Card className="p-6">
+        <h2 className="mb-4 text-sm font-semibold text-gray-900">Kommo</h2>
+        <KommoIntegrationCard
+          status={(kommoIntegration?.status as "disconnected" | "connected" | "error") ?? "disconnected"}
+          subdomain={(kommoIntegration?.credentials as { subdomain?: string } | null)?.subdomain ?? null}
+          accountName={kommoIntegration?.name ?? null}
+          lastError={kommoIntegration?.last_error ?? null}
+          lastTestedAt={kommoIntegration?.last_tested_at ?? null}
+          tenantSlug={tenantSlug}
         />
       </Card>
 
