@@ -29,8 +29,19 @@ jobs:
             # única vez e MANTÉM (o -q evita regenerar e invalidar as sessões de
             # todo mundo a cada deploy). .env.local é untracked, sobrevive ao reset.
             grep -q '^AUTH_SECRET=' .env.local 2>/dev/null || echo "AUTH_SECRET=$(openssl rand -base64 32)" >> .env.local
+            # Atrás do nginx, o Auth.js não descobre o host sozinho — fixa a URL.
+            grep -q '^AUTH_URL=' .env.local 2>/dev/null || echo "AUTH_URL=https://falaai.cloud" >> .env.local
+            grep -q '^AUTH_TRUST_HOST=' .env.local 2>/dev/null || echo "AUTH_TRUST_HOST=true" >> .env.local
             git fetch origin main
             git reset --hard origin/main
             npm ci
             npm run build
-            pm2 restart crm
+            # --update-env: pm2 relê as variáveis (senão mantém o env antigo em cache).
+            pm2 restart crm --update-env
+            echo "=== DIAG: vars de auth em .env.local ==="
+            grep -cE '^(AUTH_SECRET|AUTH_URL|AUTH_TRUST_HOST)=' .env.local
+            echo "=== DIAG: NEXT_PUBLIC_SITE_URL ==="
+            grep '^NEXT_PUBLIC_SITE_URL=' .env.local || echo "(ausente)"
+            sleep 4
+            echo "=== DIAG: logs recentes ==="
+            pm2 logs crm --lines 30 --nostream 2>&1 | tail -35 || true
