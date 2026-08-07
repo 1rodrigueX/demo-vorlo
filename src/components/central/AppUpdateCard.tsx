@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { Download, Monitor, RefreshCw, CheckCircle2 } from "lucide-react";
+import { useInDesktopApp } from "@/lib/app-shell/useInDesktopApp";
 
 /**
  * O mesmo espaço serve dois contextos: no navegador oferece o download do app;
@@ -43,17 +45,16 @@ type State =
   | { kind: "error"; message: string };
 
 export function AppUpdateCard({ downloadUrl }: { downloadUrl: string }) {
-  // Começa como null pra não divergir do HTML do servidor na hidratação: só
-  // depois de montar dá pra saber se estamos dentro do app.
-  const [inApp, setInApp] = useState<boolean | null>(null);
+  const inApp = useInDesktopApp();
   const [version, setVersion] = useState<string | null>(null);
   const [state, setState] = useState<State>({ kind: "idle" });
 
+  // A versão vem de uma chamada assíncrona ao app — o único motivo de existir
+  // um efeito aqui. Se a permissão de leitura faltar, cai no catch e o card
+  // segue funcionando sem mostrar o número.
   useEffect(() => {
-    const tauri = getTauri();
-    setInApp(Boolean(tauri));
-    tauri?.app
-      ?.getVersion()
+    getTauri()
+      ?.app?.getVersion()
       .then(setVersion)
       .catch(() => setVersion(null));
   }, []);
@@ -94,8 +95,8 @@ export function AppUpdateCard({ downloadUrl }: { downloadUrl: string }) {
     }
   }
 
-  // Antes de montar, mostra o card de download — é o caso da maioria (web).
-  if (inApp !== true) {
+  // No navegador (e durante a hidratação) mostra o card de download.
+  if (!inApp) {
     return (
       <Shell
         title="App para computador (Windows)"
@@ -148,6 +149,9 @@ export function AppUpdateCard({ downloadUrl }: { downloadUrl: string }) {
             Você já está na versão mais recente
           </span>
         )}
+        <Link href="/novidades" className="text-xs text-gray-400 underline hover:text-gray-600">
+          Ver o que mudou em cada versão
+        </Link>
         {state.kind === "installing" && (
           <span className="text-xs text-gray-500">
             {state.percent > 0 ? `Baixando... ${state.percent}%` : "Baixando..."} O app reinicia sozinho.

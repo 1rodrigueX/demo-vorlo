@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { ArrowRight, LayoutDashboard, Lock, Truck, Wallet, Boxes, Factory, LayoutGrid, ShoppingBag } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+import { useInDesktopApp } from "@/lib/app-shell/useInDesktopApp";
 import type { AccountService } from "@/lib/auth/current-user";
 
 const ICONS: Record<AccountService["key"], typeof LayoutDashboard> = {
@@ -52,32 +53,57 @@ function ServiceCard({ service, mode }: { service: AccountService; mode: Tab }) 
 /** Central em abas: "Meus acessos" (o que já está ativo) e "Produtos" (tudo
  * que dá pra assinar/comprar). */
 export function CentralServices({ services }: { services: AccountService[] }) {
-  const ativos = services.filter((s) => s.active);
-  const hasAnyActive = ativos.length > 0;
-  const [tab, setTab] = useState<Tab>(hasAnyActive ? "acessos" : "produtos");
+  const inApp = useInDesktopApp();
 
-  const list = tab === "acessos" ? ativos : services;
+  // Dentro do app desktop só o CRM funciona de verdade — os outros módulos
+  // dependem de coisas que a janela nativa não entrega. Mostrar cards que não
+  // abrem é pior que não mostrar: o usuário clica, nada acontece e ele acha
+  // que o app está quebrado. No navegador continua tudo.
+  const visible = inApp ? services.filter((s) => s.key === "crm") : services;
+
+  const ativos = visible.filter((s) => s.active);
+  const hasAnyActive = ativos.length > 0;
+  const [tab, setTab] = useState<Tab>("acessos");
+
+  const list = tab === "acessos" ? ativos : visible;
 
   return (
     <div>
-      <div className="mx-auto mb-8 flex w-fit rounded-full border border-gray-200 bg-panel p-1">
-        <TabButton active={tab === "acessos"} onClick={() => setTab("acessos")} icon={LayoutGrid}>
-          Meus acessos
-        </TabButton>
-        <TabButton active={tab === "produtos"} onClick={() => setTab("produtos")} icon={ShoppingBag}>
-          Produtos
-        </TabButton>
-      </div>
+      {/* A aba "Produtos" vende os outros módulos — que não abrem no app.
+          No desktop ela sai de cena junto com eles. */}
+      {!inApp && (
+        <div className="mx-auto mb-8 flex w-fit rounded-full border border-gray-200 bg-panel p-1">
+          <TabButton active={tab === "acessos"} onClick={() => setTab("acessos")} icon={LayoutGrid}>
+            Meus acessos
+          </TabButton>
+          <TabButton active={tab === "produtos"} onClick={() => setTab("produtos")} icon={ShoppingBag}>
+            Produtos
+          </TabButton>
+        </div>
+      )}
 
       {tab === "acessos" && !hasAnyActive ? (
         <div className="rounded-2xl border border-gray-200 bg-panel p-10 text-center">
-          <p className="text-sm text-gray-500">
-            Você ainda não assinou nenhum serviço. Veja os{" "}
-            <button type="button" onClick={() => setTab("produtos")} className="font-medium text-indigo-600 hover:underline">
-              Produtos
-            </button>{" "}
-            disponíveis.
-          </p>
+          {inApp ? (
+            // No app não existe aba Produtos pra mandar o usuário — a compra
+            // acontece no site, então é pra lá que ele vai.
+            <p className="text-sm text-gray-500">
+              Você ainda não tem o CRM ativo. Assine em{" "}
+              <span className="font-medium text-gray-700">falaai.cloud</span> e depois volte aqui.
+            </p>
+          ) : (
+            <p className="text-sm text-gray-500">
+              Você ainda não assinou nenhum serviço. Veja os{" "}
+              <button
+                type="button"
+                onClick={() => setTab("produtos")}
+                className="font-medium text-indigo-600 hover:underline"
+              >
+                Produtos
+              </button>{" "}
+              disponíveis.
+            </p>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">

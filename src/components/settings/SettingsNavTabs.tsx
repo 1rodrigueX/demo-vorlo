@@ -12,6 +12,7 @@ const TABS = [
   { href: "/settings/integracoes", label: "Integrações" },
   { href: "/settings/webhooks", label: "Webhooks" },
   { href: "/settings/empresa", label: "Empresa" },
+  { href: "/settings/diagnostico", label: "Status" },
 ];
 
 export function SettingsNavTabs() {
