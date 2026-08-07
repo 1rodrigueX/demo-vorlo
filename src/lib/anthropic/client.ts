@@ -67,6 +67,18 @@ export async function getAnthropicClientForAgent(
   throw new AnthropicNotConfiguredError();
 }
 
+/**
+ * Client Anthropic da PLATAFORMA (Synexa), não de um tenant. Usa a chave
+ * PLATFORM_ANTHROPIC_API_KEY — a mesma que banca o agente Synexa out-of-the-box.
+ * Uso interno do time (ex.: redigir comunicado de atualização no painel dev),
+ * nunca custo do cliente. Lança AnthropicNotConfiguredError se não houver chave.
+ */
+export function getPlatformAnthropicClient(): Anthropic {
+  const apiKey = process.env.PLATFORM_ANTHROPIC_API_KEY;
+  if (!apiKey) throw new AnthropicNotConfiguredError();
+  return new Anthropic({ apiKey });
+}
+
 /** Faz uma chamada mínima real à API pra confirmar que a chave funciona. */
 export async function testAnthropicApiKey(
   apiKey: string,

@@ -2,10 +2,12 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import type Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isCurrentUserDev } from "@/lib/auth/current-user";
 import { sendPlatformUpdateBatch, type PlatformUpdateEmail } from "@/lib/email/platformUpdate";
+import { getPlatformAnthropicClient, ASSISTANT_MODEL, AnthropicNotConfiguredError } from "@/lib/anthropic/client";
 
 export type UpdateActionState = { error?: string } | null;
 
@@ -55,6 +57,110 @@ export async function saveUpdate(_prevState: UpdateActionState, formData: FormDa
 
   revalidatePath("/dev/atualizacoes", "page");
   return null;
+}
+
+// ── "Escrever com IA" ──────────────────────────────────────────────────────
+
+export type GeneratedUpdate = {
+  title: string;
+  version: string | null;
+  body: string;
+  ctaLabel: string | null;
+  ctaUrl: string | null;
+};
+
+const WRITE_UPDATE_TOOL: Anthropic.Tool = {
+  name: "escrever_comunicado",
+  description: "Escreve o comunicado de atualização da Synexa pronto para enviar por e-mail.",
+  input_schema: {
+    type: "object",
+    properties: {
+      title: { type: "string", description: "Título curto e concreto (até ~8 palavras), sem 'novidade'/'atualização' genéricos." },
+      version: { type: "string", description: "Versão curta se fizer sentido (ex: v2.4). Vazio se não souber." },
+      body: {
+        type: "string",
+        description:
+          "Corpo do e-mail em português do Brasil, em PRIMEIRA PESSOA (eu), voz calorosa e direta do fundador da Synexa. Parágrafos separados por linha em branco. Conta o que mudou e o que a pessoa ganha com isso. Sem jargão corporativo, sem 'estamos felizes em anunciar'.",
+      },
+      ctaLabel: { type: "string", description: "Texto curto do botão, se houver ação (ex: 'Ver no CRM'). Vazio se não precisar." },
+      ctaUrl: { type: "string", description: "Link do botão, se houver. Vazio se não souber a URL." },
+    },
+    required: ["title", "body"],
+  },
+};
+
+const generatedSchema = z.object({
+  title: z.string().trim().min(3).max(160),
+  version: z.string().trim().max(24).optional().default(""),
+  body: z.string().trim().min(10).max(8000),
+  ctaLabel: z.string().trim().max(40).optional().default(""),
+  ctaUrl: z.string().trim().max(400).optional().default(""),
+});
+
+/**
+ * Redige o comunicado a partir de uma instrução curta do dev (ex.: "chat de
+ * WhatsApp com áudio e imagem no app"). Devolve os campos preenchidos pra o dev
+ * revisar e disparar — a IA escreve, o humano lança. Usa a chave da PLATAFORMA.
+ */
+export async function generatePlatformUpdate(
+  instruction: string,
+): Promise<{ update: GeneratedUpdate } | { error: string }> {
+  if (!(await isCurrentUserDev())) return { error: "Sem permissão" };
+
+  const clean = (instruction ?? "").trim();
+  if (clean.length < 3) return { error: "Descreva em uma frase o que foi lançado." };
+  if (clean.length > 2000) return { error: "Instrução muito longa (máx. 2000 caracteres)." };
+
+  let client: Anthropic;
+  try {
+    client = getPlatformAnthropicClient();
+  } catch (err) {
+    if (err instanceof AnthropicNotConfiguredError) {
+      return { error: "IA da plataforma indisponível: configure PLATFORM_ANTHROPIC_API_KEY no servidor." };
+    }
+    return { error: "IA indisponível no momento." };
+  }
+
+  const system = [
+    "Você é a voz da Synexa (uma plataforma brasileira de CRM com IA) escrevendo um comunicado de atualização por e-mail para os clientes.",
+    "Escreva SEMPRE chamando a ferramenta escrever_comunicado — nunca texto solto.",
+    "Voz: primeira pessoa do singular (eu), calorosa, direta e humana — como o fundador falando com quem usa o produto. Nada de 'nós, da Synexa' nem 'estamos felizes em anunciar'.",
+    "Foque no que a pessoa GANHA com a mudança, em linguagem simples. Português do Brasil.",
+    "Se a instrução não mencionar link, deixe ctaUrl e ctaLabel vazios.",
+  ].join("\n");
+
+  let toolInput: unknown;
+  try {
+    const resp = await client.messages.create({
+      model: ASSISTANT_MODEL,
+      max_tokens: 1500,
+      system,
+      tools: [WRITE_UPDATE_TOOL],
+      tool_choice: { type: "tool", name: "escrever_comunicado" },
+      messages: [{ role: "user", content: `Lancei isto: ${clean}\n\nEscreva o comunicado.` }],
+    });
+    const block = resp.content.find((b) => b.type === "tool_use");
+    if (!block || block.type !== "tool_use") {
+      return { error: "A IA não conseguiu escrever. Tente reescrever a instrução." };
+    }
+    toolInput = block.input;
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "erro desconhecido";
+    return { error: `Falha ao escrever com IA: ${msg}` };
+  }
+
+  const parsed = generatedSchema.safeParse(toolInput);
+  if (!parsed.success) return { error: "A IA devolveu um formato inesperado. Tente de novo." };
+
+  return {
+    update: {
+      title: parsed.data.title,
+      version: parsed.data.version || null,
+      body: parsed.data.body,
+      ctaLabel: parsed.data.ctaLabel || null,
+      ctaUrl: parsed.data.ctaUrl || null,
+    },
+  };
 }
 
 export async function deleteUpdate(id: string): Promise<UpdateActionState> {

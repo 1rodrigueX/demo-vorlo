@@ -3,7 +3,7 @@
 import { useActionState, useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Send, Trash2, Mail, Users, CheckCircle2, AlertCircle } from "lucide-react";
+import { Send, Trash2, Mail, Users, CheckCircle2, AlertCircle, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
@@ -15,6 +15,7 @@ import {
   sendUpdate,
   sendTestUpdate,
   countRecipients,
+  generatePlatformUpdate,
   type UpdateActionState,
 } from "@/lib/actions/platform-updates";
 
@@ -46,14 +47,45 @@ export function PlatformUpdatesManager({
   const formRef = useRef<HTMLFormElement>(null);
   const wasPending = useRef(false);
 
+  // Campos controlados pra a IA conseguir preenchê-los.
+  const [title, setTitle] = useState("");
+  const [version, setVersion] = useState("");
+  const [body, setBody] = useState("");
+  const [ctaLabel, setCtaLabel] = useState("");
+  const [ctaUrl, setCtaUrl] = useState("");
+
+  // "Escrever com IA".
+  const [aiInstruction, setAiInstruction] = useState("");
+  const [aiBusy, startAi] = useTransition();
+
   useEffect(() => {
     if (wasPending.current && !isPending && !state?.error) {
       toast.success("Comunicado salvo como rascunho");
-      formRef.current?.reset();
+      setTitle("");
+      setVersion("");
+      setBody("");
+      setCtaLabel("");
+      setCtaUrl("");
       router.refresh();
     }
     wasPending.current = isPending;
   }, [isPending, state, router]);
+
+  function handleGenerate() {
+    startAi(async () => {
+      const result = await generatePlatformUpdate(aiInstruction);
+      if ("error" in result) {
+        toast.error(result.error);
+        return;
+      }
+      setTitle(result.update.title);
+      setVersion(result.update.version ?? "");
+      setBody(result.update.body);
+      setCtaLabel(result.update.ctaLabel ?? "");
+      setCtaUrl(result.update.ctaUrl ?? "");
+      toast.success("Comunicado escrito pela IA — revise e ajuste antes de enviar");
+    });
+  }
 
   function handleCount() {
     startBusy(async () => {
@@ -117,15 +149,56 @@ export function PlatformUpdatesManager({
 
       <Card className="p-6">
         <h2 className="mb-4 text-sm font-semibold text-gray-900">Novo comunicado</h2>
+
+        <div className="mb-5 rounded-lg border border-indigo-100 bg-indigo-50/60 p-4">
+          <div className="mb-2 flex items-center gap-2">
+            <Sparkles size={15} className="text-indigo-600" />
+            <span className="text-sm font-semibold text-indigo-900">Escrever com IA</span>
+          </div>
+          <p className="mb-3 text-xs text-indigo-700/80">
+            Diga em uma frase o que foi lançado — a IA escreve o comunicado inteiro na voz da Synexa. Você revisa antes de enviar.
+          </p>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Input
+              value={aiInstruction}
+              onChange={(e) => setAiInstruction(e.target.value)}
+              placeholder="Ex: chat de WhatsApp com áudio e imagem no aplicativo"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleGenerate();
+                }
+              }}
+            />
+            <Button type="button" onClick={handleGenerate} isLoading={aiBusy} className="shrink-0">
+              <Sparkles size={15} />
+              Escrever
+            </Button>
+          </div>
+        </div>
+
         <form ref={formRef} action={formAction} className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-[1fr_140px]">
             <div>
               <Label htmlFor="title">Título</Label>
-              <Input id="title" name="title" placeholder="Trajetórias agora rodam sozinhas" required />
+              <Input
+                id="title"
+                name="title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Trajetórias agora rodam sozinhas"
+                required
+              />
             </div>
             <div>
               <Label htmlFor="version">Versão (opcional)</Label>
-              <Input id="version" name="version" placeholder="v2.4" />
+              <Input
+                id="version"
+                name="version"
+                value={version}
+                onChange={(e) => setVersion(e.target.value)}
+                placeholder="v2.4"
+              />
             </div>
           </div>
 
@@ -136,6 +209,8 @@ export function PlatformUpdatesManager({
               name="body"
               rows={8}
               required
+              value={body}
+              onChange={(e) => setBody(e.target.value)}
               placeholder={"Conte a novidade em poucas linhas.\n\nDeixe uma linha em branco para separar parágrafos."}
             />
           </div>
@@ -143,11 +218,24 @@ export function PlatformUpdatesManager({
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <Label htmlFor="ctaLabel">Texto do botão (opcional)</Label>
-              <Input id="ctaLabel" name="ctaLabel" placeholder="Ver o que mudou" />
+              <Input
+                id="ctaLabel"
+                name="ctaLabel"
+                value={ctaLabel}
+                onChange={(e) => setCtaLabel(e.target.value)}
+                placeholder="Ver o que mudou"
+              />
             </div>
             <div>
               <Label htmlFor="ctaUrl">Link do botão</Label>
-              <Input id="ctaUrl" name="ctaUrl" type="url" placeholder="https://..." />
+              <Input
+                id="ctaUrl"
+                name="ctaUrl"
+                type="url"
+                value={ctaUrl}
+                onChange={(e) => setCtaUrl(e.target.value)}
+                placeholder="https://..."
+              />
             </div>
           </div>
 
