@@ -1,9 +1,11 @@
 "use server";
 
+import { randomUUID } from "node:crypto";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireTenantId } from "@/lib/auth/current-user";
 import { getBaileysState } from "@/lib/whatsapp/baileysClient";
+import { putObject, getObject, deleteObject } from "@/lib/storage";
 
 /**
  * Diagnóstico do CRM: o que está funcionando, o que está pela metade e o que
@@ -213,4 +215,172 @@ export async function runDiagnostics(): Promise<DiagnosticsResult> {
   }
 
   return { checks };
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+//  Status da PLATAFORMA (o CRM em si), separado do status da CONTA acima.
+//
+//  O de cima responde "a minha configuração está completa?". Este responde "o
+//  serviço está no ar e as APIs de que ele depende estão respondendo?" — app,
+//  banco, armazenamento e conectividade externa. É o que o dono pediu: saber
+//  se o CRM está online ou com instabilidade em alguma API, sem abrir chamado.
+// ══════════════════════════════════════════════════════════════════════════
+
+export type PlatformOverall = "operational" | "degraded" | "down";
+
+export type PlatformStatus = {
+  overall: PlatformOverall;
+  checkedAt: string;
+  checks: DiagnosticCheck[];
+};
+
+/** Bate num host e diz se respondeu a tempo. Qualquer resposta HTTP (mesmo 401/404) conta como "no ar" — só a rede importa aqui, não o status. */
+async function pingHost(url: string, timeoutMs = 2500): Promise<{ up: boolean; ms: number }> {
+  const started = Date.now();
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    // HEAD é o mais barato; alguns hosts não aceitam e caem no catch como
+    // "fora" — por isso usamos GET, que qualquer endpoint responde.
+    await fetch(url, { method: "GET", signal: controller.signal, cache: "no-store" });
+    return { up: true, ms: Date.now() - started };
+  } catch {
+    return { up: false, ms: Date.now() - started };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function pingCheck(
+  id: string,
+  label: string,
+  detailUp: string,
+  { up, ms }: { up: boolean; ms: number },
+): DiagnosticCheck {
+  // Lento mas responde = instabilidade (warn); não responde = fora (error).
+  const slow = up && ms > 1500;
+  return {
+    id,
+    label,
+    status: !up ? "error" : slow ? "warn" : "ok",
+    detail: !up
+      ? "Sem resposta — pode ser instabilidade da API ou do link do servidor."
+      : slow
+        ? `${detailUp} Resposta lenta (${ms} ms).`
+        : `${detailUp} (${ms} ms)`,
+    action: up ? undefined : "Se persistir, é instabilidade do provedor — normalmente se resolve sozinho em minutos.",
+  };
+}
+
+function formatUptime(seconds: number): string {
+  const d = Math.floor(seconds / 86400);
+  const h = Math.floor((seconds % 86400) / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  if (d > 0) return `${d}d ${h}h`;
+  if (h > 0) return `${h}h ${m}min`;
+  return `${m} min`;
+}
+
+export async function getPlatformStatus(): Promise<PlatformStatus | { error: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Sessão expirada, faça login novamente" };
+
+  const admin = createAdminClient();
+  const checks: DiagnosticCheck[] = [];
+
+  // ── Servidor da aplicação ────────────────────────────────────────────────
+  // Se este código está rodando, a app respondeu. Mostra há quanto tempo o
+  // processo está de pé (reinício recente costuma explicar "sumiu tudo").
+  const uptime = process.uptime();
+  checks.push({
+    id: "app",
+    label: "Servidor da aplicação",
+    status: "ok",
+    detail: `No ar há ${formatUptime(uptime)}.`,
+  });
+
+  // ── Banco de dados (latência) ────────────────────────────────────────────
+  const dbStarted = Date.now();
+  let dbOk = true;
+  try {
+    await admin.from("tenants").select("id", { count: "exact", head: true });
+  } catch {
+    dbOk = false;
+  }
+  const dbMs = Date.now() - dbStarted;
+  checks.push({
+    id: "db",
+    label: "Banco de dados",
+    status: !dbOk ? "error" : dbMs > 800 ? "warn" : "ok",
+    detail: !dbOk
+      ? "O banco não respondeu. O CRM fica indisponível até normalizar."
+      : dbMs > 800
+        ? `Respondendo devagar (${dbMs} ms) — sinal de instabilidade.`
+        : `Respondendo normalmente (${dbMs} ms).`,
+    action: dbOk ? undefined : "Instabilidade grave — acione o suporte se não normalizar em minutos.",
+  });
+
+  // ── Armazenamento de arquivos (probe real) ───────────────────────────────
+  // Grava, lê e apaga um arquivinho: prova que anexos, áudios e logos estão
+  // sendo salvos de verdade — não só que o disco existe.
+  const probePath = `health/${randomUUID()}.txt`;
+  let storageOk = false;
+  try {
+    const { error } = await putObject("company-assets", probePath, Buffer.from("ok"), "text/plain");
+    if (!error) {
+      const back = await getObject("company-assets", probePath);
+      storageOk = back?.toString() === "ok";
+    }
+  } catch {
+    storageOk = false;
+  } finally {
+    void deleteObject("company-assets", probePath).catch(() => {});
+  }
+  checks.push({
+    id: "storage",
+    label: "Armazenamento de arquivos",
+    status: storageOk ? "ok" : "error",
+    detail: storageOk
+      ? "Anexos, áudios e imagens estão sendo salvos normalmente."
+      : "Falha ao gravar/ler arquivo. Envio de anexos e áudios pode falhar.",
+    action: storageOk ? undefined : "Instabilidade no armazenamento — acione o suporte.",
+  });
+
+  // ── APIs externas (em paralelo, com timeout curto) ───────────────────────
+  const [anthropic, google, microsoft] = await Promise.all([
+    pingHost("https://api.anthropic.com/"),
+    pingHost("https://gmail.googleapis.com/"),
+    pingHost("https://graph.microsoft.com/"),
+  ]);
+
+  checks.push(pingCheck("api-ia", "API de Inteligência Artificial", "Anthropic respondendo.", anthropic));
+
+  // E-mail (Gmail/Outlook) e OAuth do Google dependem desses dois hosts. Se os
+  // dois caírem juntos, é o link do servidor — não a API do provedor.
+  const emailUp = google.up || microsoft.up;
+  checks.push({
+    id: "api-email",
+    label: "APIs de e-mail (Google / Microsoft)",
+    status: emailUp ? (google.up && microsoft.up ? "ok" : "warn") : "error",
+    detail: emailUp
+      ? google.up && microsoft.up
+        ? "Google e Microsoft respondendo."
+        : `Instabilidade em ${google.up ? "Microsoft" : "Google"} — a outra está no ar.`
+      : "Google e Microsoft sem resposta — provável instabilidade do link do servidor.",
+    action: emailUp ? undefined : "Se persistir, o sync de e-mail pode atrasar. Costuma normalizar sozinho.",
+  });
+
+  // ── Veredito geral ───────────────────────────────────────────────────────
+  // App/banco/armazenamento fora = CRM "down". Só uma API instável = "degraded".
+  const core = checks.filter((c) => ["app", "db", "storage"].includes(c.id));
+  const overall: PlatformOverall = core.some((c) => c.status === "error")
+    ? "down"
+    : checks.some((c) => c.status === "error" || c.status === "warn")
+      ? "degraded"
+      : "operational";
+
+  return { overall, checkedAt: new Date().toISOString(), checks };
 }
