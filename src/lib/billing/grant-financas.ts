@@ -1,6 +1,5 @@
 import "server-only";
-import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database } from "@/types/database.types";
+import type { AdminClient } from "@/lib/supabase/admin";
 import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from "@/lib/financas/categories";
 
 /**
@@ -12,7 +11,7 @@ import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from "@/lib/financas/categories
  * ser desfeito por causa de um bônus.
  */
 export async function grantFreeFinancasEmpresarial(
-  admin: SupabaseClient<Database>,
+  admin: AdminClient,
   tenantId: string,
 ): Promise<void> {
   try {

@@ -1,5 +1,6 @@
 "use server";
 
+import { type AdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireTenantId } from "@/lib/auth/current-user";
@@ -33,7 +34,10 @@ export async function createBlingConnection(
   if (!tenantId) return { error: "Tenant não encontrado" };
 
   // O nome da conexão (filial) já vira a tag usada pra rotear contatos até ela.
-  const tagId = await findOrCreateTagByName(supabase, tenantId, parsed.data.name);
+  // findOrCreateTagByName aceita o shim (admin) ou o cliente de sessão — os
+  // dois têm a mesma API .from() em runtime; o cast só faz a ponte de tipo
+  // enquanto o cliente de sessão ainda é o do Supabase.
+  const tagId = await findOrCreateTagByName(supabase as unknown as AdminClient, tenantId, parsed.data.name);
   if (!tagId) return { error: "Não foi possível criar a tag dessa filial" };
 
   const { error } = await supabase.from("bling_connections").insert({

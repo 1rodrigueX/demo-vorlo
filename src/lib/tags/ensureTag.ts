@@ -1,8 +1,7 @@
 import "server-only";
-import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database } from "@/types/database.types";
+import type { AdminClient } from "@/lib/supabase/admin";
 
-type Supabase = SupabaseClient<Database>;
+type Supabase = AdminClient;
 
 /** Acha uma tag pelo nome (case-insensitive) ou cria se não existir. */
 export async function findOrCreateTagByName(

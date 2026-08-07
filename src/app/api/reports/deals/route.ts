@@ -12,7 +12,18 @@ export async function GET(request: Request) {
   const admin = createAdminClient();
   const { data, error } = await admin
     .from("deals")
-    .select(
+    .select<{
+      id: string;
+      title: string;
+      value: number;
+      status: string;
+      created_at: string;
+      closed_at: string | null;
+      proposal_sent_at: string | null;
+      stage: { name: string } | null;
+      contact: { name: string; email: string | null; phone: string | null; company_id: string | null } | null;
+      owner: { full_name: string | null } | null;
+    }>(
       "id, title, value, status, created_at, closed_at, proposal_sent_at, stage:pipeline_stages(name), contact:contacts(name, email, phone, company_id), owner:profiles(full_name)",
     )
     .eq("tenant_id", auth.tenantId)

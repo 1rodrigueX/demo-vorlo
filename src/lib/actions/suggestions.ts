@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import type { Database } from "@/types/database.types";
 import { requireTenantId, isCurrentUserDev } from "@/lib/auth/current-user";
 import { notifyNewSuggestion } from "@/lib/discord/notify";
 
@@ -69,7 +70,7 @@ export async function listAllSuggestions() {
   const admin = createAdminClient();
   const { data } = await admin
     .from("suggestions")
-    .select("*, tenant:tenants(name)")
+    .select<Database["public"]["Tables"]["suggestions"]["Row"] & { tenant: { name: string } | null }>("*, tenant:tenants(name)")
     .order("created_at", { ascending: false });
 
   return data ?? [];

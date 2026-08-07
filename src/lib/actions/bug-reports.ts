@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import type { Database } from "@/types/database.types";
 import { requireTenantId, isCurrentUserDev } from "@/lib/auth/current-user";
 import { notifyNewBugReport } from "@/lib/discord/notify";
 import { bugReportSchema } from "@/lib/validation/bug-report";
@@ -75,7 +76,7 @@ export async function listAllBugReports() {
   const admin = createAdminClient();
   const { data } = await admin
     .from("bug_reports")
-    .select("*, tenant:tenants(name)")
+    .select<Database["public"]["Tables"]["bug_reports"]["Row"] & { tenant: { name: string } | null }>("*, tenant:tenants(name)")
     .order("created_at", { ascending: false });
 
   return data ?? [];

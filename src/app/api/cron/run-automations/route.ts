@@ -40,7 +40,14 @@ async function handleLeadWebhookWelcome(admin: Admin, tenantId: string, payload:
 async function handleProposalFollowup(admin: Admin, payload: ProposalFollowupPayload) {
   const { data: deal } = await admin
     .from("deals")
-    .select("id, tenant_id, contact_id, status, stage:pipeline_stages(name), contact:contacts(name, phone)")
+    .select<{
+      id: string;
+      tenant_id: string;
+      contact_id: string;
+      status: string;
+      stage: { name: string } | null;
+      contact: { name: string; phone: string | null } | null;
+    }>("id, tenant_id, contact_id, status, stage:pipeline_stages(name), contact:contacts(name, phone)")
     .eq("id", payload.dealId)
     .maybeSingle();
 
@@ -75,7 +82,9 @@ async function handleProposalFollowup(admin: Admin, payload: ProposalFollowupPay
 async function handleInactiveCheck(admin: Admin, payload: InactiveCheckPayload) {
   const { data: deal } = await admin
     .from("deals")
-    .select("id, tenant_id, contact_id, status, stage:pipeline_stages(name)")
+    .select<{ id: string; tenant_id: string; contact_id: string; status: string; stage: { name: string } | null }>(
+      "id, tenant_id, contact_id, status, stage:pipeline_stages(name)",
+    )
     .eq("id", payload.dealId)
     .maybeSingle();
 

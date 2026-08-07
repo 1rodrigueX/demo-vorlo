@@ -12,7 +12,16 @@ export async function GET(request: Request) {
   const admin = createAdminClient();
   const { data, error } = await admin
     .from("contacts")
-    .select("id, name, email, phone, lead_source, created_at, company:companies(name), owner:profiles(full_name)")
+    .select<{
+      id: string;
+      name: string;
+      email: string | null;
+      phone: string | null;
+      lead_source: string | null;
+      created_at: string;
+      company: { name: string } | null;
+      owner: { full_name: string | null } | null;
+    }>("id, name, email, phone, lead_source, created_at, company:companies(name), owner:profiles(full_name)")
     .eq("tenant_id", auth.tenantId)
     .order("created_at", { ascending: false });
 
@@ -23,8 +32,11 @@ export async function GET(request: Request) {
   const contacts = data ?? [];
   const contactIds = contacts.map((c) => c.id);
   const { data: contactTagRows } = contactIds.length
-    ? await admin.from("contact_tags").select("contact_id, tag:tags(name)").in("contact_id", contactIds)
-    : { data: [] };
+    ? await admin
+        .from("contact_tags")
+        .select<{ contact_id: string; tag: { name: string } | null }>("contact_id, tag:tags(name)")
+        .in("contact_id", contactIds)
+    : { data: [] as { contact_id: string; tag: { name: string } | null }[] };
 
   const tagNamesByContact = new Map<string, string[]>();
   for (const row of contactTagRows ?? []) {

@@ -1,12 +1,15 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { Card } from "@/components/ui/Card";
 import { SuggestionsManager } from "@/components/dev/SuggestionsManager";
+import type { Database } from "@/types/database.types";
 
 export default async function DevSugestoesPage() {
   const admin = createAdminClient();
   const { data: suggestions } = await admin
     .from("suggestions")
-    .select("*, tenant:tenants(name)")
+    .select<Database["public"]["Tables"]["suggestions"]["Row"] & { tenant: { name: string } | null }>(
+      "*, tenant:tenants(name)",
+    )
     .order("created_at", { ascending: false });
 
   return (

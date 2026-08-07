@@ -24,12 +24,16 @@ export async function baixarEstoqueVenda(tenantId: string, dealId: string, dealT
 
     const { data: itens } = await admin
       .from("deal_produtos")
-      .select("estoque_item_id, quantity, estoque_item:estoque_itens(quantity, unit_cost_cents)")
+      .select<{
+        estoque_item_id: string;
+        quantity: number;
+        estoque_item: { quantity: number; unit_cost_cents: number } | null;
+      }>("estoque_item_id, quantity, estoque_item:estoque_itens(quantity, unit_cost_cents)")
       .eq("deal_id", dealId);
     if (!itens || itens.length === 0) return;
 
     for (const item of itens) {
-      const estoqueItem = item.estoque_item as { quantity: number; unit_cost_cents: number } | null;
+      const estoqueItem = item.estoque_item;
       if (!estoqueItem) continue;
 
       const quantity = Number(item.quantity);
