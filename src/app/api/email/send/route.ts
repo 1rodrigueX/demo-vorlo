@@ -8,6 +8,7 @@ import { emailSendSchema, parseCcAddresses } from "@/lib/validation/email";
 import { findOrCreateContactByEmail } from "@/lib/email/findOrCreateContactByEmail";
 import { sanitizeEmailHtml, htmlToPlainText } from "@/lib/email/sanitizeHtml";
 import { uploadMessageAttachment, MAX_ATTACHMENT_SIZE } from "@/lib/storage/messageAttachments";
+import { publishChange } from "@/lib/realtime/bus";
 import type { OAuthProviderKey } from "@/lib/integrations/providers";
 import type { EmailAttachmentInput } from "@/lib/email/types";
 import type { EmailMessage } from "@/types/domain";
@@ -168,6 +169,9 @@ export async function POST(request: Request) {
       created_by: user.id,
       email_message_id: emailMessage.id,
     });
+
+    // Tempo real: outro atendente vendo esse contato recebe o e-mail enviado.
+    publishChange(tenantId, "email_messages", "INSERT", contact.id);
 
     return NextResponse.json({ ok: true, message: emailMessage });
   } catch (err) {

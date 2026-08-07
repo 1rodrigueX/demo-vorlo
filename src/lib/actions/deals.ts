@@ -15,6 +15,7 @@ import { createBlingOrderForDeal } from "@/lib/bling/sync";
 import { createDealWonInboxEntry } from "@/lib/financas/crmInbox";
 import { baixarEstoqueVenda } from "@/lib/estoque/dealStock";
 import { CRM_MODULE_COUPLING } from "@/lib/crm/isolation";
+import { publishChange } from "@/lib/realtime/bus";
 import { dealSchema, updateDealOwnerSchema, updateDealStageSchema } from "@/lib/validation/deal";
 
 export type ActionState = { error?: string } | null;
@@ -189,6 +190,8 @@ export async function updateDealStage(input: {
       body: `Negócio movido para "${stage?.name ?? "novo estágio"}"`,
       created_by: user?.id ?? null,
     });
+    // Tempo real: a timeline do contato aberto por outro atendente atualiza.
+    publishChange(tenantId, "activities", "INSERT", deal.contact_id);
   }
 
   // ── Automações de funil (ver src/lib/automations/funnel.ts) ──────────────

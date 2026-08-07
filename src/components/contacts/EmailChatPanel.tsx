@@ -1,14 +1,26 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Send, Mail, AlertCircle, Paperclip, X } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
+import { onRealtime } from "@/lib/realtime/client";
 import { cn } from "@/lib/utils/cn";
 import { formatDateTime } from "@/lib/utils/dates";
 import { EmailAttachmentChip } from "@/components/email/EmailAttachmentChip";
 import { RichTextEditor } from "@/components/email/RichTextEditor";
 import type { EmailMessage } from "@/types/domain";
+
+function sortEmails(list: EmailMessage[]): EmailMessage[] {
+  return [...list].sort((a, b) => a.created_at.localeCompare(b.created_at));
+}
+
+/** Une o servidor (que ganha nos ids repetidos) com os envios otimistas locais ainda não persistidos. */
+function mergeEmails(local: EmailMessage[], server: EmailMessage[]): EmailMessage[] {
+  const byId = new Map(local.map((m) => [m.id, m]));
+  for (const m of server) byId.set(m.id, m);
+  return sortEmails([...byId.values()]);
+}
 
 export function EmailChatPanel({
   contactId,
@@ -25,9 +37,8 @@ export function EmailChatPanel({
   /** Preenche a altura do container pai (flex-1 h-full) em vez da altura fixa padrão. */
   fillHeight?: boolean;
 }) {
-  const [messages, setMessages] = useState(
-    [...initialMessages].sort((a, b) => a.created_at.localeCompare(b.created_at)),
-  );
+  const router = useRouter();
+  const [messages, setMessages] = useState(() => sortEmails(initialMessages));
   const lastSubject = [...messages].reverse().find((m) => m.subject)?.subject ?? "";
   const [subject, setSubject] = useState(lastSubject ? `Re: ${lastSubject.replace(/^Re:\s*/i, "")}` : "");
   const [body, setBody] = useState("");
@@ -40,25 +51,23 @@ export function EmailChatPanel({
     bottomRef.current?.scrollIntoView({ block: "end" });
   }, [messages.length]);
 
+  // Sincroniza o que veio do servidor (após um router.refresh) no estado
+  // local, preservando envios otimistas. O id do e-mail é gerado no envio e
+  // gravado igual, então a mesma linha volta do servidor sem duplicar.
   useEffect(() => {
-    const supabase = createClient();
+    setMessages((prev) => mergeEmails(prev, initialMessages));
+  }, [initialMessages]);
 
-    const channel = supabase
-      .channel(`email-chat-${contactId}`)
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "email_messages", filter: `contact_id=eq.${contactId}` },
-        (payload) => {
-          const incoming = payload.new as EmailMessage;
-          setMessages((prev) => (prev.some((m) => m.id === incoming.id) ? prev : [...prev, incoming]));
-        },
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [contactId]);
+  // Tempo real via SSE (antes era o Realtime do Supabase): ao chegar sinal de
+  // e-mail deste contato (novo inbound do sync, envio de outro atendente),
+  // recarrega do servidor.
+  useEffect(() => {
+    return onRealtime((event) => {
+      if (event.table === "email_messages" && event.contactId === contactId) {
+        router.refresh();
+      }
+    });
+  }, [contactId, router]);
 
   function handleFilesSelected(e: React.ChangeEvent<HTMLInputElement>) {
     const selected = Array.from(e.target.files ?? []);

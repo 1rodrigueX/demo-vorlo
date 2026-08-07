@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { verifyTwilioSignature } from "@/lib/twilio/verifyWebhook";
 import { recordInboundMessage } from "@/lib/whatsapp/recordInboundMessage";
+import { publishChange } from "@/lib/realtime/bus";
 import type { Database } from "@/types/database.types";
 
 type WhatsAppStatus = Database["public"]["Tables"]["whatsapp_messages"]["Row"]["status"];
@@ -52,14 +53,20 @@ export async function POST(request: Request, { params }: { params: Promise<{ ten
       : undefined;
 
     if (status) {
-      await supabase
+      const { data: updatedRows } = await supabase
         .from("whatsapp_messages")
         .update({
           status,
           error_message: params_.ErrorMessage ?? null,
         })
         .eq("twilio_sid", params_.MessageSid)
-        .eq("tenant_id", tenantId);
+        .eq("tenant_id", tenantId)
+        .select("contact_id");
+
+      // Tempo real: o chat aberto recarrega e mostra o novo status (✓✓/lido).
+      for (const contactId of new Set((updatedRows ?? []).map((r) => r.contact_id))) {
+        publishChange(tenantId, "whatsapp_messages", "UPDATE", contactId);
+      }
     }
 
     return NextResponse.json({ ok: true });

@@ -2,37 +2,25 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { onRealtime } from "@/lib/realtime/client";
 
 /**
- * Subscribes to Realtime changes on this contact's activities (notes, calls,
- * follow-ups, stage changes) and refreshes the Server Component tree so the
- * general timeline updates live. WhatsApp messages have their own dedicated
- * realtime subscription inside WhatsAppChatPanel, so they're excluded here
- * to avoid double-refreshing the page on every inbound/outbound message.
+ * Atualiza a árvore de Server Components deste contato quando muda algo da
+ * timeline geral (notas, ligações, follow-ups, mudança de etapa, e-mails).
+ *
+ * WhatsApp NÃO entra aqui de propósito: o WhatsAppChatPanel tem seu próprio
+ * gatilho de tempo real, então deixar a mensagem de WhatsApp fora evita
+ * refresh dobrado da página a cada mensagem que entra/sai.
  */
 export function ContactRealtimeListener({ contactId }: { contactId: string }) {
   const router = useRouter();
 
   useEffect(() => {
-    const supabase = createClient();
-
-    const channel = supabase
-      .channel(`contact-${contactId}`)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "activities", filter: `contact_id=eq.${contactId}` },
-        (payload) => {
-          const row = (payload.new ?? payload.old) as { type?: string } | null;
-          if (row?.type === "whatsapp") return;
-          router.refresh();
-        },
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return onRealtime((event) => {
+      if (event.contactId !== contactId) return;
+      if (event.table === "whatsapp_messages") return;
+      router.refresh();
+    });
   }, [contactId, router]);
 
   return null;

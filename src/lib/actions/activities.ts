@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireTenantId } from "@/lib/auth/current-user";
+import { publishChange } from "@/lib/realtime/bus";
 import { activitySchema } from "@/lib/validation/activity";
 
 export type ActionState = { error?: string } | null;
@@ -38,6 +39,9 @@ export async function logActivity(_prevState: ActionState, formData: FormData): 
   if (error) {
     return { error: "Não foi possível salvar a atividade" };
   }
+
+  // Tempo real: a timeline de quem estiver com esse contato aberto atualiza.
+  publishChange(tenantId, "activities", "INSERT", parsed.data.contactId);
 
   revalidatePath(`/[tenantSlug]/contacts/${parsed.data.contactId}`, "page");
   return null;

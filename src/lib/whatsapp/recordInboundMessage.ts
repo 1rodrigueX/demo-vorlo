@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { findOrCreateContact } from "@/lib/whatsapp/findOrCreateContact";
 import { runSdrLeadTurn } from "@/lib/ai-agents/runSdrLeadTurn";
 import { triggerFlows } from "@/lib/automations/runtime";
+import { publishChange } from "@/lib/realtime/bus";
 import type { Json } from "@/types/database.types";
 
 /**
@@ -78,6 +79,9 @@ export async function recordInboundMessage(input: {
     body: input.body,
     whatsapp_message_id: waMessage?.id ?? null,
   });
+
+  // Tempo real: avisa o inbox e o chat aberto desse contato que chegou msg.
+  publishChange(input.tenantId, "whatsapp_messages", "INSERT", contact.id);
 
   // Lead pediu pra sair: marca o descadastro e cancela o que estiver
   // agendado pra ele. Antes de qualquer automação, pra não responder na

@@ -5,6 +5,7 @@ import { listGmailMessageIds, getGmailMessage } from "@/lib/email/gmail";
 import { listOutlookMessages } from "@/lib/email/outlook";
 import { findOrCreateContactByEmail, parseEmailAddress } from "@/lib/email/findOrCreateContactByEmail";
 import { sanitizeEmailHtml } from "@/lib/email/sanitizeHtml";
+import { publishChange } from "@/lib/realtime/bus";
 import type { ParsedEmail } from "@/lib/email/types";
 import type { OAuthProviderKey } from "@/lib/integrations/providers";
 
@@ -69,6 +70,8 @@ async function insertEmails(
         body: email.subject || email.body?.slice(0, 200) || "",
         email_message_id: insertedRow.id,
       });
+      // Tempo real: e-mail novo aparece no chat de e-mail aberto do contato.
+      publishChange(tenantId, "email_messages", "INSERT", contact.id);
       insertedCount++;
     }
   }

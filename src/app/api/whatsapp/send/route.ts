@@ -9,6 +9,7 @@ import {
   MAX_ATTACHMENT_SIZE,
 } from "@/lib/storage/messageAttachments";
 import { convertToOggOpus } from "@/lib/audio/convertToOgg";
+import { publishChange } from "@/lib/realtime/bus";
 import type { WhatsAppMessage } from "@/types/domain";
 
 export async function POST(request: Request) {
@@ -144,6 +145,10 @@ export async function POST(request: Request) {
     // Um vendedor de verdade acabou de escrever pra esse contato — o SDR de
     // IA para de responder automaticamente (o humano assumiu a conversa).
     await supabase.from("contacts").update({ needs_registration: false }).eq("id", contactId).eq("needs_registration", true);
+
+    // Tempo real: outro atendente vendo esse contato recebe a mensagem, e o
+    // inbox reordena. (Quem enviou já vê pelo append otimista.)
+    publishChange(tenantId, "whatsapp_messages", "INSERT", contact.id);
 
     return NextResponse.json({ ok: true, message: waMessage });
   } catch (err) {

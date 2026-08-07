@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Check, CheckCheck, Clock, AlertCircle, Send, Paperclip, Mic, Square } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
+import { onRealtime } from "@/lib/realtime/client";
 import { cn } from "@/lib/utils/cn";
 import { formatTime, formatDayDivider, isSameCalendarDay } from "@/lib/utils/dates";
 import { WhatsAppMediaBubble } from "@/components/whatsapp/WhatsAppMediaBubble";
@@ -18,6 +19,17 @@ const statusIcon: Record<string, React.ReactNode> = {
   undelivered: <AlertCircle size={13} className="text-red-500" />,
   failed: <AlertCircle size={13} className="text-red-500" />,
 };
+
+function sortMessages(list: WhatsAppMessage[]): WhatsAppMessage[] {
+  return [...list].sort((a, b) => a.created_at.localeCompare(b.created_at));
+}
+
+/** Une o servidor (que ganha nos ids repetidos) com os envios otimistas locais ainda não persistidos. */
+function mergeMessages(local: WhatsAppMessage[], server: WhatsAppMessage[]): WhatsAppMessage[] {
+  const byId = new Map(local.map((m) => [m.id, m]));
+  for (const m of server) byId.set(m.id, m);
+  return sortMessages([...byId.values()]);
+}
 
 export function WhatsAppChatPanel({
   contactId,
@@ -34,9 +46,8 @@ export function WhatsAppChatPanel({
   /** Preenche a altura do container pai (flex-1 h-full) em vez da altura fixa padrão. */
   fillHeight?: boolean;
 }) {
-  const [messages, setMessages] = useState(
-    [...initialMessages].sort((a, b) => a.created_at.localeCompare(b.created_at)),
-  );
+  const router = useRouter();
+  const [messages, setMessages] = useState(() => sortMessages(initialMessages));
   const [text, setText] = useState("");
   const [isPending, setIsPending] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
@@ -49,45 +60,24 @@ export function WhatsAppChatPanel({
     bottomRef.current?.scrollIntoView({ block: "end" });
   }, [messages.length]);
 
+  // Sincroniza o que veio do servidor (recarregado por um router.refresh após
+  // um evento de tempo real) no estado local, preservando envios otimistas
+  // ainda não persistidos. Como o id da mensagem é gerado no envio e gravado
+  // igual, a mesma linha volta do servidor com o mesmo id — sem duplicar.
   useEffect(() => {
-    const supabase = createClient();
+    setMessages((prev) => mergeMessages(prev, initialMessages));
+  }, [initialMessages]);
 
-    const channel = supabase
-      .channel(`whatsapp-chat-${contactId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "whatsapp_messages",
-          filter: `contact_id=eq.${contactId}`,
-        },
-        (payload) => {
-          const incoming = payload.new as WhatsAppMessage;
-          setMessages((prev) =>
-            prev.some((m) => m.id === incoming.id) ? prev : [...prev, incoming],
-          );
-        },
-      )
-      .on(
-        "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "whatsapp_messages",
-          filter: `contact_id=eq.${contactId}`,
-        },
-        (payload) => {
-          const updated = payload.new as WhatsAppMessage;
-          setMessages((prev) => prev.map((m) => (m.id === updated.id ? updated : m)));
-        },
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [contactId]);
+  // Tempo real via SSE (antes era o Realtime do Supabase): ao chegar sinal de
+  // mensagem deste contato, recarrega do servidor — que já traz inbound novo,
+  // envio de outro atendente e atualização de status (entregue/lido).
+  useEffect(() => {
+    return onRealtime((event) => {
+      if (event.table === "whatsapp_messages" && event.contactId === contactId) {
+        router.refresh();
+      }
+    });
+  }, [contactId, router]);
 
   async function sendFormData(formData: FormData) {
     setIsPending(true);

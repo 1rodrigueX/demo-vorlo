@@ -1,5 +1,6 @@
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { publishChange } from "@/lib/realtime/bus";
 import type { SendResult } from "@/lib/whatsapp/send";
 
 /**
@@ -43,4 +44,7 @@ export async function recordOutboundMessage(
     created_by: null,
     whatsapp_message_id: waMessage?.id ?? null,
   });
+
+  // Tempo real: mensagem automática (SDR/funil) aparece no chat aberto.
+  publishChange(tenantId, "whatsapp_messages", "INSERT", contactId);
 }
