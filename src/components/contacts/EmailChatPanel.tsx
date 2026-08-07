@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Send, Mail, AlertCircle, Paperclip, X } from "lucide-react";
@@ -38,7 +38,11 @@ export function EmailChatPanel({
   fillHeight?: boolean;
 }) {
   const router = useRouter();
-  const [messages, setMessages] = useState(() => sortEmails(initialMessages));
+  // Só os envios otimistas ficam em estado; o resto vem do servidor (props). A
+  // lista é a fusão dos dois (servidor ganha nos ids repetidos; o id é gerado
+  // no envio e gravado igual, então não duplica).
+  const [optimistic, setOptimistic] = useState<EmailMessage[]>([]);
+  const messages = useMemo(() => mergeEmails(optimistic, initialMessages), [optimistic, initialMessages]);
   const lastSubject = [...messages].reverse().find((m) => m.subject)?.subject ?? "";
   const [subject, setSubject] = useState(lastSubject ? `Re: ${lastSubject.replace(/^Re:\s*/i, "")}` : "");
   const [body, setBody] = useState("");
@@ -50,13 +54,6 @@ export function EmailChatPanel({
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ block: "end" });
   }, [messages.length]);
-
-  // Sincroniza o que veio do servidor (após um router.refresh) no estado
-  // local, preservando envios otimistas. O id do e-mail é gerado no envio e
-  // gravado igual, então a mesma linha volta do servidor sem duplicar.
-  useEffect(() => {
-    setMessages((prev) => mergeEmails(prev, initialMessages));
-  }, [initialMessages]);
 
   // Tempo real via SSE (antes era o Realtime do Supabase): ao chegar sinal de
   // e-mail deste contato (novo inbound do sync, envio de outro atendente),
@@ -102,7 +99,8 @@ export function EmailChatPanel({
       }
 
       const sent = data.message as EmailMessage;
-      setMessages((prev) => (prev.some((m) => m.id === sent.id) ? prev : [...prev, sent]));
+      setOptimistic((prev) => [...prev, sent]);
+      router.refresh();
       setBody("");
       setFiles([]);
     } catch {

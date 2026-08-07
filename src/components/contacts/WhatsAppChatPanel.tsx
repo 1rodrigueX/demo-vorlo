@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Check, CheckCheck, Clock, AlertCircle, Send, Paperclip, Mic, Square } from "lucide-react";
@@ -47,7 +47,11 @@ export function WhatsAppChatPanel({
   fillHeight?: boolean;
 }) {
   const router = useRouter();
-  const [messages, setMessages] = useState(() => sortMessages(initialMessages));
+  // Só os envios otimistas ficam em estado; o resto vem do servidor (props).
+  // A lista exibida é a fusão dos dois — o servidor ganha nos ids repetidos, e
+  // como o id é gerado no envio e gravado igual, a mesma linha volta sem duplicar.
+  const [optimistic, setOptimistic] = useState<WhatsAppMessage[]>([]);
+  const messages = useMemo(() => mergeMessages(optimistic, initialMessages), [optimistic, initialMessages]);
   const [text, setText] = useState("");
   const [isPending, setIsPending] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
@@ -59,14 +63,6 @@ export function WhatsAppChatPanel({
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ block: "end" });
   }, [messages.length]);
-
-  // Sincroniza o que veio do servidor (recarregado por um router.refresh após
-  // um evento de tempo real) no estado local, preservando envios otimistas
-  // ainda não persistidos. Como o id da mensagem é gerado no envio e gravado
-  // igual, a mesma linha volta do servidor com o mesmo id — sem duplicar.
-  useEffect(() => {
-    setMessages((prev) => mergeMessages(prev, initialMessages));
-  }, [initialMessages]);
 
   // Tempo real via SSE (antes era o Realtime do Supabase): ao chegar sinal de
   // mensagem deste contato, recarrega do servidor — que já traz inbound novo,
@@ -91,7 +87,9 @@ export function WhatsAppChatPanel({
       }
 
       const sent = data.message as WhatsAppMessage;
-      setMessages((prev) => (prev.some((m) => m.id === sent.id) ? prev : [...prev, sent]));
+      setOptimistic((prev) => [...prev, sent]);
+      // Puxa a verdade do servidor logo em seguida (o merge dedupa pelo id).
+      router.refresh();
     } catch {
       toast.error("Falha ao enviar mensagem");
     } finally {
