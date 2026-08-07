@@ -35,3 +35,11 @@ export async function getMessageAttachmentSignedUrl(
   if (error || !data) return null;
   return data.signedUrl;
 }
+
+/** Baixa os bytes de um anexo — usado pra dar visão/áudio ao SDR (base64 pro Claude, buffer pro ASR). */
+export async function getMessageAttachmentBytes(storagePath: string): Promise<Buffer | null> {
+  const admin = createAdminClient();
+  const { data, error } = await admin.storage.from(MESSAGE_ATTACHMENTS_BUCKET).download(storagePath);
+  if (error || !data) return null;
+  return Buffer.from(await data.arrayBuffer());
+}

@@ -46,6 +46,12 @@ export async function recordInboundMessage(input: {
   body: string;
   contactName?: string | null;
   rawPayload?: Json;
+  /** Mídia recebida (imagem, áudio, documento) já salva no storage. */
+  media?: {
+    storagePath: string;
+    contentType: string;
+    fileName: string | null;
+  } | null;
 }) {
   const supabase = createAdminClient();
 
@@ -67,16 +73,29 @@ export async function recordInboundMessage(input: {
       body: input.body,
       status: "received",
       raw_payload: input.rawPayload ?? null,
+      media_storage_path: input.media?.storagePath ?? null,
+      media_content_type: input.media?.contentType ?? null,
+      media_file_name: input.media?.fileName ?? null,
     })
     .select("id")
     .single();
+
+  const activityBody =
+    input.body ||
+    (input.media
+      ? input.media.contentType.startsWith("image/")
+        ? "[imagem recebida]"
+        : input.media.contentType.startsWith("audio/")
+          ? "[áudio recebido]"
+          : "[arquivo recebido]"
+      : "");
 
   await supabase.from("activities").insert({
     tenant_id: input.tenantId,
     contact_id: contact.id,
     type: "whatsapp",
     direction: "inbound",
-    body: input.body,
+    body: activityBody,
     whatsapp_message_id: waMessage?.id ?? null,
   });
 

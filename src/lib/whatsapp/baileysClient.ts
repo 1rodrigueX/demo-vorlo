@@ -7,6 +7,7 @@ import type { Boom } from "@hapi/boom";
 import makeWASocket, {
   useMultiFileAuthState as loadMultiFileAuthState,
   fetchLatestBaileysVersion,
+  downloadMediaMessage,
   DisconnectReason,
   jidDecode,
   isJidGroup,
@@ -18,6 +19,7 @@ import makeWASocket, {
 } from "@whiskeysockets/baileys";
 import { recordInboundMessage } from "@/lib/whatsapp/recordInboundMessage";
 import { findOrCreateContact } from "@/lib/whatsapp/findOrCreateContact";
+import { uploadMessageAttachment, MAX_ATTACHMENT_SIZE } from "@/lib/storage/messageAttachments";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export type BaileysStatus = "connecting" | "qr" | "connected";
@@ -205,17 +207,105 @@ async function handleInboundMessage(
   const decoded = phoneJid ? jidDecode(phoneJid) : null;
   if (!decoded) return;
 
-  const body = msg.message?.conversation ?? msg.message?.extendedTextMessage?.text;
-  if (!body) return;
+  const text = msg.message?.conversation ?? msg.message?.extendedTextMessage?.text ?? null;
+
+  // Mídia (imagem/áudio/documento): baixa e guarda pra o SDR poder VER a
+  // imagem e OUVIR o áudio (ver runSdrLeadTurn). Legenda de imagem vira o texto.
+  const mediaInfo = extractInboundMediaInfo(msg);
+  let media: { storagePath: string; contentType: string; fileName: string | null } | null = null;
+  let caption = text;
+
+  if (mediaInfo) {
+    caption = text ?? mediaInfo.caption ?? "";
+    if (mediaInfo.fileLength <= MAX_ATTACHMENT_SIZE) {
+      try {
+        const buffer = (await downloadMediaMessage(
+          msg,
+          "buffer",
+          {},
+          { logger, reuploadRequest: sock.updateMediaMessage },
+        )) as Buffer;
+        // Pasta por número do remetente (ainda não temos o contactId aqui — ele
+        // é resolvido dentro de recordInboundMessage).
+        const uploaded = await uploadMessageAttachment(
+          tenantId,
+          decoded.user,
+          mediaInfo.fileName,
+          mediaInfo.contentType,
+          buffer,
+        );
+        if (!("error" in uploaded)) {
+          media = {
+            storagePath: uploaded.storagePath,
+            contentType: mediaInfo.contentType,
+            fileName: mediaInfo.fileName,
+          };
+        }
+      } catch (err) {
+        console.error(`Baileys (tenant ${tenantId}): falha ao baixar mídia recebida`, err);
+      }
+    }
+  }
+
+  // Sem texto e sem mídia (ex.: reação, sticker que ignoramos): nada a gravar.
+  if (caption === null && !media) return;
 
   await recordInboundMessage({
     tenantId,
     fromNumber: `+${decoded.user}`,
     toNumber: myPhoneNumber ?? "",
     externalMessageId: msg.key.id ?? null,
-    body,
+    body: caption ?? "",
     contactName: msg.pushName,
+    media,
   });
+}
+
+type InboundMediaInfo = {
+  contentType: string;
+  fileName: string;
+  caption: string | null;
+  fileLength: number;
+};
+
+/** Descobre imagem/áudio/documento numa mensagem recebida (e a legenda), pra baixar e guardar. */
+function extractInboundMediaInfo(msg: WAMessage): InboundMediaInfo | null {
+  const m = msg.message;
+  if (!m) return null;
+
+  // fileLength vem como number ou Long (protobuf) — normaliza sem depender do tipo Long.
+  const toLen = (v: number | { toNumber?: () => number } | null | undefined): number => {
+    if (v == null) return 0;
+    if (typeof v === "number") return v;
+    return typeof v.toNumber === "function" ? v.toNumber() : 0;
+  };
+
+  if (m.imageMessage) {
+    const mime = m.imageMessage.mimetype || "image/jpeg";
+    return {
+      contentType: mime,
+      fileName: `imagem.${mime.split("/")[1]?.split(";")[0] || "jpg"}`,
+      caption: m.imageMessage.caption || null,
+      fileLength: toLen(m.imageMessage.fileLength),
+    };
+  }
+  if (m.audioMessage) {
+    return {
+      contentType: m.audioMessage.mimetype || "audio/ogg",
+      fileName: "audio.ogg",
+      caption: null,
+      fileLength: toLen(m.audioMessage.fileLength),
+    };
+  }
+  if (m.documentMessage) {
+    return {
+      contentType: m.documentMessage.mimetype || "application/octet-stream",
+      fileName: m.documentMessage.fileName || "arquivo",
+      caption: m.documentMessage.caption || null,
+      fileLength: toLen(m.documentMessage.fileLength),
+    };
+  }
+  return null;
 }
 
 function toIsoTimestamp(ts: number | { toNumber?: () => number } | null | undefined): string {
