@@ -6,5 +6,5 @@
   "remote": {
     "urls": ["https://falaai.cloud/*"]
   },
-  "permissions": ["updater:default", "process:allow-restart"]
+  "permissions": ["updater:default", "process:allow-restart", "core:app:allow-version"]
 }

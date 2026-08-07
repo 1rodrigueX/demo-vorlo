@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Home } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { getAccountServices } from "@/lib/auth/current-user";
 import { UserMenu } from "@/components/layout/UserMenu";
 import { LiteToggle } from "@/components/layout/LiteToggle";
@@ -19,6 +20,24 @@ export default async function CentralPage() {
   const { services, ownerName } = await getAccountServices();
   const email = user.email ?? "";
   const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
+
+  // O botão de baixar serve o MESMO arquivo que o updater instala: uma fonte
+  // de verdade só. Sem isso o link ficaria preso num nome fixo
+  // ("Synexa-Setup.exe") e daria 404 a cada release, porque o instalador sai
+  // com a versão no nome (Synexa_0.2.0_x64-setup.exe).
+  //
+  // Via admin client porque app_releases é legível só por dev (0075). A URL em
+  // si não é segredo — já vai pública no manifesto de /api/app/update —, então
+  // o que se lê aqui é o mesmo que qualquer um obteria naquela rota.
+  const { data: release } = await createAdminClient()
+    .from("app_releases")
+    .select("url")
+    .eq("is_published", true)
+    .order("published_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const downloadUrl = release?.url ?? "/downloads/Synexa-Setup.exe";
 
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-6">
@@ -56,7 +75,7 @@ export default async function CentralPage() {
         </div>
 
         {/* No navegador vira "baixar o app"; dentro do app, "atualizar". */}
-        <AppUpdateCard downloadUrl="/downloads/Synexa-Setup.exe" />
+        <AppUpdateCard downloadUrl={downloadUrl} />
 
         <p className="mt-10 text-center text-sm text-gray-400">
           <Link href="/central/seguranca" className="hover:text-gray-600 hover:underline">
