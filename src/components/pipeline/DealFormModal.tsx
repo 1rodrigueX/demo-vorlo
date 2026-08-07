@@ -15,7 +15,7 @@ export function DealFormModal({
   contacts,
 }: {
   stages: PipelineStage[];
-  contacts: { id: string; name: string }[];
+  contacts: { id: string; name: string; phone?: string | null; email?: string | null }[];
 }) {
   const [open, setOpen] = useState(false);
   const [state, formAction, isPending] = useActionState<ActionState, FormData>(createDeal, null);
@@ -48,11 +48,16 @@ export function DealFormModal({
               <option value="" disabled>
                 Selecione um contato
               </option>
-              {contacts.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
+              {/* Telefone/e-mail junto do nome: sem isso, dois homônimos ficam
+                  indistinguíveis na lista e o vendedor escolhe o errado. */}
+              {contacts.map((c) => {
+                const detail = c.phone || c.email;
+                return (
+                  <option key={c.id} value={c.id}>
+                    {detail ? `${c.name} — ${detail}` : c.name}
+                  </option>
+                );
+              })}
             </Select>
           </div>
           <div className="grid grid-cols-2 gap-3">

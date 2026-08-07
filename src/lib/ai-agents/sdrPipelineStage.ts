@@ -1,5 +1,6 @@
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { findOpenDealForContact } from "@/lib/crm/openDeal";
 
 type Admin = ReturnType<typeof createAdminClient>;
 
@@ -17,17 +18,9 @@ async function findStageByName(
   return data;
 }
 
-async function findOpenDealForContact(admin: Admin, contactId: string): Promise<{ id: string } | null> {
-  const { data } = await admin
-    .from("deals")
-    .select("id")
-    .eq("contact_id", contactId)
-    .eq("status", "open")
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  return data;
-}
+// findOpenDealForContact vive em @/lib/crm/openDeal — o webhook público de
+// captura precisa da mesma proteção contra criar um segundo card pro mesmo
+// lead, então o guard virou compartilhado.
 
 /**
  * Garante que o lead já aparece no pipeline (etapa "Atendimento SDR") assim

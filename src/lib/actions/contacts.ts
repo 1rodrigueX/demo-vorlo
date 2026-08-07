@@ -8,7 +8,7 @@ import { requireTenantId, getTenantSlug } from "@/lib/auth/current-user";
 import { syncContactToBling } from "@/lib/bling/sync";
 import { triggerFlows } from "@/lib/automations/runtime";
 import { contactSchema } from "@/lib/validation/contact";
-import { normalizePhone, isDuplicatePhoneError } from "@/lib/crm/phone";
+import { normalizePhone, normalizeEmail, isDuplicatePhoneError } from "@/lib/crm/phone";
 
 export type ActionState = { error?: string } | null;
 
@@ -113,6 +113,27 @@ export async function createContact(_prevState: ActionState, formData: FormData)
       parsed.data.companyNotes,
     );
     if (!companyId) return { error: "Não foi possível criar a empresa" };
+  }
+
+  // Telefone é barrado pelo índice único do banco; e-mail não é (índice único
+  // em e-mail quebraria contato@empresa.com compartilhado — ver
+  // 0070_contact_dedupe). Então a checagem de e-mail é aqui, no cadastro
+  // manual, que é de onde vem a maior parte das fichas repetidas.
+  const emailKey = normalizeEmail(parsed.data.email);
+  if (emailKey) {
+    const { data: sameEmail } = await supabase
+      .from("contacts")
+      .select("name")
+      .eq("tenant_id", tenantId)
+      .eq("email_key", emailKey)
+      .limit(1)
+      .maybeSingle();
+
+    if (sameEmail) {
+      return {
+        error: `Este e-mail já está cadastrado em "${sameEmail.name}". Abra esse contato em vez de criar outro — ou use outro e-mail se forem pessoas diferentes da mesma empresa.`,
+      };
+    }
   }
 
   const { data, error } = await supabase

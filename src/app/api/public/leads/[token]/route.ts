@@ -5,6 +5,7 @@ import { incomingLeadSchema } from "@/lib/validation/lead-webhook";
 import { checkRateLimit } from "@/lib/utils/rateLimit";
 import { normalizePhone, normalizeEmail, isDuplicatePhoneError } from "@/lib/crm/phone";
 import { triggerFlows } from "@/lib/automations/runtime";
+import { findOpenDealForContact, nextPositionInStage } from "@/lib/crm/openDeal";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -149,20 +150,30 @@ export async function POST(request: Request, { params }: { params: Promise<{ tok
   }
 
   if (webhook.target_stage_id) {
-    const { count } = await admin
-      .from("deals")
-      .select("id", { count: "exact", head: true })
-      .eq("stage_id", webhook.target_stage_id);
+    // O mesmo lead reenviando o formulário não pode virar um segundo card no
+    // Kanban. Se já existe negócio aberto, move pra coluna do webhook em vez
+    // de criar outro — mesma proteção que o SDR já tinha.
+    const openDeal = await findOpenDealForContact(admin, contactId);
+    const position = await nextPositionInStage(admin, webhook.target_stage_id);
 
-    await admin.from("deals").insert({
-      tenant_id: webhook.tenant_id,
-      title: lead.name?.trim() || lead.phone || lead.email || "Novo lead",
-      contact_id: contactId,
-      stage_id: webhook.target_stage_id,
-      owner_id: ownerId,
-      position: count ?? 0,
-      value: 0,
-    });
+    if (openDeal) {
+      if (openDeal.stage_id !== webhook.target_stage_id) {
+        await admin
+          .from("deals")
+          .update({ stage_id: webhook.target_stage_id, position })
+          .eq("id", openDeal.id);
+      }
+    } else {
+      await admin.from("deals").insert({
+        tenant_id: webhook.tenant_id,
+        title: lead.name?.trim() || lead.phone || lead.email || "Novo lead",
+        contact_id: contactId,
+        stage_id: webhook.target_stage_id,
+        owner_id: ownerId,
+        position,
+        value: 0,
+      });
+    }
   }
 
   await admin

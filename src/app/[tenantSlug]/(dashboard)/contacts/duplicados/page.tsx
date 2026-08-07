@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowLeft, CheckCircle2 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { DuplicateGroupCard } from "@/components/contacts/DuplicateGroupCard";
+import { MergeAllByEmailButton } from "@/components/contacts/MergeAllByEmailButton";
 import { listDuplicateGroups } from "@/lib/actions/contact-merge";
 
 /**
@@ -15,6 +16,7 @@ export default async function DuplicateContactsPage({
 }) {
   const { tenantSlug } = await params;
   const groups = await listDuplicateGroups();
+  const emailGroupCount = groups.filter((group) => group.matchType === "email").length;
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -26,11 +28,19 @@ export default async function DuplicateContactsPage({
           <ArrowLeft size={14} />
           Contatos
         </Link>
-        <h1 className="text-xl font-semibold text-gray-900">Duplicados</h1>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h1 className="text-xl font-semibold text-gray-900">Duplicados</h1>
+          <MergeAllByEmailButton groupCount={emailGroupCount} />
+        </div>
         <p className="mt-1 text-sm text-gray-500">
           Contatos com o mesmo e-mail ou o mesmo nome. Telefone repetido já é bloqueado no cadastro, então o
           que aparece aqui pode ser duplicata de verdade — ou pessoas diferentes da mesma empresa. Confira
           antes de mesclar.
+        </p>
+        <p className="mt-1 text-sm text-gray-500">
+          Grupos por <span className="font-medium">nome</span> não têm mesclagem em massa de propósito: nome
+          igual não prova mesma pessoa, e juntar dois clientes distintos leva o histórico de conversa dos dois
+          junto.
         </p>
       </div>
 

@@ -128,3 +128,44 @@ export async function mergeContacts(
   revalidatePath("/[tenantSlug]/pipeline", "page");
   return { merged: loserIds.length };
 }
+
+/**
+ * Mescla de uma vez todos os grupos de mesmo e-mail, mantendo o contato mais
+ * antigo de cada um.
+ *
+ * Só e-mail, de propósito: nome igual não prova mesma pessoa. Dois "João
+ * Silva" diferentes virariam um cliente só, levando junto o histórico de
+ * conversa de ambos — e isso não tem desfazer bonito. Grupo por nome continua
+ * exigindo confirmação humana grupo a grupo.
+ */
+export async function mergeAllByEmail(): Promise<{ error?: string; merged?: number; groups?: number }> {
+  const groups = (await listDuplicateGroups()).filter((group) => group.matchType === "email");
+  if (!groups.length) return { merged: 0, groups: 0 };
+
+  let merged = 0;
+  let failed = 0;
+
+  for (const group of groups) {
+    const [winner, ...losers] = group.contacts;
+    if (!winner || !losers.length) continue;
+
+    const result = await mergeContacts(
+      winner.id,
+      losers.map((contact) => contact.id),
+    );
+
+    // Um grupo problemático (contatos de donos diferentes, por exemplo) não
+    // pode abortar os outros — segue e reporta no fim.
+    if (result.error) {
+      failed++;
+      continue;
+    }
+    merged += result.merged ?? 0;
+  }
+
+  if (!merged && failed) {
+    return { error: "Nenhum grupo pôde ser mesclado — provavelmente falta permissão sobre esses contatos." };
+  }
+
+  return { merged, groups: groups.length - failed };
+}
