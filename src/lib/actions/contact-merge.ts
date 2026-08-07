@@ -34,13 +34,14 @@ type CandidateRow = { match_type: string; match_value: string; contact_ids: stri
 export async function listDuplicateGroups(): Promise<DuplicateGroup[]> {
   const supabase = await createClient();
 
-  const { data: candidates, error } = await supabase.rpc("contact_duplicate_candidates");
+  const { data, error } = await supabase.rpc("contact_duplicate_candidates");
+  const candidates = data as CandidateRow[] | null;
   if (error || !candidates?.length) {
     if (error) console.error("listDuplicateGroups failed:", error);
     return [];
   }
 
-  const rows = candidates as CandidateRow[];
+  const rows = candidates;
   const allIds = [...new Set(rows.flatMap((r) => r.contact_ids))];
 
   const [{ data: contacts }, { data: deals }, { data: messages }] = await Promise.all([

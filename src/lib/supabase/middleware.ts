@@ -1,4 +1,5 @@
 import { createServerClient } from "@supabase/ssr";
+import type { SessionClient } from "@/lib/supabase/server";
 import { NextResponse, type NextRequest } from "next/server";
 import { resolveHomeRouteFor } from "@/lib/auth/current-user";
 
@@ -66,7 +67,7 @@ export async function updateSession(request: NextRequest) {
 
     if (path === "/login" || path === "/signup") {
       const url = request.nextUrl.clone();
-      url.pathname = await resolveHomeRouteFor(supabase, user.id);
+      url.pathname = await resolveHomeRouteFor(supabase as unknown as SessionClient, user.id);
       return NextResponse.redirect(url);
     }
 
@@ -78,7 +79,7 @@ export async function updateSession(request: NextRequest) {
 
     if (!needsMfaChallenge && path === "/mfa-challenge") {
       const url = request.nextUrl.clone();
-      url.pathname = await resolveHomeRouteFor(supabase, user.id);
+      url.pathname = await resolveHomeRouteFor(supabase as unknown as SessionClient, user.id);
       return NextResponse.redirect(url);
     }
   }

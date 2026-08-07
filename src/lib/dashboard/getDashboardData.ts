@@ -1,6 +1,5 @@
 import "server-only";
-import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database } from "@/types/database.types";
+import type { DbClient } from "@/lib/db/queryClient";
 import type { StageSummary } from "@/components/dashboard/StageCountChart";
 import type { SellerSummary } from "@/components/dashboard/SalesBySellerChart";
 import type { MonthlyRevenuePoint } from "@/components/dashboard/RevenueTrendChart";
@@ -26,12 +25,23 @@ export type DashboardFilters = {
  * vendedor. Ganho/vendas/propostas/fechados são eventos históricos, então
  * respeitam vendedor + período.
  */
-export async function getDashboardData(supabase: SupabaseClient<Database>, filters: DashboardFilters) {
+export async function getDashboardData(supabase: DbClient, filters: DashboardFilters) {
   const { from, to, ownerId } = filters;
 
   let dealsQuery = supabase
     .from("deals")
-    .select(
+    .select<{
+      id: string;
+      title: string;
+      stage_id: string;
+      value: number;
+      status: string;
+      closed_at: string | null;
+      proposal_sent_at: string | null;
+      owner_id: string;
+      contact: { id: string; name: string } | null;
+      owner: { full_name: string | null } | null;
+    }>(
       "id, title, stage_id, value, status, closed_at, proposal_sent_at, owner_id, contact:contacts(id, name), owner:profiles(full_name)",
     );
   if (ownerId) dealsQuery = dealsQuery.eq("owner_id", ownerId);

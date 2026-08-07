@@ -83,7 +83,8 @@ export default async function ContactDetailPage({
 
   // "Produtos vendidos" só faz sentido pra quem tem Estoque ativo — a
   // seção some inteira pros demais em vez de aparecer vazia sem explicação.
-  const { data: hasEstoque } = await supabase.rpc("current_tenant_has_estoque");
+  const { data: hasEstoqueRaw } = await supabase.rpc("current_tenant_has_estoque");
+  const hasEstoque = Boolean(hasEstoqueRaw);
   const dealIds = (deals ?? []).map((d) => d.id);
 
   // Reatribuir vendedor responsável é uma reação de gestão — RLS já só

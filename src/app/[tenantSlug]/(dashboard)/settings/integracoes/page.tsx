@@ -68,7 +68,6 @@ export default async function SettingsIntegracoesPage({
     { data: emailIntegrations },
     { data: kommoIntegration },
     { data: tags },
-    { data: sellerMappings },
     { data: apiKeys },
   ] = await Promise.all([
     supabase.from("tenants").select("id, youtube_api_key").eq("id", current.profile.tenant_id).single(),
@@ -106,14 +105,28 @@ export default async function SettingsIntegracoesPage({
       .maybeSingle(),
     supabase.from("tags").select("*").eq("tenant_id", current.profile.tenant_id).order("name"),
     supabase
-      .from("bling_connection_sellers")
-      .select("bling_connection_id, profile_id, bling_vendedor_id, bling_vendedor_name, bling_connection:bling_connections!inner(tenant_id)")
-      .eq("bling_connection.tenant_id", current.profile.tenant_id),
-    supabase
       .from("tenant_api_keys")
       .select("id, name, key_prefix, created_at, last_used_at")
       .order("created_at", { ascending: false }),
   ]);
+
+  // Mapeamentos vendedor↔Bling das conexões deste tenant. Filtrado pelo id das
+  // conexões já buscadas (bling_connection_sellers não tem tenant_id próprio) —
+  // em vez do filtro-em-relação-embutida do PostgREST, que não é do shim.
+  const blingConnectionIds = (blingConnections ?? []).map((c) => c.id);
+  const { data: sellerMappings } = blingConnectionIds.length
+    ? await supabase
+        .from("bling_connection_sellers")
+        .select("bling_connection_id, profile_id, bling_vendedor_id, bling_vendedor_name")
+        .in("bling_connection_id", blingConnectionIds)
+    : {
+        data: [] as {
+          bling_connection_id: string;
+          profile_id: string;
+          bling_vendedor_id: string;
+          bling_vendedor_name: string | null;
+        }[],
+      };
 
   if (!tenant) redirect(`/${tenantSlug}/dashboard`);
 

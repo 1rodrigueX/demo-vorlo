@@ -172,7 +172,9 @@ export async function updateDealStage(input: {
 
   const { data: deal } = await supabase
     .from("deals")
-    .select("contact_id, contact:contacts(name, phone)")
+    .select<{ contact_id: string; contact: { name: string; phone: string | null } | null }>(
+      "contact_id, contact:contacts(name, phone)",
+    )
     .eq("id", parsed.data.dealId)
     .single();
 
@@ -359,7 +361,13 @@ export async function markProposalSent(dealId: string) {
       ...(proposalStage ? { stage_id: proposalStage.id } : {}),
     })
     .eq("id", dealId)
-    .select("tenant_id, title, value, contact_id, contact:contacts(bling_contact_id)")
+    .select<{
+      tenant_id: string;
+      title: string;
+      value: number;
+      contact_id: string;
+      contact: { bling_contact_id: string | null } | null;
+    }>("tenant_id, title, value, contact_id, contact:contacts(bling_contact_id)")
     .single();
 
   if (error || !deal) {

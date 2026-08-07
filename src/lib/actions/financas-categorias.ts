@@ -1,12 +1,11 @@
 "use server";
 
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
+import type { DbClient } from "@/lib/db/queryClient";
 import { createClient } from "@/lib/supabase/server";
 import { requireTenantId, getTenantSlug } from "@/lib/auth/current-user";
 import { categoriaSchema } from "@/lib/validation/financas";
 import { CHART_COLORS } from "@/lib/financas/categories";
-import type { Database } from "@/types/database.types";
 import type { FinancasCategoria } from "@/types/domain";
 
 export type ActionState = { error?: string } | null;
@@ -15,7 +14,7 @@ const PALETTE_ORDER = Object.values(CHART_COLORS);
 
 /** Garante que uma categoria existe (cria se faltar) — usado por integrações automáticas (Caixa de Entrada, Estoque) que precisam de uma categoria específica sem depender do usuário ter criado antes. */
 export async function ensureCategoria(
-  supabase: SupabaseClient<Database>,
+  supabase: DbClient,
   tenantId: string,
   type: "receita" | "despesa",
   name: string,

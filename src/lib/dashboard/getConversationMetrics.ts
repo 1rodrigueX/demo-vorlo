@@ -1,6 +1,5 @@
 import "server-only";
-import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database } from "@/types/database.types";
+import type { DbClient } from "@/lib/db/queryClient";
 
 /**
  * Métricas de conversa/atendimento pro topo da dashboard (estilo Kommo):
@@ -48,7 +47,7 @@ function emptyMetrics(): ConversationMetrics {
 }
 
 export async function getConversationMetrics(
-  supabase: SupabaseClient<Database>,
+  supabase: DbClient,
   filters: { from: Date; to: Date; ownerId: string | null },
 ): Promise<ConversationMetrics> {
   const { from, to, ownerId } = filters;

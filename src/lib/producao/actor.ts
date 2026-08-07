@@ -1,6 +1,5 @@
 import "server-only";
-import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database } from "@/types/database.types";
+import type { DbClient } from "@/lib/db/queryClient";
 import { requireTenantId } from "@/lib/auth/current-user";
 
 /**
@@ -12,7 +11,7 @@ import { requireTenantId } from "@/lib/auth/current-user";
  * mutações continuam exigindo requireTenantId (dono) direto.
  */
 export async function requireProducaoActorTenantId(
-  supabase: SupabaseClient<Database>,
+  supabase: DbClient,
   userId: string,
 ): Promise<string | null> {
   const ownerTenantId = await requireTenantId(supabase, userId);

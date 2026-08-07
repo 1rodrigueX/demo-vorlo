@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { DbClient } from "@/lib/db/queryClient";
 import { createClient } from "@/lib/supabase/server";
 import { requireTenantId } from "@/lib/auth/current-user";
 import { companyProfileSchema, productPhotoCaptionSchema } from "@/lib/validation/company-profile";
@@ -12,12 +12,11 @@ import {
   MAX_CATALOG_SIZE,
   MAX_PRODUCT_PHOTO_SIZE,
 } from "@/lib/storage/companyAssets";
-import type { Database } from "@/types/database.types";
 
 export type ActionState = { error?: string } | null;
 
 async function requireAdminTenantId(
-  supabase: SupabaseClient<Database>,
+  supabase: DbClient,
   userId: string,
 ): Promise<{ tenantId: string } | { error: string }> {
   const tenantId = await requireTenantId(supabase, userId);

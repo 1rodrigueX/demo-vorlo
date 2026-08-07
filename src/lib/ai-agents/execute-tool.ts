@@ -1,6 +1,5 @@
 import "server-only";
-import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database } from "@/types/database.types";
+import type { DbClient } from "@/lib/db/queryClient";
 import { setDealBudget, markProposalSent, markDealWon } from "@/lib/actions/deals";
 import { createAgent, updateAgent, toggleAgentStatus, deleteAgent } from "@/lib/actions/ai-agents";
 import { syncContactToBling } from "@/lib/bling/sync";
@@ -9,7 +8,7 @@ import { daysSinceNow } from "@/lib/utils/dates";
 import { rememberFactSchema } from "@/lib/validation/ai-agent";
 import { CREATABLE_AGENT_TYPES } from "@/lib/ai-agents/templates";
 
-type Supabase = SupabaseClient<Database>;
+type Supabase = DbClient;
 type AgentContext = { id: string; is_fala_ai: boolean };
 
 const INTEGRATION_GUIDANCE: Record<string, string> = {
@@ -40,7 +39,14 @@ export async function executeAgentTool(
 
         const { data, error } = await supabase
           .from("contacts")
-          .select("id, name, phone, email, company:companies(name), deals(id, title, value, status, proposal_sent_at)")
+          .select<{
+            id: string;
+            name: string;
+            phone: string | null;
+            email: string | null;
+            company: { name: string } | null;
+            deals: { id: string; title: string; value: number; status: string; proposal_sent_at: string | null }[];
+          }>("id, name, phone, email, company:companies(name), deals(id, title, value, status, proposal_sent_at)")
           .or(`name.ilike.%${query}%,phone.ilike.%${query}%`)
           .limit(8);
 
@@ -71,7 +77,13 @@ export async function executeAgentTool(
       case "list_open_deals": {
         const { data, error } = await supabase
           .from("deals")
-          .select("id, title, value, proposal_sent_at, contact:contacts(name)")
+          .select<{
+            id: string;
+            title: string;
+            value: number;
+            proposal_sent_at: string | null;
+            contact: { name: string } | null;
+          }>("id, title, value, proposal_sent_at, contact:contacts(name)")
           .eq("status", "open")
           .order("created_at", { ascending: true });
 

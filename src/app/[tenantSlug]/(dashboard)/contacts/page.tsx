@@ -40,7 +40,15 @@ export default async function ContactsPage({
 
   let contactsQuery = supabase
     .from("contacts")
-    .select("id, name, email, phone, lead_source, company:companies(id, name), contact_tags(tag:tags(id, name, color))")
+    .select<{
+      id: string;
+      name: string;
+      email: string | null;
+      phone: string | null;
+      lead_source: string | null;
+      company: { id: string; name: string } | null;
+      contact_tags: { tag: { id: string; name: string; color: string } | null }[];
+    }>("id, name, email, phone, lead_source, company:companies(id, name), contact_tags(tag:tags(id, name, color))")
     .order("created_at", { ascending: false });
   if (q) contactsQuery = contactsQuery.ilike("name", `%${q}%`);
   if (contactIdsWithTag) contactsQuery = contactsQuery.in("id", contactIdsWithTag.length ? contactIdsWithTag : ["-"]);

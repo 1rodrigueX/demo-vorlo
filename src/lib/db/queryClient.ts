@@ -39,11 +39,19 @@ export type QueryResult<T> = { data: T | null; error: PgError | null; count?: nu
 export type PgError = { message: string; code?: string; details?: string };
 
 type Filter = { op: string; column: string; value: unknown };
-type OrderBy = { column: string; ascending: boolean };
+type OrderBy = { column: string; ascending: boolean; nullsFirst?: boolean };
 type Operation = "select" | "insert" | "update" | "delete" | "upsert";
 
-/** Um pedaço `alias:tabela(col1, col2)` de um select embutido. */
-type Embed = { alias: string; table: string; columns: string[] };
+/**
+ * Um pedaço `alias:tabela(...)` de um select embutido. `inner` é o conteúdo
+ * cru dentro dos parênteses, que pode ter novos embeds (resolução recursiva).
+ */
+type Embed = { alias: string; table: string; inner: string };
+
+/** Singular ingênuo pra derivar a FK do filho num hasMany (contacts → contact). */
+function singularize(table: string): string {
+  return table.endsWith("s") ? table.slice(0, -1) : table;
+}
 
 /** Aspas em identificador, barrando o que não for um nome de coluna/tabela válido. */
 function ident(name: string): string {
@@ -79,17 +87,21 @@ function parseSelect(select: string): { columns: string[]; embeds: Embed[] } {
 
   for (const raw of parts) {
     const part = raw.trim();
-    const embedMatch = part.match(/^(\w+):(\w+)\(([^)]*)\)$/);
-    if (embedMatch) {
-      embeds.push({
-        alias: embedMatch[1],
-        table: embedMatch[2],
-        columns: embedMatch[3].split(",").map((c) => c.trim()).filter(Boolean),
-      });
-    } else if (part && part !== "*") {
+    if (!part) continue;
+
+    // Um embed é "algo(...)" — com ou sem alias, com ou sem modificador
+    // !inner / !nome_da_fk (que o PostgREST usa e o shim só descarta).
+    const open = part.indexOf("(");
+    if (open !== -1 && part.endsWith(")")) {
+      const head = part.slice(0, open);
+      const inner = part.slice(open + 1, -1);
+      // head pode ser "alias:tabela!inner", "tabela", "alias:tabela".
+      const [aliasPart, tablePart] = head.includes(":") ? head.split(":") : [head, head];
+      const table = tablePart.split("!")[0].trim();
+      const alias = aliasPart.split("!")[0].trim();
+      embeds.push({ alias, table, inner });
+    } else {
       columns.push(part);
-    } else if (part === "*") {
-      columns.push("*");
     }
   }
 
@@ -218,8 +230,8 @@ class QueryBuilder<TRow, TResult = TRow[]> implements PromiseLike<QueryResult<TR
     return this;
   }
 
-  order(column: string, opts?: { ascending?: boolean }): this {
-    this.orderBys.push({ column, ascending: opts?.ascending ?? true });
+  order(column: string, opts?: { ascending?: boolean; nullsFirst?: boolean }): this {
+    this.orderBys.push({ column, ascending: opts?.ascending ?? true, nullsFirst: opts?.nullsFirst });
     return this;
   }
   limit(n: number): this {
@@ -338,7 +350,13 @@ class QueryBuilder<TRow, TResult = TRow[]> implements PromiseLike<QueryResult<TR
     if (this.orderBys.length) {
       sql +=
         " ORDER BY " +
-        this.orderBys.map((o) => `${ident(o.column)} ${o.ascending ? "ASC" : "DESC"}`).join(", ");
+        this.orderBys
+          .map((o) => {
+            const dir = o.ascending ? "ASC" : "DESC";
+            const nulls = o.nullsFirst === undefined ? "" : o.nullsFirst ? " NULLS FIRST" : " NULLS LAST";
+            return `${ident(o.column)} ${dir}${nulls}`;
+          })
+          .join(", ");
     }
     if (this.rangeFromTo) {
       const [from, to] = this.rangeFromTo;
@@ -384,7 +402,7 @@ class QueryBuilder<TRow, TResult = TRow[]> implements PromiseLike<QueryResult<TR
       if (this.countMode && rows.length) this._count = rows[0].__count;
       else if (this.countMode) this._count = 0;
       for (const r of rows) delete r.__count;
-      if (embeds.length) await this.resolveEmbeds(pool, rows, embeds);
+      if (embeds.length) await this.resolveEmbeds(pool, this.table, rows, embeds);
       return rows;
     }
 
@@ -467,50 +485,80 @@ class QueryBuilder<TRow, TResult = TRow[]> implements PromiseLike<QueryResult<TR
   }
 
   private baseColumns(columns: string[], embeds: Embed[]): string {
-    const cols: string[] = [];
-    if (!columns.length || columns.includes("*")) cols.push("*");
-    else cols.push(...columns.map(ident));
-    // A FK de cada embed precisa vir junto pra resolver a relação depois.
-    for (const embed of embeds) {
-      const fk = `${embed.alias}_id`;
-      if (!cols.includes("*") && !cols.includes(ident(fk))) cols.push(ident(fk));
-    }
-    return cols.join(", ");
+    // Com embed, traz a linha inteira: assim `id` (pra hasMany) e qualquer
+    // `{alias}_id` (pra belongsTo) estão presentes sem eu precisar adivinhar a
+    // direção antes de ter a linha, e sem errar em coluna inexistente.
+    if (embeds.length) return "*";
+    if (!columns.length || columns.includes("*")) return "*";
+    return columns.map(ident).join(", ");
   }
 
   /**
-   * Preenche as relações embutidas (muitos-para-um). Para cada embed, junta os
-   * `{alias}_id` das linhas, busca a tabela alvo de uma vez e devolve o objeto
-   * aninhado sob o alias — igual ao que o PostgREST entregaria.
+   * Preenche as relações embutidas, nos dois sentidos e recursivamente:
+   *
+   *  - belongsTo: a linha base tem `{alias}_id` → busca o alvo por esse id e
+   *    aninha UM objeto (ex: deal.contact).
+   *  - hasMany: a linha base não tem `{alias}_id` → busca o filho onde
+   *    `{singular_da_base}_id` = base.id e aninha uma LISTA (ex:
+   *    contact.contact_tags).
+   *
+   * Cada alvo pode ter seus próprios embeds, resolvidos pela mesma função.
    */
   private async resolveEmbeds(
     pool: Pool | PoolClient,
+    baseTable: string,
     rows: Record<string, unknown>[],
     embeds: Embed[],
   ): Promise<void> {
+    if (!rows.length) return;
+
     for (const embed of embeds) {
-      const fk = `${embed.alias}_id`;
-      const ids = [...new Set(rows.map((r) => r[fk]).filter((v) => v != null))];
+      const nested = parseSelect(embed.inner);
+      const belongsToFk = `${embed.alias}_id`;
+      const isBelongsTo = belongsToFk in rows[0];
 
-      if (!ids.length) {
-        for (const r of rows) r[embed.alias] = null;
-        continue;
-      }
-
-      const cols = embed.columns.length ? embed.columns : ["*"];
-      const selectCols = cols.includes("*") ? "*" : ["id", ...cols].map(ident).join(", ");
-      const res = await pool.query(
-        `SELECT ${selectCols} FROM ${ident(embed.table)} WHERE "id" = ANY($1)`,
-        [ids],
-      );
-      const byId = new Map(res.rows.map((row) => [row.id, row]));
-      for (const r of rows) {
-        const related = byId.get(r[fk]);
-        r[embed.alias] = related
-          ? Object.fromEntries(cols.includes("*") ? Object.entries(related) : cols.map((c) => [c, related[c]]))
-          : null;
+      if (isBelongsTo) {
+        const ids = [...new Set(rows.map((r) => r[belongsToFk]).filter((v) => v != null))];
+        if (!ids.length) {
+          for (const r of rows) r[embed.alias] = null;
+          continue;
+        }
+        const targets = await pool.query(
+          `SELECT ${this.baseColumns(nested.columns, nested.embeds)} FROM ${ident(embed.table)} WHERE "id" = ANY($1)`,
+          [ids],
+        );
+        if (nested.embeds.length) await this.resolveEmbeds(pool, embed.table, targets.rows, nested.embeds);
+        const byId = new Map(targets.rows.map((t) => [t.id, this.project(t, nested)]));
+        for (const r of rows) r[embed.alias] = byId.get(r[belongsToFk]) ?? null;
+      } else {
+        // hasMany: a FK vive no filho.
+        const childFk = `${singularize(baseTable)}_id`;
+        const parentIds = [...new Set(rows.map((r) => r.id).filter((v) => v != null))];
+        const children = await pool.query(
+          `SELECT ${this.baseColumns(nested.columns, nested.embeds)}, ${ident(childFk)} FROM ${ident(embed.table)} WHERE ${ident(childFk)} = ANY($1)`,
+          [parentIds],
+        );
+        if (nested.embeds.length) await this.resolveEmbeds(pool, embed.table, children.rows, nested.embeds);
+        const grouped = new Map<unknown, Record<string, unknown>[]>();
+        for (const child of children.rows) {
+          const key = child[childFk];
+          (grouped.get(key) ?? grouped.set(key, []).get(key)!).push(this.project(child, nested));
+        }
+        for (const r of rows) r[embed.alias] = grouped.get(r.id) ?? [];
       }
     }
+  }
+
+  /** Recorta a linha do alvo pras colunas pedidas (mais os embeds já aninhados). */
+  private project(row: Record<string, unknown>, sel: { columns: string[]; embeds: Embed[] }): Record<string, unknown> {
+    if (!sel.columns.length || sel.columns.includes("*")) {
+      // "*": devolve tudo, menos as FKs que só serviram pra juntar.
+      return row;
+    }
+    const out: Record<string, unknown> = {};
+    for (const col of sel.columns) out[col] = row[col];
+    for (const embed of sel.embeds) out[embed.alias] = row[embed.alias];
+    return out;
   }
 
   private _count: number | null = null;
@@ -590,3 +638,11 @@ export function createQueryClient() {
 }
 
 export type QueryClient = ReturnType<typeof createQueryClient>;
+
+/**
+ * Tipo pra funções que recebem "um cliente de banco" e só usam `.from`/`.rpc`.
+ * Tanto o createAdminClient quanto o createClient (sessão) satisfazem — os dois
+ * têm esses métodos com a mesma assinatura. Substitui o antigo
+ * DbClient nas assinaturas de helper.
+ */
+export type DbClient = QueryClient;

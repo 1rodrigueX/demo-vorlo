@@ -1,7 +1,7 @@
 import { cache } from "react";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { SessionClient } from "@/lib/supabase/server";
+import type { DbClient } from "@/lib/db/queryClient";
 import { createClient } from "@/lib/supabase/server";
-import type { Database } from "@/types/database.types";
 import type { Profile } from "@/types/domain";
 
 // cache(): memoiza por request. getCurrentUser/isCurrentUserDev são chamados no
@@ -76,7 +76,7 @@ export const isCurrentUserDev = cache(async () => {
 
 /** Busca o slug de um tenant pelo id — usado pra montar caminhos prefixados com o slug. */
 export async function getTenantSlug(
-  supabase: SupabaseClient<Database>,
+  supabase: DbClient,
   tenantId: string,
 ): Promise<string | null> {
   const { data } = await supabase.from("tenants").select("slug").eq("id", tenantId).maybeSingle();
@@ -95,7 +95,7 @@ export async function getTenantSlug(
  * um client montado sobre os cookies da request, não o de next/headers).
  */
 export async function resolveHomeRouteFor(
-  supabase: SupabaseClient<Database>,
+  supabase: SessionClient,
   userId: string,
 ): Promise<string> {
   // Sessão pode estar em aal1 (só senha) mesmo com MFA ativado, até
@@ -250,7 +250,7 @@ export async function getAccountServices(): Promise<{
 
 /** Busca o tenant_id do usuário logado — usado pelas server actions antes de inserir dados. */
 export async function requireTenantId(
-  supabase: SupabaseClient<Database>,
+  supabase: DbClient,
   userId: string,
 ): Promise<string | null> {
   const { data: profile } = await supabase
