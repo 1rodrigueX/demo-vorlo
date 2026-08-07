@@ -11,10 +11,15 @@ jobs:
     steps:
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1
+        env:
+          RUNTIME_DIRECT_URL: ${{ secrets.RUNTIME_DIRECT_URL }}
+          RUNTIME_DATABASE_URL: ${{ secrets.RUNTIME_DATABASE_URL }}
         with:
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
+          # Encaminha os secrets do banco pro script remoto.
+          envs: RUNTIME_DIRECT_URL,RUNTIME_DATABASE_URL
           script: |
             set -e
             # Áudio de voz do WhatsApp (convertToOggOpus) depende do ffmpeg do
@@ -25,9 +30,14 @@ jobs:
               sudo apt-get update -y && sudo apt-get install -y ffmpeg || echo "aviso: não foi possível instalar o ffmpeg automaticamente"
             fi
             cd /opt/crm
+            # Conexão com o banco (runtime). O pool usa DIRECT_URL (pooler de
+            # sessão, 5432) — o certo pra processo longo. Escreve se faltar; o -q
+            # preserva um valor que já exista. .env.local é untracked, sobrevive ao reset.
+            grep -q '^DIRECT_URL=' .env.local 2>/dev/null || echo "DIRECT_URL=$RUNTIME_DIRECT_URL" >> .env.local
+            grep -q '^DATABASE_URL=' .env.local 2>/dev/null || echo "DATABASE_URL=$RUNTIME_DATABASE_URL" >> .env.local
             # Auth.js precisa de um segredo pra assinar a sessão (JWT). Gera uma
             # única vez e MANTÉM (o -q evita regenerar e invalidar as sessões de
-            # todo mundo a cada deploy). .env.local é untracked, sobrevive ao reset.
+            # todo mundo a cada deploy).
             grep -q '^AUTH_SECRET=' .env.local 2>/dev/null || echo "AUTH_SECRET=$(openssl rand -base64 32)" >> .env.local
             # Atrás do nginx, o Auth.js não descobre o host sozinho — fixa a URL.
             grep -q '^AUTH_URL=' .env.local 2>/dev/null || echo "AUTH_URL=https://falaai.cloud" >> .env.local
@@ -38,10 +48,3 @@ jobs:
             npm run build
             # --update-env: pm2 relê as variáveis (senão mantém o env antigo em cache).
             pm2 restart crm --update-env
-            echo "=== DIAG: vars de auth em .env.local ==="
-            grep -cE '^(AUTH_SECRET|AUTH_URL|AUTH_TRUST_HOST)=' .env.local
-            echo "=== DIAG: NEXT_PUBLIC_SITE_URL ==="
-            grep '^NEXT_PUBLIC_SITE_URL=' .env.local || echo "(ausente)"
-            sleep 4
-            echo "=== DIAG: logs recentes ==="
-            pm2 logs crm --lines 30 --nostream 2>&1 | tail -35 || true
