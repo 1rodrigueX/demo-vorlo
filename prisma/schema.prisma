@@ -1,0 +1,41 @@
+// Schema do Prisma.
+//
+// ATENÇÃO: este arquivo ainda está VAZIO de modelos de propósito.
+//
+// O banco tem ~60 tabelas construídas por 75 migrations, com colunas geradas
+// (contacts.phone_key), índices únicos parciais, funções plpgsql e policies de
+// RLS. Transcrever isso à mão a partir das migrations é o caminho mais lento e
+// o mais sujeito a erro silencioso — um default trocado ou um índice parcial
+// esquecido só aparece em produção.
+//
+// O caminho certo é uma linha de comando:
+//
+//   npx prisma db pull
+//
+// Ela lê o banco real e escreve todos os modelos aqui, exatos. Para isso o
+// DATABASE_URL precisa apontar para o Postgres do projeto (ver .env.local.example).
+//
+// Depois do db pull, rode:
+//
+//   npx prisma generate
+//
+// O que o db pull NÃO traz (e continua sendo SQL cru em supabase/migrations):
+//   - policies de RLS
+//   - funções SECURITY DEFINER (current_tenant_id, is_admin, merge_contacts...)
+//   - triggers
+//   - a expressão das colunas geradas (o Prisma marca a coluna, não a fórmula)
+//
+// Nada disso se perde ao migrar: são objetos do PostgreSQL, e o PostgreSQL
+// continua sendo o mesmo. O que deixa de existir é o auth.uid() de dentro das
+// policies, que precisa virar current_setting('app.user_id') — ver
+// withRlsContext em src/lib/db/prisma.ts.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// A partir do Prisma 7 a `url` não vive mais aqui: o CLI lê de
+// prisma.config.ts e o runtime recebe a conexão por driver adapter.
+datasource db {
+  provider = "postgresql"
+}

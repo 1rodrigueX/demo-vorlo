@@ -6,7 +6,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "db:pull": "prisma db pull",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
+    "db:studio": "prisma studio"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.111.0",
@@ -15,6 +20,8 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@hapi/boom": "^10.0.1",
     "@hookform/resolvers": "^5.4.0",
+    "@prisma/adapter-pg": "^7.9.1",
+    "@prisma/client": "^7.9.1",
     "@supabase/ssr": "^0.12.1",
     "@supabase/supabase-js": "^2.110.5",
     "@tiptap/extension-color": "^3.27.4",
@@ -30,10 +37,12 @@
     "date-fns": "^4.4.0",
     "discord-interactions": "^4.4.0",
     "discord.js": "^14.27.0",
+    "dotenv": "^17.4.2",
     "lucide-react": "^1.24.0",
     "mercadopago": "^3.2.0",
     "motion": "^12.43.0",
     "next": "16.2.10",
+    "pg": "^8.22.0",
     "pino": "^10.3.1",
     "qrcode": "^1.5.4",
     "react": "19.2.4",
@@ -51,12 +60,14 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
+    "@types/pg": "^8.20.4",
     "@types/qrcode": "^1.5.6",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/sanitize-html": "^2.16.1",
     "eslint": "^9",
     "eslint-config-next": "16.2.10",
+    "prisma": "^7.9.1",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
