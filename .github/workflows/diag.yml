@@ -19,7 +19,9 @@ jobs:
             pm2 describe crm 2>&1 | grep -iE "script path|script args|exec cwd|exec mode|node.js version|status|restarts" || true
             echo "=== AUTH_SECRET len ==="
             awk -F= '/^AUTH_SECRET=/{print length($2)}' .env.local
-            echo "=== DIRECT_URL presente? ==="
-            grep -cE '^DIRECT_URL=' .env.local
-            echo "=== ERROR log (60) ==="
-            pm2 logs crm --err --lines 60 --nostream 2>&1 | tail -65 || true
+            echo "=== DB vars em .env.local (mascarado) ==="
+            grep -nE '^(DIRECT_URL|DATABASE_URL)=' .env.local | sed -E 's#://([^:]+):[^@]+@#://\1:****@#g'
+            echo "=== lengths ==="
+            awk -F= '/^DIRECT_URL=/{v=substr($0,index($0,"=")+1);print "DIRECT_URL len:",length(v)} /^DATABASE_URL=/{v=substr($0,index($0,"=")+1);print "DATABASE_URL len:",length(v)}' .env.local
+            echo "=== ERROR log (30) ==="
+            pm2 logs crm --err --lines 30 --nostream 2>&1 | tail -32 || true
