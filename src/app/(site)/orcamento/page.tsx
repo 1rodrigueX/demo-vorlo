@@ -8,7 +8,7 @@ import { QUOTE } from "@/lib/site/content";
 const REASSEGURA = [
   { icon: Clock, titulo: "Resposta em 1 dia útil", corpo: "Sem fila e sem robô. Quem responde é quem vai tocar o projeto." },
   { icon: FileSignature, titulo: "Orçamento fechado", corpo: "Escopo, prazo e valor por escrito. Nada de \"a partir de\"." },
-  { icon: ShieldCheck, titulo: "Sem compromisso", corpo: "Pedir orçamento não contrata nada. Se não fizer sentido, a gente diz." },
+  { icon: ShieldCheck, titulo: "Sem compromisso", corpo: "Pedir orçamento não contrata nada. Se não fizer sentido, eu digo." },
 ];
 
 export default function OrcamentoPage() {
@@ -30,7 +30,7 @@ export default function OrcamentoPage() {
             >
               <p className="type-eyebrow mb-4">{QUOTE.eyebrow}</p>
               <h1 className="type-display text-[clamp(2.1rem,5.5vw,3.6rem)] text-white-soft text-balance">
-                Conte sua ideia. Devolvemos <span className="text-ignite">escopo, prazo e valor</span>.
+                Conta sua ideia. Eu devolvo <span className="text-ignite">escopo, prazo e valor</span>.
               </h1>
               <p className="mt-5 max-w-xl text-base leading-relaxed text-grey">{QUOTE.intro}</p>
             </motion.header>

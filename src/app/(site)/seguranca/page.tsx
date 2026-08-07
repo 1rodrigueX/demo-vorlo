@@ -193,10 +193,9 @@ export default function SegurancaPage() {
               Alinhados à <span className="text-ignite">LGPD</span>
             </h2>
             <p className="mt-4 leading-relaxed text-grey">
-              Tratamos dados pessoais seguindo a Lei Geral de Proteção de Dados: coleta com finalidade clara,
-              respeito aos direitos do titular (acesso, correção e exclusão) e minimização — guardamos apenas o
-              necessário para a operação do seu negócio. Precisa exercer um direito sobre seus dados? É só falar
-              com a gente.
+              Trato dados pessoais seguindo a Lei Geral de Proteção de Dados: coleta com finalidade clara,
+              respeito aos direitos do titular (acesso, correção e exclusão) e minimização — guardo só o que a
+              operação do seu negócio precisa. Quer exercer um direito sobre seus dados? É só me chamar.
             </p>
           </div>
         </motion.div>
@@ -214,7 +213,7 @@ export default function SegurancaPage() {
               Tem uma dúvida de segurança?
             </h2>
             <p className="mt-3 max-w-md text-[0.95rem] leading-relaxed text-grey">
-              Fale com a gente sobre como protegemos os dados da sua empresa — respondemos rápido.
+              Me pergunta como os dados da sua empresa ficam protegidos — respondo rápido.
             </p>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row">

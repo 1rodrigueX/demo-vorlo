@@ -55,7 +55,7 @@ export const SERVICES = [
   {
     id: "crm",
     title: "CRM com IA",
-    body: "Esse é nosso, e a gente usa todo dia: funil, WhatsApp e agentes de IA que atendem e qualificam sozinhos. Dá pra criar conta e testar agora.",
+    body: "Esse é meu, e eu uso todo dia: funil, WhatsApp e agentes de IA que atendem e qualificam sozinhos. Dá pra criar conta e testar agora.",
     points: ["Funil e WhatsApp no mesmo lugar", "Agentes de IA que atendem"],
     href: "/signup",
   },
@@ -86,7 +86,7 @@ export const GUARANTEES = [
   },
   {
     id: "manutencao",
-    title: "A gente continua depois",
+    title: "Eu continuo depois",
     body: "Correção, atualização e suporte depois de entregar. Seu site não fica órfão no dia seguinte.",
   },
 ] as const;
@@ -110,13 +110,13 @@ export const PROCESS = [
   {
     step: "04",
     title: "No ar",
-    body: "Publicação, domínio, e-mail profissional e sua equipe treinada pra mexer sem depender da gente.",
+    body: "Publicação, domínio, e-mail profissional e sua equipe treinada pra mexer sem depender de mim.",
   },
 ] as const;
 
 export const FINAL_CTA = {
   title: "Conta o que você precisa.",
-  body: "Descreve o problema que você quer resolver. A gente responde com escopo, prazo e valor — e se não for trabalho pra gente, a gente fala isso também.",
+  body: "Descreve o problema que você quer resolver. Eu respondo com escopo, prazo e valor — e se não for trabalho pra mim, eu falo isso também.",
   cta: "Pedir um orçamento",
 } as const;
 
@@ -145,7 +145,7 @@ export const PORTFOLIO = {
   eyebrow: "Portfólio",
   title: "Sem template pra mostrar. Produto no ar.",
   intro:
-    "Dois projetos escritos do zero e em produção agora: o nosso CRM e este próprio site. Sem construtor de arrastar-e-soltar.",
+    "Dois projetos escritos do zero e rodando agora: meu CRM e este próprio site. Nenhum construtor de arrastar e soltar no meio.",
 } as const;
 
 export interface Projeto {
@@ -172,13 +172,13 @@ export const PROJETOS: Projeto[] = [
 ];
 
 export const QUOTE = {
-  eyebrow: "Solicitar orçamento",
-  title: "Conte sua ideia. Devolvemos escopo, prazo e valor.",
+  eyebrow: "Pedir orçamento",
+  title: "Conta sua ideia. Eu devolvo escopo, prazo e valor.",
   intro:
-    "Quanto mais detalhe você der, mais preciso é o orçamento. Respondemos em até 1 dia útil pelo canal que você escolher.",
-  successTitle: "Recebemos sua solicitação.",
+    "Quanto mais detalhe você der, mais preciso fica o orçamento. Respondo em até 1 dia útil, pelo canal que você escolher.",
+  successTitle: "Recebi seu pedido.",
   successBody:
-    "Vamos analisar e responder em até 1 dia útil. Se preferir adiantar, mande a mesma mensagem pelo WhatsApp — ela já vai preenchida.",
+    "Vou analisar e te responder em até 1 dia útil. Se quiser adiantar, manda a mesma mensagem no WhatsApp — ela já vai preenchida.",
 } as const;
 
 export const TIPOS_PROJETO = [
