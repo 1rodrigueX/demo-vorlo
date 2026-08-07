@@ -37,10 +37,13 @@ export function Hero() {
 
           <h1 className="type-display text-[clamp(2.5rem,7vw,4.7rem)] text-white-soft text-balance">
             <span className="sr-only">{HERO.title}</span>
+            {/* Duas linhas: a segunda é o diferencial e leva o destaque.
+                Precisa continuar batendo com HERO.title, que alimenta o
+                leitor de tela logo acima. */}
             <span aria-hidden>
-              <WordReveal text="Presença digital" delay={0.06} start />
+              <WordReveal text="Sites e sistemas" delay={0.06} start />
               <br />
-              <WordReveal text="que vende." className="text-ignite type-glow-soft" delay={0.2} start />
+              <WordReveal text="escritos à mão." className="text-ignite type-glow-soft" delay={0.2} start />
             </span>
           </h1>
 

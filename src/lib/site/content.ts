@@ -23,39 +23,40 @@ export const NAV = [
 
 export const HERO = {
   eyebrow: "Sites · CRM · Automações com IA",
-  title: "Presença digital que vende.",
-  subtitle: "Sites, e-commerce e CRM que existem pra vender — não só pra estar online.",
-  primaryCta: "Solicitar orçamento",
+  title: "Sites e sistemas escritos à mão.",
+  subtitle:
+    "Sem tema comprado, sem construtor de arrastar e soltar. Cada projeto é escrito do zero — então quando você pedir uma coisa diferente, a resposta não vai ser \"não dá\".",
+  primaryCta: "Pedir um orçamento",
   secondaryCta: "Ver o que fazemos",
 } as const;
 
 export const SERVICES = [
   {
     id: "landing",
-    title: "Landing Pages de Alta Conversão",
-    body: "Uma página, um objetivo: transformar visita em orçamento. Estrutura testada, carregamento abaixo de dois segundos.",
-    points: ["Copy orientada a conversão", "Formulário integrado ao WhatsApp"],
+    title: "Landing page",
+    body: "Uma página com um objetivo só: fazer quem chegou pedir orçamento. Abre em menos de dois segundos, inclusive no celular no meio da rua.",
+    points: ["Texto escrito pra converter", "Formulário que cai no seu WhatsApp"],
     href: "/orcamento",
   },
   {
     id: "institucional",
-    title: "Sites Institucionais B2B",
-    body: "A vitrine que sua equipe comercial manda antes da reunião. Autoridade, portfólio e prova social no lugar certo.",
-    points: ["Painel para editar conteúdo", "Otimizado para busca no Google"],
+    title: "Site institucional",
+    body: "Aquele link que seu vendedor manda antes da reunião. Mostra o que você já entregou e por que dá pra confiar no seu trabalho.",
+    points: ["Painel pra você mesmo editar", "Preparado pra aparecer no Google"],
     href: "/orcamento",
   },
   {
     id: "ecommerce",
-    title: "E-commerce & Lojas Virtuais",
-    body: "Catálogo, checkout e pagamento integrados. Sua operação vendendo direto, sem depender de marketplace.",
-    points: ["Pagamento e frete integrados", "Gestão de estoque e pedidos"],
-    href: "/orcamento",
+    title: "Loja virtual",
+    body: "Catálogo, carrinho e pagamento no seu próprio domínio. Você vende direto, sem dividir a margem com marketplace.",
+    points: ["Pagamento e frete já integrados", "Controle de estoque e pedidos"],
+    href: "/signup",
   },
   {
     id: "crm",
-    title: "CRM de Vendas com IA",
-    body: "Nosso produto próprio: pipeline, WhatsApp e agentes de IA que atendem, qualificam e cobram. Crie sua conta e comece hoje.",
-    points: ["Pipeline + WhatsApp integrados", "Agentes de IA (Synexa)"],
+    title: "CRM com IA",
+    body: "Esse é nosso, e a gente usa todo dia: funil, WhatsApp e agentes de IA que atendem e qualificam sozinhos. Dá pra criar conta e testar agora.",
+    points: ["Funil e WhatsApp no mesmo lugar", "Agentes de IA que atendem"],
     href: "/signup",
   },
 ] as const;
@@ -68,23 +69,55 @@ export const STATS = [
 ] as const;
 
 export const GUARANTEES = [
-  { id: "contrato", title: "Contrato Formal", body: "Escopo, prazo e valor por escrito antes da primeira linha de código." },
-  { id: "prazo", title: "Prazo Garantido", body: "Data de entrega definida em contrato, com acompanhamento semanal do andamento." },
-  { id: "seguranca", title: "Código Seguro", body: "HTTPS, proteção contra injeção e backup automático desde o primeiro dia no ar." },
-  { id: "manutencao", title: "Manutenção Contínua", body: "Correções, atualizações e suporte depois da entrega. O site não fica órfão." },
+  {
+    id: "contrato",
+    title: "Você sabe o preço antes",
+    body: "Escopo, prazo e valor por escrito antes da primeira linha de código. Sem \"a partir de\".",
+  },
+  {
+    id: "prazo",
+    title: "A data está no contrato",
+    body: "E toda semana você recebe notícia de como está indo, mesmo quando não tem novidade boa.",
+  },
+  {
+    id: "seguranca",
+    title: "Seguro desde o primeiro dia",
+    body: "HTTPS, proteção contra invasão e backup automático desde a hora em que entra no ar.",
+  },
+  {
+    id: "manutencao",
+    title: "A gente continua depois",
+    body: "Correção, atualização e suporte depois de entregar. Seu site não fica órfão no dia seguinte.",
+  },
 ] as const;
 
 export const PROCESS = [
-  { step: "01", title: "Briefing", body: "Uma conversa de 40 minutos para entender o negócio, o cliente e a meta comercial." },
-  { step: "02", title: "Design", body: "Protótipo navegável aprovado por você antes de qualquer desenvolvimento começar." },
-  { step: "03", title: "Desenvolvimento", body: "Código próprio, responsivo e otimizado, com ambiente de teste aberto para acompanhar." },
-  { step: "04", title: "Lançamento", body: "Publicação, domínio, e-mail profissional e treinamento da sua equipe." },
+  {
+    step: "01",
+    title: "Conversa",
+    body: "Uns 40 minutos pra entender o negócio, quem é seu cliente e o que você precisa que aconteça.",
+  },
+  {
+    step: "02",
+    title: "Desenho",
+    body: "Você navega no protótipo e aprova antes de existir uma linha de código. Mudar aqui é barato.",
+  },
+  {
+    step: "03",
+    title: "Construção",
+    body: "Escrito do zero, rápido no celular, com um endereço de teste aberto pra você acompanhar de perto.",
+  },
+  {
+    step: "04",
+    title: "No ar",
+    body: "Publicação, domínio, e-mail profissional e sua equipe treinada pra mexer sem depender da gente.",
+  },
 ] as const;
 
 export const FINAL_CTA = {
-  title: "Seu concorrente já está online.",
-  body: "Conte o que sua empresa precisa. Respondemos com escopo, prazo e valor — sem enrolação.",
-  cta: "Solicitar orçamento",
+  title: "Conta o que você precisa.",
+  body: "Descreve o problema que você quer resolver. A gente responde com escopo, prazo e valor — e se não for trabalho pra gente, a gente fala isso também.",
+  cta: "Pedir um orçamento",
 } as const;
 
 export const SOBRE = {

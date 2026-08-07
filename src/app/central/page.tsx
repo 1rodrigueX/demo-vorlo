@@ -1,11 +1,12 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Home, Download, Monitor } from "lucide-react";
+import { Home } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getAccountServices } from "@/lib/auth/current-user";
 import { UserMenu } from "@/components/layout/UserMenu";
 import { LiteToggle } from "@/components/layout/LiteToggle";
 import { CentralServices } from "@/components/central/CentralServices";
+import { AppUpdateCard } from "@/components/central/AppUpdateCard";
 import { SynexaMark } from "@/components/brand/SynexaLogo";
 
 export default async function CentralPage() {
@@ -54,28 +55,8 @@ export default async function CentralPage() {
           <CentralServices services={services} />
         </div>
 
-        {/* App desktop (Windows) */}
-        <div className="mt-4 flex flex-col items-start gap-4 rounded-xl border border-gray-200 bg-panel p-5 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-3.5">
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[#ff5722]/10 text-[#ff5722]">
-              <Monitor size={22} />
-            </span>
-            <div>
-              <p className="text-sm font-semibold text-gray-900">App para computador (Windows)</p>
-              <p className="mt-0.5 text-sm text-gray-500">
-                Tenha a Synexa numa janela própria — abre direto nos seus acessos, como no navegador.
-              </p>
-            </div>
-          </div>
-          <a
-            href="/downloads/Synexa-Setup.exe"
-            download="Synexa-Setup.exe"
-            className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-[#ff5722] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:brightness-110"
-          >
-            <Download size={16} />
-            Baixar para Windows
-          </a>
-        </div>
+        {/* No navegador vira "baixar o app"; dentro do app, "atualizar". */}
+        <AppUpdateCard downloadUrl="/downloads/Synexa-Setup.exe" />
 
         <p className="mt-10 text-center text-sm text-gray-400">
           <Link href="/central/seguranca" className="hover:text-gray-600 hover:underline">
