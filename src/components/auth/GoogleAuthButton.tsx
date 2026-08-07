@@ -40,8 +40,14 @@ function GoogleSubmit() {
 /**
  * Login com Google via Auth.js. Um form que chama a server action loginWithGoogle
  * (que dispara o signIn do provider) — sem client SDK do Supabase.
+ *
+ * Só aparece quando o Google está configurado (NEXT_PUBLIC_GOOGLE_AUTH_ENABLED).
+ * Assim dá pra subir "e-mail/senha por enquanto" sem um botão que não funciona;
+ * ative o flag (+ AUTH_GOOGLE_ID/SECRET no servidor) quando for ligar o Google.
  */
 export function GoogleAuthButton({ next }: { next?: string }) {
+  if (process.env.NEXT_PUBLIC_GOOGLE_AUTH_ENABLED !== "true") return null;
+
   return (
     <form action={loginWithGoogle}>
       {next && <input type="hidden" name="next" value={next} />}

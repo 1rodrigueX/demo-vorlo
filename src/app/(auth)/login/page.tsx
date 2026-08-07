@@ -22,6 +22,7 @@ function LoginForm() {
 
   const [state, formAction, isPending] = useActionState<AuthActionState, FormData>(login, null);
   const mfaRequired = state?.mfaRequired === true;
+  const googleEnabled = process.env.NEXT_PUBLIC_GOOGLE_AUTH_ENABLED === "true";
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
@@ -50,13 +51,16 @@ function LoginForm() {
           </p>
         )}
 
-        <GoogleAuthButton next={next || "/dashboard"} />
-
-        <div className="my-5 flex items-center gap-3">
-          <div className="h-px flex-1 bg-gray-200" />
-          <span className="text-xs text-gray-400">ou com e-mail</span>
-          <div className="h-px flex-1 bg-gray-200" />
-        </div>
+        {googleEnabled && (
+          <>
+            <GoogleAuthButton next={next || "/dashboard"} />
+            <div className="my-5 flex items-center gap-3">
+              <div className="h-px flex-1 bg-gray-200" />
+              <span className="text-xs text-gray-400">ou com e-mail</span>
+              <div className="h-px flex-1 bg-gray-200" />
+            </div>
+          </>
+        )}
 
         <form action={formAction} className="space-y-4">
           <input type="hidden" name="next" value={next} />

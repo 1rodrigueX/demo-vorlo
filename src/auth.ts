@@ -66,7 +66,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         return { id: user.id, email: user.email, name: user.full_name, image: user.image };
       },
     }),
-    Google,
+    // Google entra só quando as credenciais existem — assim dá pra subir
+    // "e-mail/senha por enquanto" sem quebrar, e o login Google se ativa
+    // sozinho ao setar AUTH_GOOGLE_ID/SECRET no servidor e reiniciar.
+    ...(process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET ? [Google] : []),
   ],
   callbacks: {
     // Google: vincula/cria o app_user pelo sub e garante o UUID interno no token.

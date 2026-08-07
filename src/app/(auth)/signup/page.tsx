@@ -22,6 +22,7 @@ function SignupForm() {
   const [state, formAction, isPending] = useActionState<AuthActionState, FormData>(signup, null);
   const searchParams = useSearchParams();
   const plan = searchParams.get("plan");
+  const googleEnabled = process.env.NEXT_PUBLIC_GOOGLE_AUTH_ENABLED === "true";
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
@@ -35,13 +36,16 @@ function SignupForm() {
           <p className="rounded-md bg-green-50 p-3 text-sm text-green-700">{state.message}</p>
         ) : (
           <>
-            <GoogleAuthButton next={plan ? `/choose-plan?plan=${plan}` : "/choose-plan"} />
-
-            <div className="my-5 flex items-center gap-3">
-              <div className="h-px flex-1 bg-gray-200" />
-              <span className="text-xs text-gray-400">ou com e-mail</span>
-              <div className="h-px flex-1 bg-gray-200" />
-            </div>
+            {googleEnabled && (
+              <>
+                <GoogleAuthButton next={plan ? `/choose-plan?plan=${plan}` : "/choose-plan"} />
+                <div className="my-5 flex items-center gap-3">
+                  <div className="h-px flex-1 bg-gray-200" />
+                  <span className="text-xs text-gray-400">ou com e-mail</span>
+                  <div className="h-px flex-1 bg-gray-200" />
+                </div>
+              </>
+            )}
 
             <form action={formAction} className="space-y-4">
               {plan && <input type="hidden" name="plan" value={plan} />}
