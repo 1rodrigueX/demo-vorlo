@@ -19,6 +19,9 @@ export default defineConfig({
     path: "prisma/migrations",
   },
   datasource: {
-    url: env("DATABASE_URL"),
+    // Migrations e db pull vão pela DIRECT_URL (pooler em modo sessão, porta
+    // 5432). O DATABASE_URL do projeto é o pooler de transação (6543,
+    // pgbouncer), que não aceita os comandos de migration.
+    url: env("DIRECT_URL"),
   },
 });

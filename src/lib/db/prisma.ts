@@ -16,9 +16,15 @@ import { PrismaPg } from "@prisma/adapter-pg";
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 
 function createClient(): PrismaClient {
-  const connectionString = process.env.DATABASE_URL;
+  // Em runtime usamos o pooler em modo SESSÃO (DIRECT_URL, 5432), não o de
+  // transação (DATABASE_URL, 6543). Motivo: a app roda num processo PM2 único
+  // e de vida longa, não em serverless — o modo sessão se comporta como uma
+  // conexão normal, aceita prepared statements e evita a pegadinha do
+  // pgbouncer em modo transação ("prepared statement already exists"). O pool
+  // fica limitado pelo próprio Prisma, bem dentro do limite do plano.
+  const connectionString = process.env.DIRECT_URL || process.env.DATABASE_URL;
   if (!connectionString) {
-    throw new Error("DATABASE_URL não configurada — veja .env.local.example");
+    throw new Error("DIRECT_URL/DATABASE_URL não configuradas — veja .env.local.example");
   }
 
   return new PrismaClient({
