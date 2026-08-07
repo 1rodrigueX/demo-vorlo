@@ -7,15 +7,25 @@
     "frontendDist": "../dist"
   },
   "app": {
-    "withGlobalTauri": false,
+    "withGlobalTauri": true,
     "windows": [],
     "security": {
       "csp": null
     }
   },
+  "plugins": {
+    "updater": {
+      "endpoints": ["https://falaai.cloud/api/app/update/{{target}}/{{current_version}}"],
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDdFQjhFOTdEQ0M5MEVGMzMKUldRejc1RE1mZW00ZnI4bFdxNS9EMERQOEJLbkd6S2ZrZU9qdmlHRURLU2pULzRtYS93elJxOWsK",
+      "windows": {
+        "installMode": "passive"
+      }
+    }
+  },
   "bundle": {
     "active": true,
     "targets": ["nsis"],
+    "createUpdaterArtifacts": true,
     "publisher": "Synexa",
     "category": "Business",
     "shortDescription": "Synexa — CRM, vendas e automações",

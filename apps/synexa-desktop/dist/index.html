@@ -5,15 +5,166 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Synexa</title>
     <style>
-      html, body { margin: 0; height: 100%; background: #120a05; color: #ff5722;
-        font-family: system-ui, sans-serif; display: grid; place-items: center; }
-      .dot { width: 14px; height: 14px; border-radius: 50%; background: #ff5722;
-        animation: pulse 1s ease-in-out infinite; }
-      @keyframes pulse { 0%,100% { opacity: .35; transform: scale(.8);} 50% { opacity: 1; transform: scale(1);} }
+      :root { --brand: #ff5722; --bg: #120a05; --panel: rgba(255,255,255,.05); }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; height: 100%; background: var(--bg); color: #fff;
+        font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+      body { display: flex; flex-direction: column; padding: 28px 26px; }
+
+      .logo { font-size: 26px; font-weight: 700; letter-spacing: -.5px; }
+      .logo span { color: var(--brand); }
+      .sub { color: rgba(255,255,255,.45); font-size: 13px; margin-top: 2px; }
+
+      .tabs { display: flex; gap: 4px; margin: 24px 0 18px; border-bottom: 1px solid rgba(255,255,255,.08); }
+      .tab { background: none; border: none; border-bottom: 2px solid transparent; color: rgba(255,255,255,.5);
+        font: inherit; font-size: 14px; font-weight: 500; padding: 8px 12px; cursor: pointer; }
+      .tab[aria-selected="true"] { color: #fff; border-bottom-color: var(--brand); }
+
+      .panel { flex: 1; display: none; }
+      .panel[data-active="true"] { display: flex; flex-direction: column; }
+
+      .btn { background: var(--brand); color: #fff; border: none; border-radius: 10px;
+        font: inherit; font-size: 15px; font-weight: 600; padding: 13px; cursor: pointer; width: 100%; }
+      .btn:disabled { opacity: .45; cursor: default; }
+      .btn.ghost { background: var(--panel); }
+
+      .card { background: var(--panel); border-radius: 12px; padding: 16px; margin-bottom: 14px; }
+      .row { display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
+      .muted { color: rgba(255,255,255,.5); }
+      .status { font-size: 13px; line-height: 1.6; color: rgba(255,255,255,.75); margin-bottom: 14px; min-height: 40px; }
+      .ok { color: #4ade80; }
+      .err { color: #fb7185; }
+
+      .bar { height: 6px; background: rgba(255,255,255,.1); border-radius: 999px; overflow: hidden; margin-top: 10px; }
+      .bar > i { display: block; height: 100%; width: 0; background: var(--brand); transition: width .2s; }
+      .spacer { flex: 1; }
     </style>
   </head>
   <body>
-    <!-- Placeholder: a janela real é criada em src-tauri/src/lib.rs e carrega o site. -->
-    <div class="dot"></div>
+    <div class="logo">Synexa<span>.</span></div>
+    <div class="sub">CRM, vendas e automações</div>
+
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" aria-selected="true" data-tab="entrar">Entrar</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="atualizacoes">Atualizações</button>
+    </div>
+
+    <section class="panel" data-panel="entrar" data-active="true">
+      <p class="status">Seu CRM abre em uma janela própria. É só entrar com o e-mail e a senha de sempre.</p>
+      <div class="spacer"></div>
+      <button class="btn" id="btn-entrar">Entrar no CRM</button>
+    </section>
+
+    <section class="panel" data-panel="atualizacoes">
+      <div class="card">
+        <div class="row">
+          <span class="muted">Versão instalada</span>
+          <strong id="versao">—</strong>
+        </div>
+      </div>
+
+      <p class="status" id="update-status">Verifique se há uma versão mais nova. A atualização é baixada e instalada pelo próprio app.</p>
+      <div class="bar" id="barra" hidden><i></i></div>
+
+      <div class="spacer"></div>
+      <button class="btn ghost" id="btn-verificar">Verificar atualizações</button>
+      <button class="btn" id="btn-instalar" hidden style="margin-top:10px">Baixar e instalar</button>
+    </section>
+
+    <script>
+      // withGlobalTauri: true expõe os plugins em window.__TAURI__ — sem isso
+      // uma página estática (sem bundler) não alcançaria a API.
+      const { core, updater, process: tauriProcess } = window.__TAURI__ ?? {};
+
+      const $ = (sel) => document.querySelector(sel);
+      const statusEl = $("#update-status");
+      const barra = $("#barra");
+      const btnInstalar = $("#btn-instalar");
+      const btnVerificar = $("#btn-verificar");
+
+      let pendente = null;
+
+      document.querySelectorAll(".tab").forEach((tab) => {
+        tab.addEventListener("click", () => {
+          document.querySelectorAll(".tab").forEach((t) => t.setAttribute("aria-selected", String(t === tab)));
+          document.querySelectorAll(".panel").forEach((p) => {
+            p.dataset.active = String(p.dataset.panel === tab.dataset.tab);
+          });
+        });
+      });
+
+      $("#btn-entrar").addEventListener("click", async () => {
+        try {
+          await core.invoke("abrir_crm");
+        } catch (err) {
+          alert("Não foi possível abrir o CRM: " + err);
+        }
+      });
+
+      core
+        ?.invoke("versao_atual")
+        .then((v) => ($("#versao").textContent = "v" + v))
+        .catch(() => ($("#versao").textContent = "—"));
+
+      btnVerificar.addEventListener("click", async () => {
+        btnVerificar.disabled = true;
+        statusEl.className = "status";
+        statusEl.textContent = "Procurando atualização...";
+
+        try {
+          const update = await updater.check();
+          if (!update) {
+            statusEl.classList.add("ok");
+            statusEl.textContent = "Você já está na versão mais recente.";
+            return;
+          }
+          pendente = update;
+          statusEl.textContent = `Versão ${update.version} disponível.` + (update.body ? "\n" + update.body : "");
+          btnInstalar.hidden = false;
+        } catch (err) {
+          statusEl.classList.add("err");
+          // Servidor fora do ar ou sem versão publicada não pode parecer defeito
+          // do app — o usuário só precisa saber que pode seguir usando.
+          statusEl.textContent = "Não foi possível verificar agora. Você pode entrar normalmente e tentar depois.";
+          console.error(err);
+        } finally {
+          btnVerificar.disabled = false;
+        }
+      });
+
+      btnInstalar.addEventListener("click", async () => {
+        if (!pendente) return;
+        btnInstalar.disabled = true;
+        btnVerificar.disabled = true;
+        barra.hidden = false;
+        statusEl.className = "status";
+
+        let total = 0;
+        let baixado = 0;
+
+        try {
+          await pendente.downloadAndInstall((evento) => {
+            if (evento.event === "Started") {
+              total = evento.data.contentLength ?? 0;
+              statusEl.textContent = "Baixando a atualização...";
+            } else if (evento.event === "Progress") {
+              baixado += evento.data.chunkLength ?? 0;
+              if (total > 0) barra.firstElementChild.style.width = Math.round((baixado / total) * 100) + "%";
+            } else if (evento.event === "Finished") {
+              barra.firstElementChild.style.width = "100%";
+              statusEl.textContent = "Instalando... o app vai reiniciar sozinho.";
+            }
+          });
+
+          await tauriProcess.relaunch();
+        } catch (err) {
+          statusEl.classList.add("err");
+          statusEl.textContent = "A atualização falhou. Tente de novo — ou siga usando esta versão normalmente.";
+          console.error(err);
+          btnInstalar.disabled = false;
+          btnVerificar.disabled = false;
+        }
+      });
+    </script>
   </body>
 </html>

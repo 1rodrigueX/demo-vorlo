@@ -883,6 +883,46 @@ export interface Database {
         Update: { email?: string; reason?: string | null; created_at?: string };
         Relationships: [];
       };
+      // Versões do app desktop (ver 0075_app_releases).
+      app_releases: {
+        Row: {
+          id: string;
+          version: string;
+          platform: string;
+          url: string;
+          signature: string;
+          notes: string | null;
+          is_published: boolean;
+          created_by: string | null;
+          created_at: string;
+          published_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          version: string;
+          platform?: string;
+          url: string;
+          signature: string;
+          notes?: string | null;
+          is_published?: boolean;
+          created_by?: string | null;
+          created_at?: string;
+          published_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          version?: string;
+          platform?: string;
+          url?: string;
+          signature?: string;
+          notes?: string | null;
+          is_published?: boolean;
+          created_by?: string | null;
+          created_at?: string;
+          published_at?: string | null;
+        };
+        Relationships: [];
+      };
       // Execução das trajetórias (ver 0072_flow_runtime). Escrita só pelo
       // cron via service role; o app apenas lê.
       flow_runs: {

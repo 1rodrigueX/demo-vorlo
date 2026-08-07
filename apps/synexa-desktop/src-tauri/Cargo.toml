@@ -15,6 +15,17 @@ tauri-build = { version = "2", features = [] }
 
 [dependencies]
 tauri = { version = "2", features = [] }
+# generate_context! expande para código que usa serde_json quando a config tem
+# a seção `plugins` — sem estes dois o build quebra em "cannot find serde_json".
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+# Atualização automática: o app baixa e instala a nova versão sozinho, sem o
+# usuário pegar o instalador de novo. O manifesto vem de falaai.cloud.
+tauri-plugin-updater = "2"
+# Necessário pra reiniciar o app depois de instalar a atualização.
+tauri-plugin-process = "2"
+# A tela local (launcher) abre o site numa janela; o plugin opener cuida disso.
+tauri-plugin-opener = "2"
 
 [profile.release]
 opt-level = "s"
