@@ -11,6 +11,7 @@ import {
   MessageCircle,
   Mail,
   Workflow,
+  Megaphone,
   Sparkles,
   Lightbulb,
   Bug,
@@ -33,6 +34,9 @@ const mainLinks: NavLink[] = [
   { href: "/trajetorias", label: "Trajetórias", icon: Workflow, badge: "Beta" },
   { href: "/emails", label: "E-mails", icon: Mail },
 ];
+
+/** Só dono/gerente enxerga — fala com a base inteira de clientes de uma vez. */
+const adminLinks: NavLink[] = [{ href: "/disparos", label: "Disparos", icon: Megaphone }];
 
 const helpLinks: NavLink[] = [
   { href: "/suporte", label: "Suporte", icon: Sparkles },
@@ -189,6 +193,18 @@ export function Sidebar({
               collapsed={collapsed}
             />
           ))}
+          {/* showSettings já é "é dono ou gerente" — mesmo critério dos Disparos. */}
+          {showSettings &&
+            adminLinks.map((link) => (
+              <NavItem
+                key={link.href}
+                link={link}
+                tenantSlug={tenantSlug}
+                pathname={pathname}
+                brandColor={brandColor}
+                collapsed={collapsed}
+              />
+            ))}
         </div>
 
         <div className="my-3 h-px bg-white/[0.06]" />

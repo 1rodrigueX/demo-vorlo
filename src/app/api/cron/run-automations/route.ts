@@ -11,6 +11,7 @@ import {
 } from "@/lib/automations/funnel";
 import { runKommoImportStep } from "@/lib/kommo/import";
 import { advanceFlowRun } from "@/lib/automations/runtime";
+import { runCampaignTick } from "@/lib/campaigns/runtime";
 
 const BATCH_SIZE = 20;
 
@@ -22,6 +23,7 @@ type InactiveCheckPayload = { dealId: string; followupSentAt: string };
 type DealWonMessagePayload = { dealId: string; contactId: string; phone: string; message: string };
 type KommoImportPagePayload = { importId: string };
 type FlowStepPayload = { runId: string };
+type CampaignTickPayload = { campaignId: string };
 
 async function handleLeadWebhookWelcome(admin: Admin, tenantId: string, payload: LeadWebhookWelcomePayload) {
   const result = await sendWhatsAppMessage(tenantId, payload.phone, payload.message);
@@ -151,6 +153,11 @@ export async function POST(request: Request) {
         // fila caminha sozinha até o fim do fluxo (ver automations/runtime).
         case "flow_step":
           await advanceFlowRun(admin, (job.payload as FlowStepPayload).runId);
+          break;
+        // Uma leva de envios de um disparo em massa. Também se reagenda
+        // sozinha até a lista acabar (ver campaigns/runtime).
+        case "campaign_tick":
+          await runCampaignTick(admin, (job.payload as CampaignTickPayload).campaignId);
           break;
         default:
           throw new Error(`job_type desconhecido: ${job.job_type}`);

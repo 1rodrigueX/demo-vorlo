@@ -721,6 +721,110 @@ export interface Database {
           },
         ];
       };
+      // Disparos em massa (ver 0074_campaigns).
+      campaigns: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          name: string;
+          channel: "whatsapp";
+          audience: Json;
+          message: string;
+          variants: Json;
+          schedule: Json;
+          throttle: Json;
+          status: "draft" | "scheduled" | "running" | "paused" | "done" | "canceled";
+          error: string | null;
+          created_by: string | null;
+          created_at: string;
+          started_at: string | null;
+          finished_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          name: string;
+          channel?: "whatsapp";
+          audience?: Json;
+          message: string;
+          variants?: Json;
+          schedule?: Json;
+          throttle?: Json;
+          status?: "draft" | "scheduled" | "running" | "paused" | "done" | "canceled";
+          error?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+          started_at?: string | null;
+          finished_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          name?: string;
+          channel?: "whatsapp";
+          audience?: Json;
+          message?: string;
+          variants?: Json;
+          schedule?: Json;
+          throttle?: Json;
+          status?: "draft" | "scheduled" | "running" | "paused" | "done" | "canceled";
+          error?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+          started_at?: string | null;
+          finished_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "campaigns_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      campaign_recipients: {
+        Row: {
+          id: string;
+          campaign_id: string;
+          tenant_id: string;
+          contact_id: string;
+          status: "pending" | "sent" | "failed" | "skipped" | "opted_out";
+          sent_at: string | null;
+          error: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          campaign_id: string;
+          tenant_id: string;
+          contact_id: string;
+          status?: "pending" | "sent" | "failed" | "skipped" | "opted_out";
+          sent_at?: string | null;
+          error?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          campaign_id?: string;
+          tenant_id?: string;
+          contact_id?: string;
+          status?: "pending" | "sent" | "failed" | "skipped" | "opted_out";
+          sent_at?: string | null;
+          error?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "campaign_recipients_campaign_id_fkey";
+            columns: ["campaign_id"];
+            isOneToOne: false;
+            referencedRelation: "campaigns";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       // Comunicados de atualização da plataforma (ver 0073_platform_updates).
       platform_updates: {
         Row: {
@@ -2978,7 +3082,7 @@ export interface Database {
         Row: {
           id: string;
           tenant_id: string;
-          job_type: "lead_webhook_welcome" | "proposal_followup" | "inactive_check" | "deal_won_message" | "kommo_import_page" | "flow_step";
+          job_type: "lead_webhook_welcome" | "proposal_followup" | "inactive_check" | "deal_won_message" | "kommo_import_page" | "flow_step" | "campaign_tick";
           run_at: string;
           status: "pending" | "processing" | "done" | "failed";
           attempts: number;
@@ -2990,7 +3094,7 @@ export interface Database {
         Insert: {
           id?: string;
           tenant_id: string;
-          job_type: "lead_webhook_welcome" | "proposal_followup" | "inactive_check" | "deal_won_message" | "kommo_import_page" | "flow_step";
+          job_type: "lead_webhook_welcome" | "proposal_followup" | "inactive_check" | "deal_won_message" | "kommo_import_page" | "flow_step" | "campaign_tick";
           run_at?: string;
           status?: "pending" | "processing" | "done" | "failed";
           attempts?: number;
@@ -3002,7 +3106,7 @@ export interface Database {
         Update: {
           id?: string;
           tenant_id?: string;
-          job_type?: "lead_webhook_welcome" | "proposal_followup" | "inactive_check" | "deal_won_message" | "kommo_import_page" | "flow_step";
+          job_type?: "lead_webhook_welcome" | "proposal_followup" | "inactive_check" | "deal_won_message" | "kommo_import_page" | "flow_step" | "campaign_tick";
           run_at?: string;
           status?: "pending" | "processing" | "done" | "failed";
           attempts?: number;
