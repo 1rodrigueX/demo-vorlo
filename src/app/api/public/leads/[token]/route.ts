@@ -5,6 +5,7 @@ import { incomingLeadSchema } from "@/lib/validation/lead-webhook";
 import { checkRateLimit } from "@/lib/utils/rateLimit";
 import { normalizePhone, normalizeEmail, isDuplicatePhoneError } from "@/lib/crm/phone";
 import { triggerFlows } from "@/lib/automations/runtime";
+import { logSecurityEvent } from "@/lib/security/events";
 import { findOpenDealForContact, nextPositionInStage } from "@/lib/crm/openDeal";
 
 const CORS_HEADERS = {
@@ -32,6 +33,12 @@ export async function POST(request: Request, { params }: { params: Promise<{ tok
   // o WhatsApp do tenant (número de terceiro pode ser martelado indefinidamente).
   const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
   if (!checkRateLimit(`leads-token:${token}`, 20, 60_000) || !checkRateLimit(`leads-ip:${ip}`, 30, 60_000)) {
+    void logSecurityEvent({
+      type: "rate_limited",
+      ip,
+      userAgent: request.headers.get("user-agent"),
+      detail: { endpoint: "public/leads", token: token.slice(0, 8) },
+    });
     return NextResponse.json({ error: "Muitas requisições, tente novamente em instantes" }, {
       status: 429,
       headers: CORS_HEADERS,

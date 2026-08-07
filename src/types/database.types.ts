@@ -883,6 +883,76 @@ export interface Database {
         Update: { email?: string; reason?: string | null; created_at?: string };
         Relationships: [];
       };
+      // Cibersegurança (ver 0076_security_events).
+      security_events: {
+        Row: {
+          id: string;
+          tenant_id: string | null;
+          user_id: string | null;
+          event_type: string;
+          severity: "info" | "warn" | "critical";
+          ip: string | null;
+          user_agent: string | null;
+          detail: Json;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id?: string | null;
+          user_id?: string | null;
+          event_type: string;
+          severity?: "info" | "warn" | "critical";
+          ip?: string | null;
+          user_agent?: string | null;
+          detail?: Json;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string | null;
+          user_id?: string | null;
+          event_type?: string;
+          severity?: "info" | "warn" | "critical";
+          ip?: string | null;
+          user_agent?: string | null;
+          detail?: Json;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      blocked_ips: {
+        Row: {
+          ip: string;
+          reason: string;
+          severity: "warn" | "critical";
+          source: "auto" | "manual";
+          hits: number;
+          blocked_by: string | null;
+          created_at: string;
+          expires_at: string | null;
+        };
+        Insert: {
+          ip: string;
+          reason: string;
+          severity?: "warn" | "critical";
+          source?: "auto" | "manual";
+          hits?: number;
+          blocked_by?: string | null;
+          created_at?: string;
+          expires_at?: string | null;
+        };
+        Update: {
+          ip?: string;
+          reason?: string;
+          severity?: "warn" | "critical";
+          source?: "auto" | "manual";
+          hits?: number;
+          blocked_by?: string | null;
+          created_at?: string;
+          expires_at?: string | null;
+        };
+        Relationships: [];
+      };
       // Versões do app desktop (ver 0075_app_releases).
       app_releases: {
         Row: {

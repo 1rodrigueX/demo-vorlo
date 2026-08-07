@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { verifyCronSecret } from "@/lib/security/cronAuth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { deleteObject, listObjects, putObject } from "@/lib/storage";
 
@@ -33,8 +34,7 @@ const TABLES = [
  * (segredo compartilhado, chamado pelo crontab da VPS), 1x/dia.
  */
 export async function POST(request: Request) {
-  const cronSecret = request.headers.get("x-cron-secret");
-  if (!process.env.CRON_SECRET || cronSecret !== process.env.CRON_SECRET) {
+  if (!verifyCronSecret(request, "backup")) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 

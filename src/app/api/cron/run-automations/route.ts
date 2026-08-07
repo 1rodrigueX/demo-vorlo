@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { verifyCronSecret } from "@/lib/security/cronAuth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendWhatsAppMessage } from "@/lib/whatsapp/send";
 import { recordOutboundMessage } from "@/lib/whatsapp/recordOutboundMessage";
@@ -108,8 +109,7 @@ async function handleDealWonMessage(admin: Admin, tenantId: string, payload: Dea
  * de paralelismo ainda.
  */
 export async function POST(request: Request) {
-  const cronSecret = request.headers.get("x-cron-secret");
-  if (!process.env.CRON_SECRET || cronSecret !== process.env.CRON_SECRET) {
+  if (!verifyCronSecret(request, "run-automations")) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { verifyCronSecret } from "@/lib/security/cronAuth";
 import { Preference } from "mercadopago";
 import { getMercadoPagoConfig } from "@/lib/mercadopago/client";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -15,8 +16,7 @@ const GRACE_PERIOD_DAYS = 5;
  * usuário nesse fluxo.
  */
 export async function POST(request: Request) {
-  const cronSecret = request.headers.get("x-cron-secret");
-  if (!process.env.CRON_SECRET || cronSecret !== process.env.CRON_SECRET) {
+  if (!verifyCronSecret(request, "billing-cycle")) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 

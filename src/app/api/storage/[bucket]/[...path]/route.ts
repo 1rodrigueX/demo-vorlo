@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getObject, isStorageBucket, verifySignedUrl } from "@/lib/storage/driver";
+import { logSecurityEvent, getClientIp, getUserAgent } from "@/lib/security/events";
 
 /**
  * Serve um arquivo do disco a partir de uma URL assinada — o equivalente ao
@@ -29,7 +30,16 @@ export async function GET(
 
   if (!verifySignedUrl(bucket, objectPath, searchParams.get("exp"), searchParams.get("sig"))) {
     // Mesma resposta pra assinatura errada e link vencido: não interessa
-    // ajudar quem está tentando adivinhar.
+    // ajudar quem está tentando adivinhar. Registra só quando veio uma
+    // assinatura (tentativa de forjar), não quando faltou (link velho comum).
+    if (searchParams.get("sig")) {
+      void logSecurityEvent({
+        type: "signed_url_invalid",
+        ip: getClientIp(request),
+        userAgent: getUserAgent(request),
+        detail: { bucket, path: objectPath },
+      });
+    }
     return NextResponse.json({ error: "Link inválido ou expirado" }, { status: 403 });
   }
 
