@@ -1,4 +1,4 @@
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { NavLink, Outlet } from "react-router-dom";
 import {
   LayoutDashboard,
   KanbanSquare,
@@ -7,7 +7,6 @@ import {
   MessageCircle,
   Mail,
   Workflow,
-  Grid2x2,
   LogOut,
   type LucideIcon,
 } from "lucide-react";
@@ -26,7 +25,6 @@ const NAV: { to: string; label: string; icon: LucideIcon }[] = [
 ];
 
 export function AppShell() {
-  const navigate = useNavigate();
   const { signOut } = useAuth();
 
   return (
@@ -55,16 +53,6 @@ export function AppShell() {
             </NavLink>
           ))}
         </nav>
-
-        <div className="border-t border-carbon-800 p-3">
-          <button
-            onClick={() => navigate("/")}
-            className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-grey transition-colors hover:bg-carbon-800 hover:text-white-soft"
-          >
-            <Grid2x2 size={18} strokeWidth={1.9} />
-            Meus acessos
-          </button>
-        </div>
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">

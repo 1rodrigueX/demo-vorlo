@@ -50,20 +50,26 @@ body {
   scrollbar-color: var(--color-carbon-600) transparent;
 }
 
-/* Modo Lite — tira o que pesa pra renderizar (blur, sombras, filtros, anim). */
+/* Modo Lite — tira o que pesa pra renderizar (blur, sombras, filtros, anim,
+   compositing por GPU). Feito pra máquina fraca continuar fluida. */
 :root[data-lite="1"] * {
   box-shadow: none !important;
   filter: none !important;
   text-shadow: none !important;
   --tw-backdrop-blur: initial;
   backdrop-filter: none !important;
+  /* will-change força camada de composição na GPU; sem ele, menos memória de vídeo. */
+  will-change: auto !important;
 }
 :root[data-lite="1"] *,
 :root[data-lite="1"] *::before,
 :root[data-lite="1"] *::after {
   animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
   transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
 }
+/* Gradientes/brilhos decorativos viram cor chapada (bem mais barato de pintar). */
 :root[data-lite="1"] .brand-aura {
   background: var(--color-carbon-900) !important;
 }
