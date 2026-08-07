@@ -25,6 +25,10 @@ jobs:
               sudo apt-get update -y && sudo apt-get install -y ffmpeg || echo "aviso: não foi possível instalar o ffmpeg automaticamente"
             fi
             cd /opt/crm
+            # Auth.js precisa de um segredo pra assinar a sessão (JWT). Gera uma
+            # única vez e MANTÉM (o -q evita regenerar e invalidar as sessões de
+            # todo mundo a cada deploy). .env.local é untracked, sobrevive ao reset.
+            grep -q '^AUTH_SECRET=' .env.local 2>/dev/null || echo "AUTH_SECRET=$(openssl rand -base64 32)" >> .env.local
             git fetch origin main
             git reset --hard origin/main
             npm ci
