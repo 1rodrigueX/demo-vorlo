@@ -4,10 +4,11 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireTenantId } from "@/lib/auth/current-user";
+import { deleteObject, putObject } from "@/lib/storage";
 
 export type ActionState = { error?: string } | null;
 
-const ATTACHMENTS_BUCKET = "contact-attachments";
+const ATTACHMENTS_BUCKET = "contact-attachments" as const;
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
 export async function uploadContactAttachment(
@@ -43,9 +44,12 @@ export async function uploadContactAttachment(
   const admin = createAdminClient();
   const storagePath = `${tenantId}/${contactId}/${crypto.randomUUID()}-${file.name}`;
 
-  const { error: uploadError } = await admin.storage
-    .from(ATTACHMENTS_BUCKET)
-    .upload(storagePath, file, { contentType: file.type });
+  const { error: uploadError } = await putObject(
+    ATTACHMENTS_BUCKET,
+    storagePath,
+    Buffer.from(await file.arrayBuffer()),
+    file.type,
+  );
 
   if (uploadError) {
     console.error("uploadContactAttachment (storage) failed:", uploadError);
@@ -63,7 +67,7 @@ export async function uploadContactAttachment(
 
   if (insertError) {
     console.error("uploadContactAttachment (insert) failed:", insertError);
-    await admin.storage.from(ATTACHMENTS_BUCKET).remove([storagePath]);
+    await deleteObject(ATTACHMENTS_BUCKET, storagePath);
     return { error: "Não foi possível salvar o anexo" };
   }
 
@@ -88,7 +92,7 @@ export async function deleteContactAttachment(attachmentId: string) {
   if (!attachment) return;
 
   const admin = createAdminClient();
-  await admin.storage.from(ATTACHMENTS_BUCKET).remove([attachment.storage_path]);
+  await deleteObject(ATTACHMENTS_BUCKET, attachment.storage_path);
   await admin.from("contact_attachments").delete().eq("id", attachmentId);
 
   revalidatePath(`/[tenantSlug]/contacts/${attachment.contact_id}`, "page");

@@ -1,7 +1,13 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { deleteObject, listObjects, putObject } from "@/lib/storage";
 
-const BACKUP_BUCKET = "backups";
+// ⚠️ Com STORAGE_DRIVER=local o backup passa a viver no MESMO disco do
+// servidor. Perder a máquina passa a significar perder banco e backup juntos —
+// que é justamente o cenário que backup existe pra cobrir. Antes de virar a
+// chave, aponte este bucket pra fora (S3/Backblaze) ou copie os arquivos pra
+// outro lugar por cron.
+const BACKUP_BUCKET = "backups" as const;
 const RETENTION_COUNT = 14;
 
 // Dados de negócio — não inclui tabelas de plataforma (billing_plans,
@@ -52,22 +58,23 @@ export async function POST(request: Request) {
       }));
 
   const fileName = `backup-${new Date().toISOString().replace(/[:.]/g, "-")}.json`;
-  const { error: uploadError } = await admin.storage
-    .from(BACKUP_BUCKET)
-    .upload(fileName, JSON.stringify(dump), { contentType: "application/json" });
+  const { error: uploadError } = await putObject(
+    BACKUP_BUCKET,
+    fileName,
+    Buffer.from(JSON.stringify(dump)),
+    "application/json",
+  );
 
   if (uploadError) {
     console.error("cron/backup: upload falhou", uploadError);
-    return NextResponse.json({ error: uploadError.message }, { status: 500 });
+    return NextResponse.json({ error: uploadError }, { status: 500 });
   }
 
   // Poda os mais antigos, mantendo só os últimos RETENTION_COUNT.
-  const { data: existing } = await admin.storage.from(BACKUP_BUCKET).list("", {
-    sortBy: { column: "name", order: "desc" },
-  });
-  const stale = (existing ?? []).slice(RETENTION_COUNT).map((f) => f.name);
-  if (stale.length) {
-    await admin.storage.from(BACKUP_BUCKET).remove(stale);
+  const existing = await listObjects(BACKUP_BUCKET);
+  const stale = existing.slice(RETENTION_COUNT).map((f) => f.name);
+  for (const name of stale) {
+    await deleteObject(BACKUP_BUCKET, name);
   }
 
   return NextResponse.json({ ok: true, file: fileName, pruned: stale.length });
