@@ -1,0 +1,25 @@
+name: Diag (logs)
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  diag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ler logs do PM2
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            cd /opt/crm
+            echo "=== pm2 describe ==="
+            pm2 describe crm 2>&1 | grep -iE "script path|script args|exec cwd|exec mode|node.js version|status|restarts" || true
+            echo "=== AUTH_SECRET len ==="
+            awk -F= '/^AUTH_SECRET=/{print length($2)}' .env.local
+            echo "=== DIRECT_URL presente? ==="
+            grep -cE '^DIRECT_URL=' .env.local
+            echo "=== ERROR log (60) ==="
+            pm2 logs crm --err --lines 60 --nostream 2>&1 | tail -65 || true
