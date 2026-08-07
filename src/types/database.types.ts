@@ -721,6 +721,64 @@ export interface Database {
           },
         ];
       };
+      // Comunicados de atualização da plataforma (ver 0073_platform_updates).
+      platform_updates: {
+        Row: {
+          id: string;
+          title: string;
+          version: string | null;
+          body: string;
+          cta_label: string | null;
+          cta_url: string | null;
+          status: "draft" | "sending" | "sent" | "failed";
+          recipients_total: number;
+          recipients_sent: number;
+          recipients_failed: number;
+          error: string | null;
+          created_by: string | null;
+          created_at: string;
+          sent_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          title: string;
+          version?: string | null;
+          body: string;
+          cta_label?: string | null;
+          cta_url?: string | null;
+          status?: "draft" | "sending" | "sent" | "failed";
+          recipients_total?: number;
+          recipients_sent?: number;
+          recipients_failed?: number;
+          error?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+          sent_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          title?: string;
+          version?: string | null;
+          body?: string;
+          cta_label?: string | null;
+          cta_url?: string | null;
+          status?: "draft" | "sending" | "sent" | "failed";
+          recipients_total?: number;
+          recipients_sent?: number;
+          recipients_failed?: number;
+          error?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+          sent_at?: string | null;
+        };
+        Relationships: [];
+      };
+      platform_email_optouts: {
+        Row: { email: string; reason: string | null; created_at: string };
+        Insert: { email: string; reason?: string | null; created_at?: string };
+        Update: { email?: string; reason?: string | null; created_at?: string };
+        Relationships: [];
+      };
       // Execução das trajetórias (ver 0072_flow_runtime). Escrita só pelo
       // cron via service role; o app apenas lê.
       flow_runs: {
