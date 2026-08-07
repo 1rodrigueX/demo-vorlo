@@ -35,6 +35,18 @@ function getPool(): Pool {
   return globalForPool.__pgPool;
 }
 
+/**
+ * Query SQL crua no MESMO pool do shim de dados — usada pela camada de auth
+ * (Auth.js), que fala direto com as tabelas app_* sem passar pelo query builder.
+ */
+export async function rawQuery<T = Record<string, unknown>>(
+  text: string,
+  params: unknown[] = [],
+): Promise<T[]> {
+  const result = await getPool().query(text, params);
+  return result.rows as T[];
+}
+
 export type QueryResult<T> = { data: T | null; error: PgError | null; count?: number | null };
 export type PgError = { message: string; code?: string; details?: string };
 

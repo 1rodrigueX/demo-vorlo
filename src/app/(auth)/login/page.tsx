@@ -16,8 +16,12 @@ function LoginForm() {
   // Destino pós-login (ex.: voltar pro site institucional). Só caminho interno.
   const nextRaw = searchParams.get("next") ?? "";
   const next = nextRaw.startsWith("/") && !nextRaw.startsWith("//") ? nextRaw : "";
+  const confirmed = searchParams.get("confirmed") === "1";
+  const wasReset = searchParams.get("reset") === "1";
+  const confirmProblem = searchParams.get("confirm"); // 'expired' | 'invalid'
 
   const [state, formAction, isPending] = useActionState<AuthActionState, FormData>(login, null);
+  const mfaRequired = state?.mfaRequired === true;
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
@@ -29,6 +33,22 @@ function LoginForm() {
         </Link>
         <h1 className="mb-1 text-xl font-semibold text-gray-900">Entrar</h1>
         <p className="mb-6 text-sm text-gray-500">Acesse sua conta Synexa.</p>
+
+        {confirmed && (
+          <p className="mb-4 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+            E-mail confirmado! Agora é só entrar.
+          </p>
+        )}
+        {wasReset && (
+          <p className="mb-4 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+            Senha redefinida! Entre com a nova senha.
+          </p>
+        )}
+        {confirmProblem && (
+          <p className="mb-4 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-700">
+            O link de confirmação {confirmProblem === "expired" ? "expirou" : "é inválido"}. Faça login para receber um novo.
+          </p>
+        )}
 
         <GoogleAuthButton next={next || "/dashboard"} />
 
@@ -42,21 +62,43 @@ function LoginForm() {
           <input type="hidden" name="next" value={next} />
           <div>
             <Label htmlFor="email">Email</Label>
-            <Input id="email" name="email" type="email" required autoComplete="email" />
+            <Input id="email" name="email" type="email" required autoComplete="email" readOnly={mfaRequired} />
           </div>
           <div>
             <Label htmlFor="password">Senha</Label>
             <PasswordInput id="password" name="password" required autoComplete="current-password" />
           </div>
 
+          {mfaRequired && (
+            <div>
+              <Label htmlFor="totp">Código de verificação</Label>
+              <Input
+                id="totp"
+                name="totp"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                placeholder="000000"
+                autoFocus
+                required
+              />
+              <p className="mt-1 text-xs text-gray-500">Digite o código de 6 dígitos do seu app autenticador.</p>
+            </div>
+          )}
+
           {state?.error && <p className="text-sm text-red-600">{state.error}</p>}
 
           <Button type="submit" className="w-full" isLoading={isPending}>
-            Entrar
+            {mfaRequired ? "Confirmar e entrar" : "Entrar"}
           </Button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-gray-500">
+        <p className="mt-4 text-center text-sm">
+          <Link href="/reset-password" className="text-gray-500 hover:text-gray-700 hover:underline">
+            Esqueci minha senha
+          </Link>
+        </p>
+
+        <p className="mt-4 text-center text-sm text-gray-500">
           Ainda não tem conta?{" "}
           <Link href="/signup" className="font-medium text-indigo-600 hover:underline">
             Criar conta grátis

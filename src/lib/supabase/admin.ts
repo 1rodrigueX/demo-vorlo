@@ -1,20 +1,18 @@
 import "server-only";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { createQueryClient } from "@/lib/db/queryClient";
+import { createAuthShim } from "@/lib/auth/shim";
 
 /**
  * Cliente de service role. Durante a migração pro Prisma, é um HÍBRIDO:
  *
- *  - `.from()` e `.rpc()` → shim Prisma/pg (ver queryClient). Toda consulta de
- *    dado já roda no banco próprio, sem passar pelo Supabase.
- *  - `.storage` e `.auth` → delegam a um cliente Supabase real, criado sob
- *    demanda. São as duas partes que ainda não migraram (storage tem sua
- *    própria camada com chave de virada; auth vira Auth.js). Ficam aqui pra
- *    não quebrar os poucos call sites que criam/apagam usuário ou leem arquivo
- *    pelo driver antigo.
+ *  - `.from()`, `.rpc()` → shim Prisma/pg (ver queryClient).
+ *  - `.auth` → shim de auth sobre Auth.js + tabelas app_* (ver auth/shim). O
+ *    `admin.*` (criar/atualizar/apagar/listar usuário) roda direto no pg.
+ *  - `.storage` → ainda delega a um cliente Supabase real criado sob demanda; é
+ *    a última parte não migrada (message-attachments ainda no bucket Supabase).
  *
- * Quando storage e auth terminarem de migrar, este arquivo perde a metade
- * Supabase e vira só o shim.
+ * Quando o storage de anexos migrar, some a metade Supabase daqui.
  */
 function createSupabaseAdmin() {
   return createSupabaseClient(
@@ -32,11 +30,9 @@ export function createAdminClient() {
   return {
     from: query.from.bind(query),
     rpc: query.rpc.bind(query),
+    auth: createAuthShim(),
     get storage() {
       return getSupabase().storage;
-    },
-    get auth() {
-      return getSupabase().auth;
     },
   };
 }

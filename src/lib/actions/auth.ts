@@ -1,16 +1,39 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { AuthError } from "next-auth";
+import { authenticator } from "otplib";
+import { signIn, signOut, auth } from "@/auth";
 import { resolveHomeRoute } from "@/lib/auth/current-user";
+import {
+  getUserByEmail,
+  verifyPassword,
+  getVerifiedTotpFactor,
+  createUser,
+  updateUser,
+  consumeAuthToken,
+} from "@/lib/auth/db";
+import { sendEmailVerification, sendPasswordReset } from "@/lib/auth/emails";
 import { loginSchema, updatePasswordSchema, signupSchema } from "@/lib/validation/auth";
 
 export type AuthActionState = {
   error?: string;
   message?: string;
+  /** Login: usuário tem MFA — o formulário revela o campo do código TOTP. */
+  mfaRequired?: boolean;
 } | null;
 
-/** Cadastro público (Google fica no botão à parte, via signInWithOAuth no client). Sem tenant_id no metadata — o trigger não cria profile, o usuário só vira dono de um CRM depois de escolher um plano em /choose-plan. */
+authenticator.options = { window: 1 };
+
+function safeNext(next: FormDataEntryValue | null): string | null {
+  return typeof next === "string" && next.startsWith("/") && !next.startsWith("//") ? next : null;
+}
+
+/**
+ * Cadastro público. Cria o usuário NÃO confirmado e manda o e-mail de
+ * confirmação (nosso, via Resend). O usuário só entra depois de confirmar — daí
+ * cai no /choose-plan (o plano viaja no link de confirmação).
+ */
 export async function signup(_prevState: AuthActionState, formData: FormData): Promise<AuthActionState> {
   const parsed = signupSchema.safeParse({
     fullName: formData.get("fullName"),
@@ -18,95 +41,121 @@ export async function signup(_prevState: AuthActionState, formData: FormData): P
     password: formData.get("password"),
     confirmPassword: formData.get("confirmPassword"),
   });
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
 
-  if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
+  const email = parsed.data.email.toLowerCase();
+  if (await getUserByEmail(email)) {
+    return { error: "Esse e-mail já tem uma conta. Faça login." };
   }
 
-  const supabase = await createClient();
-  const { data, error } = await supabase.auth.signUp({
-    email: parsed.data.email,
-    password: parsed.data.password,
-    options: { data: { full_name: parsed.data.fullName } },
-  });
-
-  if (error) {
-    if (error.code === "user_already_exists") {
-      return { error: "Esse e-mail já tem uma conta. Faça login." };
-    }
+  let user;
+  try {
+    user = await createUser({ email, password: parsed.data.password, fullName: parsed.data.fullName, emailVerified: false });
+  } catch {
     return { error: "Não foi possível criar sua conta. Tente novamente." };
   }
 
-  // Com confirmação de email ativada no Supabase, signUp não retorna sessão —
-  // tentar logar agora daria "Email ou senha incorretos" mesmo com a senha certa.
-  if (!data.session) {
-    return { message: "Conta criada! Enviamos um link de confirmação para o seu email — confirme antes de entrar." };
+  const plan = formData.get("plan");
+  const next = typeof plan === "string" && plan ? `/choose-plan?plan=${encodeURIComponent(plan)}` : "/choose-plan";
+  const { error } = await sendEmailVerification({ userId: user.id, email, fullName: user.full_name }, next);
+  if (error) {
+    return { message: "Conta criada! Não consegui enviar o e-mail de confirmação agora — use 'esqueci minha senha' para receber o acesso." };
   }
 
-  const plan = formData.get("plan");
-  redirect(plan ? `/choose-plan?plan=${plan}` : "/choose-plan");
+  return { message: "Conta criada! Enviamos um link de confirmação para o seu e-mail — confirme antes de entrar." };
 }
 
+/**
+ * Login por e-mail/senha (com MFA de passo único). Pré-checa aqui pra dar a UX
+ * certa (revelar o campo do código), e o Auth.js reconfirma no authorize.
+ */
 export async function login(_prevState: AuthActionState, formData: FormData): Promise<AuthActionState> {
   const parsed = loginSchema.safeParse({
     email: formData.get("email"),
     password: formData.get("password"),
   });
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
 
-  if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
+  const email = parsed.data.email.toLowerCase();
+  const totp = String(formData.get("totp") ?? "").trim();
+
+  const user = await getUserByEmail(email);
+  const passwordOk = user ? await verifyPassword(user, parsed.data.password) : false;
+  if (!user || !passwordOk) return { error: "E-mail ou senha incorretos" };
+  if (!user.email_verified_at) {
+    return { error: "Confirme seu e-mail antes de entrar. Verifique sua caixa de entrada (e o spam)." };
   }
 
-  const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword(parsed.data);
-
-  if (error) {
-    if (error.code === "email_not_confirmed") {
-      return { error: "Confirme seu email antes de entrar. Verifique sua caixa de entrada (e o spam)." };
+  const factor = await getVerifiedTotpFactor(user.id);
+  if (factor) {
+    if (!totp) return { mfaRequired: true };
+    if (!authenticator.check(totp.replace(/\D/g, ""), factor.secret)) {
+      return { mfaRequired: true, error: "Código de verificação inválido" };
     }
-    return { error: "Email ou senha incorretos" };
   }
 
-  // Redireciona pro destino informado (ex.: voltar pro site institucional após
-  // logar), desde que seja um caminho interno seguro. Sem `next`, cai no destino
-  // padrão (dashboard/central conforme o que a conta acessa).
-  const next = formData.get("next");
-  if (typeof next === "string" && next.startsWith("/") && !next.startsWith("//")) {
-    redirect(next);
+  try {
+    await signIn("credentials", {
+      email,
+      password: parsed.data.password,
+      totp,
+      redirect: false,
+    });
+  } catch (err) {
+    if (err instanceof AuthError) return { error: "Não foi possível entrar. Tente novamente." };
+    throw err; // erros de redirect do Next precisam propagar
   }
 
-  redirect(await resolveHomeRoute());
+  const next = safeNext(formData.get("next"));
+  redirect(next ?? (await resolveHomeRoute()));
 }
 
-export async function logout() {
-  const supabase = await createClient();
-  await supabase.auth.signOut();
-  redirect("/login");
+/** Inicia o login com Google. O Auth.js processa o OAuth e cai em /auth/callback, que resolve o destino já logado. */
+export async function loginWithGoogle(formData: FormData): Promise<void> {
+  const next = safeNext(formData.get("next"));
+  const redirectTo = next ? `/auth/callback?next=${encodeURIComponent(next)}` : "/auth/callback";
+  await signIn("google", { redirectTo });
 }
 
-/** Usada na primeira senha (link de acesso pós-compra) e em "esqueci minha senha". */
+export async function logout(): Promise<void> {
+  await signOut({ redirectTo: "/login" });
+}
+
+/**
+ * Redefinir senha: por TOKEN (link do e-mail de reset / primeiro acesso) ou,
+ * se o usuário já está logado, troca a própria senha.
+ */
 export async function updatePassword(_prevState: AuthActionState, formData: FormData): Promise<AuthActionState> {
   const parsed = updatePasswordSchema.safeParse({
     password: formData.get("password"),
     confirmPassword: formData.get("confirmPassword"),
   });
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
 
-  if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
+  const token = String(formData.get("token") ?? "").trim();
+  if (token) {
+    const consumed = await consumeAuthToken(token, "password_reset");
+    if (!consumed?.userId) return { error: "Link expirado ou inválido. Peça um novo acesso." };
+    await updateUser(consumed.userId, { password: parsed.data.password, emailVerified: true });
+    redirect("/login?reset=1");
   }
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
-    return { error: "Link expirado ou inválido. Peça um novo acesso." };
-  }
-
-  const { error } = await supabase.auth.updateUser({ password: parsed.data.password });
-  if (error) {
-    return { error: "Não foi possível salvar a senha. Tente novamente." };
-  }
-
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Link expirado ou inválido. Peça um novo acesso." };
+  await updateUser(session.user.id, { password: parsed.data.password });
   redirect(await resolveHomeRoute());
+}
+
+/**
+ * "Esqueci minha senha": manda o link de reset. Responde igual mesmo se o
+ * e-mail não existir (não vaza quem tem conta).
+ */
+export async function requestPasswordReset(_prevState: AuthActionState, formData: FormData): Promise<AuthActionState> {
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  if (!email.includes("@")) return { error: "Informe um e-mail válido" };
+
+  const user = await getUserByEmail(email);
+  if (user) await sendPasswordReset({ userId: user.id, email });
+
+  return { message: "Se existir uma conta com esse e-mail, enviamos o link para redefinir a senha." };
 }

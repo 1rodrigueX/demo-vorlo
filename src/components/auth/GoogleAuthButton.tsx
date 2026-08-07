@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { useFormStatus } from "react-dom";
+import { loginWithGoogle } from "@/lib/actions/auth";
 import { Button } from "@/components/ui/Button";
 
 function GoogleIcon() {
@@ -27,41 +27,25 @@ function GoogleIcon() {
   );
 }
 
-export function GoogleAuthButton({ next = "/choose-plan" }: { next?: string }) {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  async function handleClick() {
-    setIsLoading(true);
-    setError(null);
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}` },
-    });
-    if (error) {
-      const message =
-        error.message === "Unsupported provider: provider is not enabled"
-          ? "O login com Google não está habilitado no Supabase. Ative o provedor Google nas configurações do Auth do seu projeto Supabase."
-          : error.message ?? "Não foi possível conectar com o Google. Tente novamente.";
-      setError(message);
-      setIsLoading(false);
-    }
-  }
-
+function GoogleSubmit() {
+  const { pending } = useFormStatus();
   return (
-    <div>
-      <Button
-        type="button"
-        variant="secondary"
-        className="w-full"
-        isLoading={isLoading}
-        onClick={handleClick}
-      >
-        {!isLoading && <GoogleIcon />}
-        Continuar com Google
-      </Button>
-      {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
-    </div>
+    <Button type="submit" variant="secondary" className="w-full" isLoading={pending}>
+      {!pending && <GoogleIcon />}
+      Continuar com Google
+    </Button>
+  );
+}
+
+/**
+ * Login com Google via Auth.js. Um form que chama a server action loginWithGoogle
+ * (que dispara o signIn do provider) — sem client SDK do Supabase.
+ */
+export function GoogleAuthButton({ next }: { next?: string }) {
+  return (
+    <form action={loginWithGoogle}>
+      {next && <input type="hidden" name="next" value={next} />}
+      <GoogleSubmit />
+    </form>
   );
 }
