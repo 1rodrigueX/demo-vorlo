@@ -11,10 +11,10 @@ export default async function ContactsPage({
   searchParams,
 }: {
   params: Promise<{ tenantSlug: string }>;
-  searchParams: Promise<{ q?: string; tag?: string }>;
+  searchParams: Promise<{ q?: string; tag?: string; vendedor?: string }>;
 }) {
   const { tenantSlug } = await params;
-  const { q, tag: tagId } = await searchParams;
+  const { q, tag: tagId, vendedor } = await searchParams;
   const supabase = await createClient();
 
   const [{ data: companies }, { data: tags }, currentUser] = await Promise.all([
@@ -22,6 +22,15 @@ export default async function ContactsPage({
     supabase.from("tags").select("*").order("name"),
     getCurrentUser(),
   ]);
+
+  // Vendedor comum já só enxerga os próprios contatos via RLS
+  // (contacts_select_own_or_admin) — o filtro só faz sentido pra quem vê a
+  // base inteira. Mesmo critério do filtro do Pipeline.
+  const profile = currentUser?.profile ?? null;
+  const isAdmin = profile?.role === "owner" || profile?.role === "manager";
+  const { data: sellers } = isAdmin
+    ? await supabase.from("profiles").select("id, full_name").eq("tenant_id", profile.tenant_id).order("full_name")
+    : { data: [] as { id: string; full_name: string | null }[] };
 
   let contactIdsWithTag: string[] | null = null;
   if (tagId) {
@@ -35,15 +44,19 @@ export default async function ContactsPage({
     .order("created_at", { ascending: false });
   if (q) contactsQuery = contactsQuery.ilike("name", `%${q}%`);
   if (contactIdsWithTag) contactsQuery = contactsQuery.in("id", contactIdsWithTag.length ? contactIdsWithTag : ["-"]);
+  if (isAdmin && vendedor) contactsQuery = contactsQuery.eq("created_by", vendedor);
 
   const { data: contacts } = await contactsQuery;
 
   const mySellerTagId = currentUser?.profile?.seller_tag_id ?? null;
   const activeTag = (tags ?? []).find((t) => t.id === tagId);
+  const activeSeller = (sellers ?? []).find((s) => s.id === vendedor);
 
+  // "limpar" tira os filtros mas preserva a busca por nome, que é o que o
+  // usuário digitou e não quer perder.
   const filterQuery = new URLSearchParams();
   if (q) filterQuery.set("q", q);
-  const clearTagHref = `/${tenantSlug}/contacts${filterQuery.toString() ? `?${filterQuery.toString()}` : ""}`;
+  const clearFiltersHref = `/${tenantSlug}/contacts${filterQuery.toString() ? `?${filterQuery.toString()}` : ""}`;
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -76,6 +89,20 @@ export default async function ContactsPage({
             </option>
           ))}
         </select>
+        {isAdmin && (sellers ?? []).length > 0 && (
+          <select
+            name="vendedor"
+            defaultValue={vendedor ?? ""}
+            className="rounded-md border border-gray-300 bg-panel px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          >
+            <option value="">Todos os vendedores</option>
+            {(sellers ?? []).map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.full_name ?? "Sem nome"}
+              </option>
+            ))}
+          </select>
+        )}
         <button
           type="submit"
           className="rounded-md border border-gray-300 bg-panel px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
@@ -93,12 +120,21 @@ export default async function ContactsPage({
         )}
       </form>
 
-      {activeTag && (
+      {(activeTag || activeSeller) && (
         <div className="mb-4 flex items-center gap-2 text-sm text-gray-600">
           <span>
-            Filtrando por: <span className="font-medium" style={{ color: activeTag.color }}>{activeTag.name}</span>
+            Filtrando por:{" "}
+            {activeTag && (
+              <span className="font-medium" style={{ color: activeTag.color }}>
+                {activeTag.name}
+              </span>
+            )}
+            {activeTag && activeSeller && " · "}
+            {activeSeller && (
+              <span className="font-medium text-gray-900">{activeSeller.full_name ?? "Sem nome"}</span>
+            )}
           </span>
-          <Link href={clearTagHref} className="flex items-center gap-0.5 text-gray-400 hover:text-gray-600">
+          <Link href={clearFiltersHref} className="flex items-center gap-0.5 text-gray-400 hover:text-gray-600">
             <X size={13} />
             limpar
           </Link>
