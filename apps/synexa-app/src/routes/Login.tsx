@@ -31,7 +31,7 @@ export function Login() {
             <SynexaMark size={46} />
           </span>
           <h1 className="mt-6 text-2xl font-bold tracking-tight text-white-soft">Entrar na Synexa</h1>
-          <p className="mt-1.5 text-sm text-grey">Acesse sua conta e seus serviços.</p>
+          <p className="mt-1.5 text-sm text-grey">Acesse seu CRM.</p>
         </div>
 
         <form onSubmit={onSubmit} className="flex flex-col gap-3">
