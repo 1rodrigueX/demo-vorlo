@@ -8,6 +8,7 @@ import { NewEstoqueTenantButton } from "@/components/dev/NewEstoqueTenantButton"
 import { NewProducaoTenantButton } from "@/components/dev/NewProducaoTenantButton";
 import { TenantStatusToggle } from "@/components/dev/TenantStatusToggle";
 import { AccessTenantButton } from "@/components/dev/AccessTenantButton";
+import { DeleteTenantButton } from "@/components/dev/DeleteTenantButton";
 
 export default async function DevTenantsPage() {
   const admin = createAdminClient();
@@ -123,6 +124,7 @@ export default async function DevTenantsPage() {
                       <TenantStatusToggle tenantId={tenant.id} status={tenant.status} />
                     </>
                   )}
+                  <DeleteTenantButton tenantId={tenant.id} tenantName={tenant.name} />
                 </div>
               </div>
             );

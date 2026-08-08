@@ -47,6 +47,34 @@ export async function rawQuery<T = Record<string, unknown>>(
   return result.rows as T[];
 }
 
+/**
+ * Roda uma sequência de queries numa transação (BEGIN/COMMIT, ROLLBACK no erro),
+ * num único cliente do pool. Pra operações destrutivas em cascata (ex.: excluir
+ * um CRM inteiro) que precisam ser tudo-ou-nada.
+ */
+export async function withTransaction<T>(
+  fn: (q: <R = Record<string, unknown>>(text: string, params?: unknown[]) => Promise<R[]>) => Promise<T>,
+): Promise<T> {
+  const client = await getPool().connect();
+  try {
+    await client.query("BEGIN");
+    const q = async <R = Record<string, unknown>>(text: string, params: unknown[] = []): Promise<R[]> =>
+      (await client.query(text, params)).rows as R[];
+    const result = await fn(q);
+    await client.query("COMMIT");
+    return result;
+  } catch (err) {
+    try {
+      await client.query("ROLLBACK");
+    } catch {
+      /* conexão já pode ter caído */
+    }
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
 export type QueryResult<T> = { data: T | null; error: PgError | null; count?: number | null };
 export type PgError = { message: string; code?: string; details?: string };
 
