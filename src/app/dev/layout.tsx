@@ -18,7 +18,7 @@ export default async function DevLayout({ children }: { children: React.ReactNod
   if (!isDev) redirect(homeRoute);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-200">
       <header className="flex h-16 items-center justify-between border-b border-gray-200 bg-panel px-6">
         <div className="flex items-center gap-2.5">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-900 text-sm font-bold text-white">
