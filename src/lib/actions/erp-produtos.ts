@@ -23,6 +23,19 @@ async function revalidateErpCadastros(supabase: Awaited<ReturnType<typeof create
   if (slug) revalidatePath(`/${slug}/erp/cadastros/produtos`);
 }
 
+/** Confere que a categoria informada é do próprio tenant antes de linkar — sem isso um POST
+ * forjado no Server Action (RLS está bypassada, ver src/lib/supabase/server.ts) conseguiria
+ * apontar category_id pra categoria de outro tenant. */
+async function validateOwnCategory(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  tenantId: string,
+  categoryId: string | null,
+): Promise<string | null> {
+  if (!categoryId) return null;
+  const { data } = await supabase.from("erp_categorias").select("id").eq("id", categoryId).eq("tenant_id", tenantId).maybeSingle();
+  return data ? categoryId : null;
+}
+
 export async function getErpProdutos(): Promise<(ErpProduto & { category: ErpCategoria | null })[]> {
   const { supabase, tenantId } = await currentTenant();
   if (!tenantId) return [];
@@ -54,11 +67,13 @@ export async function createErpProduto(_prevState: ActionState, formData: FormDa
   const { data: hasErp } = await supabase.rpc("current_tenant_has_erp", { p_user_id: user.id });
   if (!hasErp) return { error: "ERP não está ativo pra este tenant" };
 
+  const categoryId = await validateOwnCategory(supabase, tenantId, parsed.data.categoryId || null);
+
   const { error } = await supabase.from("erp_produtos").insert({
     tenant_id: tenantId,
     name: parsed.data.name,
     sku: parsed.data.sku || null,
-    category_id: parsed.data.categoryId || null,
+    category_id: categoryId,
     unit: parsed.data.unit || "un",
     cost_price_cents: Math.round((parsed.data.costPriceReais ?? 0) * 100),
     sale_price_cents: Math.round((parsed.data.salePriceReais ?? 0) * 100),
@@ -87,15 +102,21 @@ export async function updateErpProduto(id: string, _prevState: ActionState, form
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
 
-  const { supabase, tenantId } = await currentTenant();
+  const { supabase, user, tenantId } = await currentTenant();
+  if (!user) return { error: "Sessão expirada, faça login novamente" };
   if (!tenantId) return { error: "Tenant não encontrado" };
+
+  const { data: hasErp } = await supabase.rpc("current_tenant_has_erp", { p_user_id: user.id });
+  if (!hasErp) return { error: "ERP não está ativo pra este tenant" };
+
+  const categoryId = await validateOwnCategory(supabase, tenantId, parsed.data.categoryId || null);
 
   const { error } = await supabase
     .from("erp_produtos")
     .update({
       name: parsed.data.name,
       sku: parsed.data.sku || null,
-      category_id: parsed.data.categoryId || null,
+      category_id: categoryId,
       unit: parsed.data.unit || "un",
       cost_price_cents: Math.round((parsed.data.costPriceReais ?? 0) * 100),
       sale_price_cents: Math.round((parsed.data.salePriceReais ?? 0) * 100),
@@ -113,9 +134,17 @@ export async function updateErpProduto(id: string, _prevState: ActionState, form
   return null;
 }
 
-export async function deleteErpProduto(id: string) {
-  const { supabase, tenantId } = await currentTenant();
-  if (!tenantId) return;
-  await supabase.from("erp_produtos").delete().eq("id", id).eq("tenant_id", tenantId);
+export async function deleteErpProduto(id: string): Promise<{ error?: string }> {
+  const { supabase, user, tenantId } = await currentTenant();
+  if (!user) return { error: "Sessão expirada, faça login novamente" };
+  if (!tenantId) return { error: "Tenant não encontrado" };
+
+  const { data: hasErp } = await supabase.rpc("current_tenant_has_erp", { p_user_id: user.id });
+  if (!hasErp) return { error: "ERP não está ativo pra este tenant" };
+
+  const { error } = await supabase.from("erp_produtos").delete().eq("id", id).eq("tenant_id", tenantId);
+  if (error) return { error: `Não foi possível excluir: ${error.message}` };
+
   await revalidateErpCadastros(supabase, tenantId);
+  return {};
 }

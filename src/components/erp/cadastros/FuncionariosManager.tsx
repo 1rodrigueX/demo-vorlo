@@ -50,7 +50,11 @@ export function FuncionariosManager({ tenantSlug, initialFuncionarios }: { tenan
   }
   function handleDelete(row: ErpFuncionario) {
     if (!window.confirm(`Excluir "${row.full_name}"?`)) return;
-    startDelete(() => deleteErpFuncionario(row.id));
+    startDelete(async () => {
+      const result = await deleteErpFuncionario(row.id);
+      if (result.error) toast.error(result.error);
+      else toast.success("Funcionário excluído");
+    });
   }
 
   const columns: DataTableColumn<ErpFuncionario>[] = [

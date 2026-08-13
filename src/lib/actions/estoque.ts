@@ -134,9 +134,10 @@ export async function deleteEstoqueItem(id: string) {
   if (!user) return;
 
   const tenantId = await requireTenantId(supabase, user.id);
-  await supabase.from("estoque_itens").delete().eq("id", id);
+  if (!tenantId) return;
+  await supabase.from("estoque_itens").delete().eq("id", id).eq("tenant_id", tenantId);
 
-  const slug = tenantId ? await getTenantSlug(supabase, tenantId) : null;
+  const slug = await getTenantSlug(supabase, tenantId);
   if (slug) revalidatePath(`/${slug}/estoque`);
 }
 

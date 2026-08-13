@@ -47,7 +47,11 @@ export function CategoriasManager({ tenantSlug, initialCategorias }: { tenantSlu
   }
   function handleDelete(row: ErpCategoria) {
     if (!window.confirm(`Excluir a categoria "${row.name}"?`)) return;
-    startDelete(() => deleteErpCategoria(row.id));
+    startDelete(async () => {
+      const result = await deleteErpCategoria(row.id);
+      if (result.error) toast.error(result.error);
+      else toast.success("Categoria excluída");
+    });
   }
 
   const nameOf = (id: string | null) => initialCategorias.find((c) => c.id === id)?.name ?? null;
