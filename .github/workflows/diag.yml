@@ -1,0 +1,26 @@
+name: Diag (resend/email)
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  diag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checar config de e-mail e logs
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            cd /opt/crm
+            echo "=== RESEND_API_KEY presente? (não mostra o valor) ==="
+            grep -c '^RESEND_API_KEY=' .env.local
+            awk -F= '/^RESEND_API_KEY=/{v=substr($0,index($0,"=")+1); print "len:", length(v), "| prefixo:", substr(v,1,6)}' .env.local
+            echo "=== RESEND_FROM_EMAIL (não é segredo) ==="
+            grep '^RESEND_FROM_EMAIL=' .env.local || echo "(ausente — usa o fallback onboarding@resend.dev)"
+            echo "=== NEXT_PUBLIC_SITE_URL ==="
+            grep '^NEXT_PUBLIC_SITE_URL=' .env.local
+            echo "=== logs recentes mencionando email/resend/auth ==="
+            pm2 logs crm --lines 200 --nostream 2>&1 | grep -iE "resend|email|auth email|sendEmailVerification" | tail -30 || echo "(nenhuma ocorrência nas últimas 200 linhas)"
