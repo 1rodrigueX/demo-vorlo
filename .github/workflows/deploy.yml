@@ -14,12 +14,16 @@ jobs:
         env:
           RUNTIME_DIRECT_URL: ${{ secrets.RUNTIME_DIRECT_URL }}
           RUNTIME_DATABASE_URL: ${{ secrets.RUNTIME_DATABASE_URL }}
+          RUNTIME_AUTH_GOOGLE_ID: ${{ secrets.RUNTIME_AUTH_GOOGLE_ID }}
+          RUNTIME_AUTH_GOOGLE_SECRET: ${{ secrets.RUNTIME_AUTH_GOOGLE_SECRET }}
+          RUNTIME_TURNSTILE_SITE_KEY: ${{ secrets.RUNTIME_TURNSTILE_SITE_KEY }}
+          RUNTIME_TURNSTILE_SECRET_KEY: ${{ secrets.RUNTIME_TURNSTILE_SECRET_KEY }}
         with:
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
-          # Encaminha os secrets do banco pro script remoto.
-          envs: RUNTIME_DIRECT_URL,RUNTIME_DATABASE_URL
+          # Encaminha os secrets pro script remoto.
+          envs: RUNTIME_DIRECT_URL,RUNTIME_DATABASE_URL,RUNTIME_AUTH_GOOGLE_ID,RUNTIME_AUTH_GOOGLE_SECRET,RUNTIME_TURNSTILE_SITE_KEY,RUNTIME_TURNSTILE_SECRET_KEY
           script: |
             set -e
             # Áudio de voz do WhatsApp (convertToOggOpus) depende do ffmpeg do
@@ -45,6 +49,19 @@ jobs:
             # Atrás do nginx, o Auth.js não descobre o host sozinho — fixa a URL.
             grep -q '^AUTH_URL=' .env.local 2>/dev/null || echo "AUTH_URL=https://falaai.cloud" >> .env.local
             grep -q '^AUTH_TRUST_HOST=' .env.local 2>/dev/null || echo "AUTH_TRUST_HOST=true" >> .env.local
+            # Login com Google (opcional) — só liga se os secrets existirem.
+            if [ -n "$RUNTIME_AUTH_GOOGLE_ID" ]; then
+              sed -i '/^AUTH_GOOGLE_ID=/d;/^AUTH_GOOGLE_SECRET=/d;/^NEXT_PUBLIC_GOOGLE_AUTH_ENABLED=/d' .env.local
+              printf 'AUTH_GOOGLE_ID="%s"\n' "$RUNTIME_AUTH_GOOGLE_ID" >> .env.local
+              printf 'AUTH_GOOGLE_SECRET="%s"\n' "$RUNTIME_AUTH_GOOGLE_SECRET" >> .env.local
+              echo 'NEXT_PUBLIC_GOOGLE_AUTH_ENABLED=true' >> .env.local
+            fi
+            # Captcha (Cloudflare Turnstile, opcional) — só liga se os secrets existirem.
+            if [ -n "$RUNTIME_TURNSTILE_SITE_KEY" ]; then
+              sed -i '/^NEXT_PUBLIC_TURNSTILE_SITE_KEY=/d;/^TURNSTILE_SECRET_KEY=/d' .env.local
+              printf 'NEXT_PUBLIC_TURNSTILE_SITE_KEY="%s"\n' "$RUNTIME_TURNSTILE_SITE_KEY" >> .env.local
+              printf 'TURNSTILE_SECRET_KEY="%s"\n' "$RUNTIME_TURNSTILE_SECRET_KEY" >> .env.local
+            fi
             git fetch origin main
             git reset --hard origin/main
             npm ci

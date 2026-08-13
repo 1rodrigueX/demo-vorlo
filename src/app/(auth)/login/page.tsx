@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/Input";
 import { PasswordInput } from "@/components/ui/PasswordInput";
 import { Label } from "@/components/ui/Label";
 import { GoogleAuthButton } from "@/components/auth/GoogleAuthButton";
+import { TurnstileWidget } from "@/components/auth/TurnstileWidget";
 
 function LoginForm() {
   const searchParams = useSearchParams();
@@ -88,6 +89,8 @@ function LoginForm() {
               <p className="mt-1 text-xs text-gray-500">Digite o código de 6 dígitos do seu app autenticador.</p>
             </div>
           )}
+
+          <TurnstileWidget key={mfaRequired ? "mfa" : "init"} />
 
           {state?.error && <p className="text-sm text-red-600">{state.error}</p>}
 

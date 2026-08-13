@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/Input";
 import { PasswordInput } from "@/components/ui/PasswordInput";
 import { Label } from "@/components/ui/Label";
 import { GoogleAuthButton } from "@/components/auth/GoogleAuthButton";
+import { TurnstileWidget } from "@/components/auth/TurnstileWidget";
 
 export default function SignupPage() {
   return (
@@ -65,6 +66,8 @@ function SignupForm() {
                 <Label htmlFor="confirmPassword">Confirmar senha</Label>
                 <PasswordInput id="confirmPassword" name="confirmPassword" required autoComplete="new-password" />
               </div>
+
+              <TurnstileWidget />
 
               {state?.error && <p className="text-sm text-red-600">{state.error}</p>}
 

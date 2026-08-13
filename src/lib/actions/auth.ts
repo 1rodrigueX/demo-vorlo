@@ -14,7 +14,11 @@ import {
   consumeAuthToken,
 } from "@/lib/auth/db";
 import { sendEmailVerification, sendPasswordReset } from "@/lib/auth/emails";
+import { verifyTurnstile } from "@/lib/auth/turnstile";
 import { loginSchema, updatePasswordSchema, signupSchema } from "@/lib/validation/auth";
+
+const CAPTCHA_FIELD = "cf-turnstile-response";
+const CAPTCHA_ERROR = "Verificação de segurança falhou. Recarregue a página e tente de novo.";
 
 export type AuthActionState = {
   error?: string;
@@ -42,6 +46,10 @@ export async function signup(_prevState: AuthActionState, formData: FormData): P
     confirmPassword: formData.get("confirmPassword"),
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
+
+  if (!(await verifyTurnstile(formData.get(CAPTCHA_FIELD) as string | null))) {
+    return { error: CAPTCHA_ERROR };
+  }
 
   const email = parsed.data.email.toLowerCase();
   if (await getUserByEmail(email)) {
@@ -75,6 +83,10 @@ export async function login(_prevState: AuthActionState, formData: FormData): Pr
     password: formData.get("password"),
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
+
+  if (!(await verifyTurnstile(formData.get(CAPTCHA_FIELD) as string | null))) {
+    return { error: CAPTCHA_ERROR };
+  }
 
   const email = parsed.data.email.toLowerCase();
   const totp = String(formData.get("totp") ?? "").trim();
