@@ -1,0 +1,25 @@
+name: Diag (500 error)
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  diag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ler logs e status do app
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            cd /opt/crm
+            echo "=== pm2 status ==="
+            pm2 list
+            echo "=== pm2 describe crm ==="
+            pm2 describe crm 2>&1 | grep -iE "status|restarts|uptime"
+            echo "=== últimas 80 linhas de erro ==="
+            pm2 logs crm --err --lines 80 --nostream 2>&1 | tail -85
+            echo "=== últimas 40 linhas gerais (pode ter stack trace) ==="
+            pm2 logs crm --lines 40 --nostream 2>&1 | tail -45
