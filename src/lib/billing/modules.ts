@@ -4,6 +4,7 @@ export const MODULE_CATALOG = {
   financas: { key: "financas", label: "Finanças", priceCents: 7000, accessPath: "/financeiro" },
   estoque: { key: "estoque", label: "Estoque", priceCents: 5000, accessPath: "/estoque" },
   producao: { key: "producao", label: "Produção", priceCents: 5000, accessPath: "/producao" },
+  erp: { key: "erp", label: "ERP", priceCents: 7000, accessPath: "/erp" },
 } as const;
 
 export type ModuleKey = keyof typeof MODULE_CATALOG;

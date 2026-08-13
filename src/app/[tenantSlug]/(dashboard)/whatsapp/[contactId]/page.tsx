@@ -78,7 +78,9 @@ export default async function WhatsAppConversationPage({
   const { data: sellers } = await supabase.from("profiles").select("id, full_name").order("full_name");
   const ownerName = sellers?.find((s) => s.id === contact.created_by)?.full_name ?? null;
 
-  const { data: hasEstoqueRaw } = await supabase.rpc("current_tenant_has_estoque");
+  const { data: hasEstoqueRaw } = await supabase.rpc("current_tenant_has_estoque", {
+    p_user_id: currentUser?.user.id,
+  });
   const hasEstoque = Boolean(hasEstoqueRaw);
   const [dealProdutosByDealId, estoqueItens] =
     hasEstoque && primaryDeal

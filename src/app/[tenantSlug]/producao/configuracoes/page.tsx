@@ -23,7 +23,7 @@ export default async function ProducaoConfiguracoesPage({
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: hasAccess } = await supabase.rpc("current_tenant_has_producao");
+  const { data: hasAccess } = await supabase.rpc("current_tenant_has_producao", { p_user_id: user.id });
   if (!hasAccess) redirect("/comprar-producao");
 
   const [turnos, maquinas, estilos, produtos, materiaisDisponiveis, receitaItens, funcionarios] = await Promise.all([

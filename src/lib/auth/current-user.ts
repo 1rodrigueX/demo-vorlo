@@ -162,8 +162,6 @@ export type AccountService = {
   description: string;
   active: boolean;
   href: string;
-  /** Prévia gratuita liberada junto do CRM — sem checkout próprio, badge "Beta" em vez de "Ativo". */
-  beta?: boolean;
 };
 
 /** Produtos da conta pra tela /central — cada um resolve seu próprio status e destino, sem depender um do outro. */
@@ -199,12 +197,13 @@ export async function getAccountServices(): Promise<{
     crmSlug = tenant?.slug ?? null;
   }
 
-  const [{ data: hasTransportadora }, { data: hasFinancas }, { data: hasEstoque }, { data: hasProducao }] =
+  const [{ data: hasTransportadora }, { data: hasFinancas }, { data: hasEstoque }, { data: hasProducao }, { data: hasErp }] =
     await Promise.all([
-      supabase.rpc("current_tenant_has_transportadora"),
-      supabase.rpc("current_tenant_has_financas"),
-      supabase.rpc("current_tenant_has_estoque"),
-      supabase.rpc("current_tenant_has_producao"),
+      supabase.rpc("current_tenant_has_transportadora", { p_user_id: user.id }),
+      supabase.rpc("current_tenant_has_financas", { p_user_id: user.id }),
+      supabase.rpc("current_tenant_has_estoque", { p_user_id: user.id }),
+      supabase.rpc("current_tenant_has_producao", { p_user_id: user.id }),
+      supabase.rpc("current_tenant_has_erp", { p_user_id: user.id }),
     ]);
   const ownerName = (user.user_metadata?.full_name as string | undefined) ?? null;
 
@@ -246,22 +245,13 @@ export async function getAccountServices(): Promise<{
         active: !!hasProducao,
         href: hasProducao && crmSlug ? `/${crmSlug}/producao` : "/comprar-producao",
       },
-      // Prévia visual do ERP: liberada de graça pra quem já tem CRM ativo, sem
-      // gate de billing próprio (não existe RPC current_tenant_has_erp — o
-      // módulo ainda não tem regra de negócio real, só mock). Some da lista
-      // pra quem não tem CRM, porque não há como "assinar" isso à parte.
-      ...(crmActive && crmSlug
-        ? [
-            {
-              key: "erp" as const,
-              name: "ERP",
-              description: "Gestão completa: vendas, produção, estoque e financeiro (prévia).",
-              active: true,
-              beta: true,
-              href: `/${crmSlug}/erp`,
-            },
-          ]
-        : []),
+      {
+        key: "erp",
+        name: "ERP",
+        description: "Gestão completa: vendas, produção, estoque e financeiro.",
+        active: !!hasErp,
+        href: hasErp && crmSlug ? `/${crmSlug}/erp` : "/comprar-erp",
+      },
     ],
   };
 }

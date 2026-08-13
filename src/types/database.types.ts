@@ -3741,11 +3741,12 @@ export interface Database {
         };
         Returns: string;
       };
-      current_tenant_has_transportadora: { Args: Record<string, never>; Returns: boolean };
-      current_tenant_has_financas: { Args: Record<string, never>; Returns: boolean };
-      current_tenant_has_estoque: { Args: Record<string, never>; Returns: boolean };
-      current_tenant_has_producao: { Args: Record<string, never>; Returns: boolean };
-      current_tenant_has_producao_actor: { Args: Record<string, never>; Returns: boolean };
+      current_tenant_has_transportadora: { Args: { p_user_id?: string }; Returns: boolean };
+      current_tenant_has_financas: { Args: { p_user_id?: string }; Returns: boolean };
+      current_tenant_has_estoque: { Args: { p_user_id?: string }; Returns: boolean };
+      current_tenant_has_producao: { Args: { p_user_id?: string }; Returns: boolean };
+      current_tenant_has_producao_actor: { Args: { p_user_id?: string }; Returns: boolean };
+      current_tenant_has_erp: { Args: { p_user_id?: string }; Returns: boolean };
       merge_contacts: {
         Args: { winner_id: string; loser_id: string; reason?: string };
         Returns: undefined;
