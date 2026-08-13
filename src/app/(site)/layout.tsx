@@ -8,7 +8,7 @@ const montserrat = Montserrat({ subsets: ["latin"], weight: ["400", "500", "700"
 const plex = IBM_Plex_Mono({ subsets: ["latin"], weight: ["400", "500"], variable: "--font-plex" });
 
 export const metadata: Metadata = {
-  title: "SYNEXA · Soluções digitais — Sites, CRM & Automações",
+  title: { absolute: "SYNEXA · Soluções digitais — Sites, CRM & Automações" },
   description:
     "Sites, e-commerce, CRM e plataformas sob medida para empresas que precisam vender. Código próprio, prazo em contrato, suporte contínuo.",
 };

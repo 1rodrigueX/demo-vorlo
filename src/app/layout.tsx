@@ -14,8 +14,22 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Synexa",
-  description: "CRM de vendas com assistente de IA",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://falaai.cloud"),
+  title: {
+    default: "Synexa — CRM de vendas com IA",
+    template: "%s · Synexa",
+  },
+  description: "CRM de vendas com assistente de IA: WhatsApp, funil, automações e SDR de IA para vender mais.",
+  applicationName: "Synexa",
+  keywords: ["Synexa", "CRM", "CRM com IA", "SDR de IA", "WhatsApp CRM", "automação de vendas"],
+  openGraph: {
+    type: "website",
+    siteName: "Synexa",
+    title: "Synexa — CRM de vendas com IA",
+    description: "CRM de vendas com assistente de IA: WhatsApp, funil, automações e SDR de IA para vender mais.",
+    url: "/",
+    locale: "pt_BR",
+  },
 };
 
 // Aplica, ANTES do primeiro paint (síncrono e inline), o tema salvo e o Modo

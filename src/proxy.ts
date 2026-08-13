@@ -58,6 +58,6 @@ export const config = {
      *   (autenticados por assinatura/segredo/token, sem cookie de sessão)
      * - app-web (build Flutter estático, com login próprio)
      */
-    "/((?!_next/static|_next/image|favicon.ico|robots.txt|api/auth/|api/whatsapp/webhook/|api/webhooks/|api/cron/|api/public/|api/discord/|app-web|.*\\.(?:svg|png|jpg|jpeg|gif|webp|apk)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|api/auth/|api/whatsapp/webhook/|api/webhooks/|api/cron/|api/public/|api/discord/|app-web|.*\\.(?:svg|png|jpg|jpeg|gif|webp|apk)$).*)",
   ],
 };

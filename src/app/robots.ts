@@ -5,6 +5,8 @@ import type { MetadataRoute } from "next";
  * middleware (rota não excluída) e recebia um redirect pro /login em vez
  * de um robots.txt de verdade — achado durante a auditoria de segurança.
  */
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://falaai.cloud";
+
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: {
@@ -12,5 +14,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: "/",
       disallow: ["/dev", "/central", "/api", "/choose-plan", "/comprar-transportadora", "/comprar-financas"],
     },
+    sitemap: `${SITE_URL}/sitemap.xml`,
   };
 }
