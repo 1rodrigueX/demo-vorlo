@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://falaai.cloud";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://vorlo.com.br";
 
 /**
  * Sitemap das páginas públicas (site institucional + produto). Ajuda o Google a

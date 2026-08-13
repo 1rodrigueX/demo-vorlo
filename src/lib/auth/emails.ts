@@ -19,7 +19,7 @@ function getResend(): Resend {
 }
 
 function siteUrl(): string {
-  return process.env.NEXT_PUBLIC_SITE_URL || "https://falaai.cloud";
+  return process.env.NEXT_PUBLIC_SITE_URL || "https://vorlo.com.br";
 }
 
 function fromAddress(): string {

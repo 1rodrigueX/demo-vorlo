@@ -85,7 +85,7 @@ export function AppReleasesCard({ releases }: { releases: ReleaseItem[] }) {
               id="url"
               name="url"
               type="url"
-              placeholder="https://falaai.cloud/downloads/Vorlo_0.2.0_x64-setup.exe"
+              placeholder="https://vorlo.com.br/downloads/Vorlo_0.2.0_x64-setup.exe"
               required
             />
           </div>

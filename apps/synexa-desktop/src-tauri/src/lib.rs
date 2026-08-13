@@ -3,7 +3,7 @@ use tauri::{Manager, WebviewUrl, WebviewWindowBuilder};
 // ⚙️  URL que o app abre depois do launcher. Vai direto pro login: quem tem o
 //     app já é cliente, loga e cai nos seus acessos. Precisa ser um endereço
 //     ao vivo.
-const APP_URL: &str = "https://falaai.cloud/login";
+const APP_URL: &str = "https://vorlo.com.br/login";
 
 /// Abre o CRM numa janela própria e fecha o launcher.
 ///

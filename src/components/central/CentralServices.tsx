@@ -89,7 +89,7 @@ export function CentralServices({ services }: { services: AccountService[] }) {
             // acontece no site, então é pra lá que ele vai.
             <p className="text-sm text-gray-500">
               Você ainda não tem o CRM ativo. Assine em{" "}
-              <span className="font-medium text-gray-700">falaai.cloud</span> e depois volte aqui.
+              <span className="font-medium text-gray-700">vorlo.com.br</span> e depois volte aqui.
             </p>
           ) : (
             <p className="text-sm text-gray-500">

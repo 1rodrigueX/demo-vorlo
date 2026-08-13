@@ -1,7 +1,7 @@
 import { supabase } from "@/lib/supabase";
 
 // Base da API fina do servidor (operações privilegiadas: enviar WhatsApp etc.).
-const API_BASE = (import.meta.env.VITE_API_BASE as string | undefined) || "https://falaai.cloud";
+const API_BASE = (import.meta.env.VITE_API_BASE as string | undefined) || "https://vorlo.com.br";
 
 /** POST autenticado com o JWT do usuário (Bearer). Lança Error com a mensagem do servidor. */
 export async function apiPost<T = unknown>(path: string, body: unknown): Promise<T> {

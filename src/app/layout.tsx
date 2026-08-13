@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://falaai.cloud"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://vorlo.com.br"),
   title: {
     default: "Vorlo — CRM de vendas com IA",
     template: "%s · Vorlo",
