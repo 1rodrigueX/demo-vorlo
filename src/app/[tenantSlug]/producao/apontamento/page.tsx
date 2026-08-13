@@ -14,7 +14,7 @@ export default async function ApontamentoPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: hasAccess } = await supabase.rpc("current_tenant_has_producao_actor");
+  const { data: hasAccess } = await supabase.rpc("current_tenant_has_producao_actor", { p_user_id: user.id });
   if (!hasAccess) redirect("/login");
 
   const [turnos, maquinas, estilos, produtos, apontamentos, { data: proprioFuncionario }] = await Promise.all([

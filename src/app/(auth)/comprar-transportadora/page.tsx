@@ -26,7 +26,7 @@ export default async function ComprarTransportadoraPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: hasAccess } = await supabase.rpc("current_tenant_has_transportadora");
+  const { data: hasAccess } = await supabase.rpc("current_tenant_has_transportadora", { p_user_id: user.id });
   if (hasAccess) redirect("/app/download");
 
   const { data: profile } = await supabase.from("profiles").select("tenant_id").eq("id", user.id).maybeSingle();

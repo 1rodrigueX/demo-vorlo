@@ -26,7 +26,7 @@ export default async function PipelinePage({
   const [{ data: stages }, { data: contacts }, { data: hasEstoque }] = await Promise.all([
     supabase.from("pipeline_stages").select("*").order("position"),
     supabase.from("contacts").select("id, name, phone, email").order("name"),
-    supabase.rpc("current_tenant_has_estoque"),
+    supabase.rpc("current_tenant_has_estoque", { p_user_id: currentUser?.user.id }),
   ]);
 
   let sellers: { id: string; full_name: string | null }[] = [];

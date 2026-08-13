@@ -13,7 +13,7 @@ export default async function EstoquePage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: hasAccess } = await supabase.rpc("current_tenant_has_estoque");
+  const { data: hasAccess } = await supabase.rpc("current_tenant_has_estoque", { p_user_id: user.id });
   if (!hasAccess) redirect("/comprar-estoque");
 
   const [itens, movimentacoes, currentUser] = await Promise.all([

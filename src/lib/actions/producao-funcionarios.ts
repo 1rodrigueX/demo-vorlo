@@ -54,7 +54,7 @@ export async function createFuncionario(_prevState: ActionState, formData: FormD
   const tenantId = await requireTenantId(supabase, user.id);
   if (!tenantId) return { error: "Tenant não encontrado" };
 
-  const { data: hasProducao } = await supabase.rpc("current_tenant_has_producao");
+  const { data: hasProducao } = await supabase.rpc("current_tenant_has_producao", { p_user_id: user.id });
   if (!hasProducao) return { error: "Produção não está ativa" };
 
   const admin = createAdminClient();

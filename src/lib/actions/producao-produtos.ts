@@ -85,7 +85,7 @@ export async function createProduto(_prevState: ActionState, formData: FormData)
   if (!user) return { error: "Sessão expirada, faça login novamente" };
   if (!tenantId) return { error: "Tenant não encontrado" };
 
-  const { data: hasEstoque } = await supabase.rpc("current_tenant_has_estoque");
+  const { data: hasEstoque } = await supabase.rpc("current_tenant_has_estoque", { p_user_id: user.id });
   if (!hasEstoque) {
     return { error: "Ative o Controle de Estoque pra poder cadastrar produtos (Produção linka os dois)" };
   }

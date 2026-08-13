@@ -1796,6 +1796,10 @@ model tenants {
   deals                            deals[]
   dev_active_view                  dev_active_view[]
   email_messages                   email_messages[]
+  erp_categorias                   erp_categorias[]
+  erp_fornecedores                 erp_fornecedores[]
+  erp_funcionarios                 erp_funcionarios[]
+  erp_produtos                     erp_produtos[]
   estoque_itens                    estoque_itens[]
   estoque_movimentacoes            estoque_movimentacoes[]
   financas_bank_connections        financas_bank_connections?
@@ -1995,6 +1999,145 @@ model whatsapp_messages {
 
   @@index([contact_id, created_at(sort: Desc)], map: "whatsapp_messages_contact_id_idx")
   @@index([tenant_id])
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model app_auth_tokens {
+  id         String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id    String?    @db.Uuid
+  email      String?
+  purpose    String
+  token_hash String     @unique
+  expires_at DateTime   @db.Timestamptz(6)
+  used_at    DateTime?  @db.Timestamptz(6)
+  created_at DateTime   @default(now()) @db.Timestamptz(6)
+  app_users  app_users? @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([purpose])
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model app_mfa_factors {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id       String    @db.Uuid
+  type          String    @default("totp")
+  secret        String
+  friendly_name String?
+  verified_at   DateTime? @db.Timestamptz(6)
+  created_at    DateTime  @default(now()) @db.Timestamptz(6)
+  app_users     app_users @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([user_id], map: "app_mfa_user_idx")
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model app_oauth_accounts {
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id             String    @db.Uuid
+  provider            String
+  provider_account_id String
+  created_at          DateTime  @default(now()) @db.Timestamptz(6)
+  app_users           app_users @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([provider, provider_account_id])
+  @@index([user_id], map: "app_oauth_user_idx")
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
+model app_users {
+  id                 String               @id @db.Uuid
+  email              String
+  email_verified_at  DateTime?            @db.Timestamptz(6)
+  password_hash      String?
+  full_name          String?
+  image              String?
+  created_at         DateTime             @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime             @default(now()) @db.Timestamptz(6)
+  app_auth_tokens    app_auth_tokens[]
+  app_mfa_factors    app_mfa_factors[]
+  app_oauth_accounts app_oauth_accounts[]
+
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
+model erp_categorias {
+  id                   String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenant_id            String           @db.Uuid
+  name                 String
+  parent_id            String?          @db.Uuid
+  created_at           DateTime         @default(now()) @db.Timestamptz(6)
+  erp_categorias       erp_categorias?  @relation("erp_categoriasToerp_categorias", fields: [parent_id], references: [id], onUpdate: NoAction)
+  other_erp_categorias erp_categorias[] @relation("erp_categoriasToerp_categorias")
+  tenants              tenants          @relation(fields: [tenant_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  erp_produtos         erp_produtos[]
+
+  @@index([parent_id], map: "erp_categorias_parent_idx")
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
+model erp_fornecedores {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenant_id  String   @db.Uuid
+  name       String
+  document   String?
+  email      String?
+  phone      String?
+  city       String?
+  state      String?
+  category   String?
+  status     String   @default("ativo")
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  tenants    tenants  @relation(fields: [tenant_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model erp_funcionarios {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenant_id      String    @db.Uuid
+  full_name      String
+  role           String?
+  department     String?
+  admission_date DateTime? @db.Date
+  status         String    @default("ativo")
+  created_at     DateTime  @default(now()) @db.Timestamptz(6)
+  tenants        tenants   @relation(fields: [tenant_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([tenant_id], map: "erp_funcionarios_tenant_idx")
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
+model erp_produtos {
+  id               String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenant_id        String          @db.Uuid
+  name             String
+  sku              String?
+  category_id      String?         @db.Uuid
+  unit             String          @default("un")
+  cost_price_cents BigInt          @default(0)
+  sale_price_cents BigInt          @default(0)
+  quantity         Decimal         @default(0) @db.Decimal(12, 3)
+  min_stock        Decimal         @default(0) @db.Decimal(12, 3)
+  created_at       DateTime        @default(now()) @db.Timestamptz(6)
+  erp_categorias   erp_categorias? @relation(fields: [category_id], references: [id], onUpdate: NoAction)
+  tenants          tenants         @relation(fields: [tenant_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([tenant_id, sku], map: "erp_produtos_tenant_sku_idx", where: raw("(sku IS NOT NULL)"))
+  @@index([category_id], map: "erp_produtos_category_idx")
   @@schema("public")
 }
 

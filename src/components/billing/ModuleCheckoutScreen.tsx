@@ -15,6 +15,7 @@ const HAS_RPC = {
   financas: "current_tenant_has_financas",
   estoque: "current_tenant_has_estoque",
   producao: "current_tenant_has_producao",
+  erp: "current_tenant_has_erp",
 } as const;
 
 /**
@@ -29,7 +30,7 @@ export async function ModuleCheckoutScreen({ module }: { module: ModuleKey }) {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: hasAccess } = await supabase.rpc(HAS_RPC[module]);
+  const { data: hasAccess } = await supabase.rpc(HAS_RPC[module], { p_user_id: user.id });
   if (hasAccess) redirect("/central");
 
   const { data: profile } = await supabase

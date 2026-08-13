@@ -214,7 +214,7 @@ export async function registrarMovimentacao(_prevState: ActionState, formData: F
     // Estoque não depende mais de Finanças pra funcionar — o lançamento em
     // Empresarial só acontece se o tenant também tiver o Financeiro ativo
     // (mesmo padrão best-effort do link CRM→Caixa de Entrada).
-    const { data: hasFinancas } = await supabase.rpc("current_tenant_has_financas");
+    const { data: hasFinancas } = await supabase.rpc("current_tenant_has_financas", { p_user_id: user.id });
     if (hasFinancas) {
       await ensureCategoria(supabase, tenantId, "despesa", "Estoque");
       const { error: lancamentoError } = await supabase.from("financas_lancamentos").insert({

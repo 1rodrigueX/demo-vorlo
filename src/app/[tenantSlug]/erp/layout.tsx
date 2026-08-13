@@ -15,15 +15,13 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-erp-sans" });
  * do grupo (dashboard), mesmo padrão de "módulo solto" que /producao já usa,
  * mas com os tokens de tema padrão em vez de paleta neon hardcoded).
  *
- * Fase atual: 100% visual/mock (ver plano aprovado). Único dado real buscado
- * aqui é nome/logo do tenant, pra Sidebar/Topbar não parecerem genéricos
- * enquanto o dono revisa o próprio ambiente — resto do shell (notificações,
- * empresa/filial) é mock em src/mocks/erp/session.ts.
+ * ERP é add-on pago, separado do CRM e dos outros módulos (Financeiro/
+ * Estoque/Produção reais) — mesmo padrão deles: current_tenant_has_erp()
+ * decide o acesso, sem depender de assinatura de CRM.
  *
- * Sem guard extra de billing/role: o middleware (src/proxy.ts) já exige
- * sessão logada em qualquer rota fora do allowlist público, e esta fase não
- * tem produto/gate de billing próprio ainda (fica pra quando entrarmos em
- * regras de negócio).
+ * Fase atual: 100% visual/mock nas telas (ver plano aprovado) — só o gate de
+ * billing e o nome/logo do tenant são reais. Resto do shell (notificações,
+ * empresa/filial) é mock em src/mocks/erp/session.ts.
  */
 export default async function ErpLayout({
   children,
@@ -38,6 +36,9 @@ export default async function ErpLayout({
   if (!current.profile) redirect("/choose-plan");
 
   const supabase = await createClient();
+  const { data: hasErp } = await supabase.rpc("current_tenant_has_erp", { p_user_id: current.user.id });
+  if (!hasErp) redirect("/comprar-erp");
+
   const { data: tenant } = await supabase
     .from("tenants")
     .select("name, logo_storage_path")
