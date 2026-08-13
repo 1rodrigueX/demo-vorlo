@@ -22,6 +22,7 @@ export const metadata: Metadata = {
   description: "CRM de vendas com assistente de IA: WhatsApp, funil, automações e SDR de IA para vender mais.",
   applicationName: "Synexa",
   keywords: ["Synexa", "CRM", "CRM com IA", "SDR de IA", "WhatsApp CRM", "automação de vendas"],
+  verification: { google: "9ux8kd9gFsLNLaRZhA2mxh5duJ2xkRKVVqxDnr0y_4Q" },
   openGraph: {
     type: "website",
     siteName: "Synexa",
