@@ -1,0 +1,29 @@
+name: Diag (nginx/ssl)
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  diag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ler nginx/certbot
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            echo "=== sites-enabled ==="
+            ls -la /etc/nginx/sites-enabled/ 2>&1
+            echo "=== conteúdo de cada site (server_name + ssl) ==="
+            for f in /etc/nginx/sites-enabled/*; do
+              echo "--- $f ---"
+              grep -nE "server_name|listen|ssl_certificate|root|proxy_pass" "$f" 2>&1
+            done
+            echo "=== certbot instalado? ==="
+            (command -v certbot && certbot --version) 2>&1 || echo "certbot ausente"
+            echo "=== certificados existentes ==="
+            certbot certificates 2>&1 || echo "falhou ao listar"
+            echo "=== letsencrypt live dirs ==="
+            ls -la /etc/letsencrypt/live/ 2>&1 || echo "sem /etc/letsencrypt/live"
