@@ -11,7 +11,7 @@ interface LogoMarkProps {
   title?: string;
 }
 
-/** Símbolo SYNEXA em SVG puro — 7 nós, 13 arestas + flanco curvo. Herda a cor
+/** Símbolo VORLO em SVG puro — 7 nós, 13 arestas + flanco curvo. Herda a cor
  * via currentColor. */
 export function LogoMark({ className, mode = "static", delay = 0, title }: LogoMarkProps) {
   const reduce = useReducedMotion();

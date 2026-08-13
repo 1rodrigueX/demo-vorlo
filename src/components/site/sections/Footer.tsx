@@ -6,7 +6,7 @@ export function Footer({ user }: { user: { name: string } | null }) {
   return (
     <footer className="relative border-t border-carbon-700 px-5 py-12 sm:px-8">
       <div className="mx-auto flex w-full max-w-[1240px] flex-col gap-9 sm:flex-row sm:items-end sm:justify-between">
-        <a href="/" className="text-[1.4rem]" aria-label="SYNEXA — início">
+        <a href="/" className="text-[1.4rem]" aria-label="VORLO — início">
           <Logo showTagline markMode="hover" />
         </a>
 
@@ -28,7 +28,7 @@ export function Footer({ user }: { user: { name: string } | null }) {
               {user ? "Meus acessos" : "Fazer login"}
             </a>
           </nav>
-          <p className="type-mono-label text-[0.68rem]">© {new Date().getFullYear()} SYNEXA · Soluções digitais</p>
+          <p className="type-mono-label text-[0.68rem]">© {new Date().getFullYear()} VORLO · Soluções digitais</p>
         </div>
       </div>
     </footer>

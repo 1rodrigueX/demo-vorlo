@@ -13,7 +13,7 @@ export const FEATURES = [
   },
   {
     icon: Sparkles,
-    title: "Synexa — agentes de IA",
+    title: "Vorlo — agentes de IA",
     description: "Crie SDR, atendente, financeiro e outros agentes de IA sob medida pra sua equipe, só conversando.",
   },
   {
@@ -32,7 +32,7 @@ export const HOW_IT_WORKS = [
   {
     icon: Bot,
     title: "A IA atende e qualifica",
-    description: "O SDR do Synexa responde leads novos no WhatsApp na hora, qualifica e já registra tudo no pipeline.",
+    description: "O SDR do Vorlo responde leads novos no WhatsApp na hora, qualifica e já registra tudo no pipeline.",
   },
   {
     icon: Handshake,

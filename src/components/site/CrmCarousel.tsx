@@ -205,10 +205,10 @@ function FlowScreen() {
 }
 
 const SLIDES = [
-  { url: "app.synexa.cloud/pipeline", el: <PipelineScreen /> },
-  { url: "app.synexa.cloud/dashboard", el: <DashboardScreen /> },
-  { url: "app.synexa.cloud/leads", el: <LeadsScreen /> },
-  { url: "app.synexa.cloud/trajetorias", el: <FlowScreen /> },
+  { url: "app.vorlo.com.br/pipeline", el: <PipelineScreen /> },
+  { url: "app.vorlo.com.br/dashboard", el: <DashboardScreen /> },
+  { url: "app.vorlo.com.br/leads", el: <LeadsScreen /> },
+  { url: "app.vorlo.com.br/trajetorias", el: <FlowScreen /> },
 ];
 
 /** Carrossel de telas do CRM dentro de um mockup de navegador (auto-avança,

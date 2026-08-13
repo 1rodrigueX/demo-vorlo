@@ -8,7 +8,7 @@ const GUIDES = [
       "Cole a chave em Configurações → Inteligência Artificial",
     ],
     link: "https://console.anthropic.com/settings/keys",
-    note: "O Synexa (aba Suporte) já funciona sem isso — a chave própria só é necessária pros outros agentes (SDR, atendente, etc).",
+    note: "O Vorlo (aba Suporte) já funciona sem isso — a chave própria só é necessária pros outros agentes (SDR, atendente, etc).",
   },
   {
     title: "Bling (ERP)",

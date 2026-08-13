@@ -20,7 +20,7 @@ export default async function AppDownloadPage() {
         <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-indigo-50 text-indigo-600">
           <Download size={28} />
         </div>
-        <h1 className="text-xl font-semibold text-gray-900">Use o Synexa Transportadora</h1>
+        <h1 className="text-xl font-semibold text-gray-900">Use o Vorlo Transportadora</h1>
         <p className="mt-2 text-sm text-gray-600">
           Entre com o mesmo e-mail e senha (ou Google) que você usa aqui no site.
         </p>

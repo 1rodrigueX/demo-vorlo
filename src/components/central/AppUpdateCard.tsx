@@ -100,11 +100,11 @@ export function AppUpdateCard({ downloadUrl }: { downloadUrl: string }) {
     return (
       <Shell
         title="App para computador (Windows)"
-        description="Tenha a Synexa numa janela própria — abre direto nos seus acessos, como no navegador."
+        description="Tenha a Vorlo numa janela própria — abre direto nos seus acessos, como no navegador."
       >
         <a
           href={downloadUrl}
-          download="Synexa-Setup.exe"
+          download="Vorlo-Setup.exe"
           className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-[#ff5722] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:brightness-110"
         >
           <Download size={16} />

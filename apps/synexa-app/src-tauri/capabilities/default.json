@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Permissões base do app Synexa (janela principal).",
+  "description": "Permissões base do app Vorlo (janela principal).",
   "windows": ["main"],
   "permissions": ["core:default"]
 }

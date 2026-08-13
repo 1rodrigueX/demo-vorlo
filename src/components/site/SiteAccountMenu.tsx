@@ -46,7 +46,7 @@ export function SiteAccountMenu({ name }: { name: string }) {
         <div className="absolute right-0 mt-2 w-56 overflow-hidden rounded-xl border border-carbon-700 bg-carbon-800 py-1 shadow-xl shadow-black/40">
           <div className="border-b border-carbon-700 px-4 py-2.5">
             <p className="truncate text-sm font-medium text-white-soft">{name}</p>
-            <p className="text-[0.7rem] text-grey">Conta Synexa</p>
+            <p className="text-[0.7rem] text-grey">Conta Vorlo</p>
           </div>
           <a
             href="/central"

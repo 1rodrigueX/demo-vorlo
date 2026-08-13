@@ -54,7 +54,7 @@ export function ModuleCheckoutForm({
         <h1 className="text-2xl font-bold text-gray-900">
           {ownerName ? `Falta pouco, ${ownerName.split(" ")[0]}!` : "Falta pouco!"}
         </h1>
-        <p className="mt-2 text-sm text-gray-500">Libere o módulo {label} na sua conta Synexa.</p>
+        <p className="mt-2 text-sm text-gray-500">Libere o módulo {label} na sua conta Vorlo.</p>
       </div>
 
       <div className="mt-8 rounded-2xl border border-gray-200 bg-panel p-6 shadow-sm">

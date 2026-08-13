@@ -11,7 +11,7 @@ const PRODUTOS = [
     icon: LayoutDashboard,
     nome: "CRM de Vendas com IA",
     descricao: "Pipeline, WhatsApp e agentes de IA que atendem, qualificam e cobram por você.",
-    pontos: ["Pipeline + WhatsApp integrados", "Agentes de IA (Synexa)", "Multi-empresa e permissões"],
+    pontos: ["Pipeline + WhatsApp integrados", "Agentes de IA (Vorlo)", "Multi-empresa e permissões"],
     preco: 150,
     href: "/signup",
     cta: "Criar conta grátis",
@@ -83,7 +83,7 @@ export default function ProdutosPage() {
             Ferramentas para <span className="text-ignite">vender e operar</span>
           </h1>
           <p className="mt-5 text-base leading-relaxed text-grey sm:text-lg">
-            Software próprio da Synexa. Assine só o que a sua operação precisa — cada produto funciona sozinho ou
+            Software próprio da Vorlo. Assine só o que a sua operação precisa — cada produto funciona sozinho ou
             integrado aos outros.
           </p>
         </motion.header>

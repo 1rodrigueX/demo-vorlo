@@ -1,11 +1,11 @@
-# Synexa Desktop (Windows)
+# Vorlo Desktop (Windows)
 
-App desktop **leve** da Synexa: uma casca nativa em **Tauri** (núcleo em Rust,
-webview do sistema) que abre o site da Synexa numa janela própria, com login e
+App desktop **leve** da Vorlo: uma casca nativa em **Tauri** (núcleo em Rust,
+webview do sistema) que abre o site da Vorlo numa janela própria, com login e
 todos os acessos idênticos ao navegador. Binário pequeno, pouca RAM.
 
 - Janela/URL: definida em [`src-tauri/src/lib.rs`](src-tauri/src/lib.rs) na
-  constante `APP_URL` — troque para `https://synexa.cloud` quando o domínio
+  constante `APP_URL` — troque para `https://vorlo.com.br` quando o domínio
   estiver 100% no ar.
 - Ícone: gerado da marca oficial (mesma geometria do site).
 
@@ -18,16 +18,16 @@ todos os acessos idênticos ao navegador. Binário pequeno, pouca RAM.
 
 ## Passos
 ```bash
-cd apps/synexa-desktop
+cd apps/vorlo-desktop
 npm install                 # baixa a CLI do Tauri + sharp (gerador de ícone)
-npm run gen:icon            # gera app-icon.png a partir da marca Synexa
+npm run gen:icon            # gera app-icon.png a partir da marca Vorlo
 npm run tauri -- icon app-icon.png   # gera o conjunto de ícones (inclui .ico)
 npm run build               # compila o .exe (instalador NSIS)
 ```
 
 O instalador sai em:
-`src-tauri/target/release/bundle/nsis/Synexa_0.1.0_x64-setup.exe`
-e o executável direto em `src-tauri/target/release/Synexa.exe`.
+`src-tauri/target/release/bundle/nsis/Vorlo_0.1.0_x64-setup.exe`
+e o executável direto em `src-tauri/target/release/Vorlo.exe`.
 
 Para desenvolver com hot-reload da janela: `npm run dev`.
 

@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react";
 
 /**
- * Marca Synexa (recriação vetorial da logo): "S" angular em gradiente azul→violeta
+ * Marca Vorlo (recriação vetorial da logo): "S" angular em gradiente azul→violeta
  * com trilhas de circuito nas laterais. É um SVG puro — escala em qualquer
  * tamanho, acompanha o tema e não depende de arquivo de imagem.
  */
@@ -11,7 +11,7 @@ const S_PATH = "M8 8 H50 L56 14 V20 H20 V26 H56 V56 H14 L8 50 V44 H44 V38 H8 Z";
 
 let gradSeq = 0;
 
-export function SynexaMark({
+export function VorloMark({
   size = 32,
   className,
   withCircuit = true,
@@ -23,7 +23,7 @@ export function SynexaMark({
   style?: CSSProperties;
 }) {
   // id único por instância pra dois marks na mesma página não colidirem.
-  const gid = `synexa-s-${gradSeq++}`;
+  const gid = `vorlo-s-${gradSeq++}`;
   return (
     <svg
       width={size}
@@ -34,7 +34,7 @@ export function SynexaMark({
       className={className}
       style={style}
       role="img"
-      aria-label="Synexa"
+      aria-label="Vorlo"
     >
       <defs>
         <linearGradient id={gid} x1="12" y1="6" x2="54" y2="58" gradientUnits="userSpaceOnUse">
@@ -60,8 +60,8 @@ export function SynexaMark({
   );
 }
 
-/** Marca + wordmark "SYNEXA". Usado no cabeçalho/rodapé da landing. */
-export function SynexaLogo({
+/** Marca + wordmark "VORLO". Usado no cabeçalho/rodapé da landing. */
+export function VorloLogo({
   size = 30,
   className,
   wordmark = true,
@@ -72,9 +72,9 @@ export function SynexaLogo({
 }) {
   return (
     <span className={"inline-flex items-center gap-2 " + (className ?? "")}>
-      <SynexaMark size={size} style={{ filter: "drop-shadow(0 4px 12px rgba(255,87,34,0.45))" }} />
+      <VorloMark size={size} style={{ filter: "drop-shadow(0 4px 12px rgba(255,87,34,0.45))" }} />
       {wordmark && (
-        <span className="text-base font-bold tracking-[0.14em] text-gray-900">SYNEXA</span>
+        <span className="text-base font-bold tracking-[0.14em] text-gray-900">VORLO</span>
       )}
     </span>
   );

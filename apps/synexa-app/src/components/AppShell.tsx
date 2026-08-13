@@ -10,7 +10,7 @@ import {
   LogOut,
   type LucideIcon,
 } from "lucide-react";
-import { SynexaMark } from "@/components/SynexaMark";
+import { VorloMark } from "@/components/VorloMark";
 import { LiteToggle } from "@/components/LiteToggle";
 import { useAuth } from "@/lib/auth";
 
@@ -32,9 +32,9 @@ export function AppShell() {
       <aside className="flex w-60 shrink-0 flex-col border-r border-carbon-800 bg-carbon-950">
         <div className="flex h-14 items-center gap-2.5 px-4">
           <span className="text-ignite">
-            <SynexaMark size={20} />
+            <VorloMark size={20} />
           </span>
-          <span className="text-sm font-semibold tracking-tight text-white-soft">Synexa</span>
+          <span className="text-sm font-semibold tracking-tight text-white-soft">Vorlo</span>
         </div>
 
         <nav className="flex-1 space-y-0.5 px-3 py-3">

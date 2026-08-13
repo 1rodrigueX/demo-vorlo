@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* Tokens da marca Synexa (porta condensada de globals.css do app web).
+/* Tokens da marca Vorlo (porta condensada de globals.css do app web).
  * O app é DARK por padrão — reforça que é um cliente próprio, não o site. */
 @theme {
   --color-ignite: #ff5722;

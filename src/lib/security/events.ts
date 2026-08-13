@@ -4,7 +4,7 @@ import type { Json } from "@/types/database.types";
 
 /**
  * Registro de eventos de segurança + defesa por IP. Alimenta o painel de
- * cibersegurança em tempo real do time Synexa (ver src/app/dev/seguranca).
+ * cibersegurança em tempo real do time Vorlo (ver src/app/dev/seguranca).
  *
  * Regra de ouro deste arquivo: NADA aqui pode derrubar o fluxo que chamou. Um
  * log de segurança que quebra o login é pior que não ter log nenhum. Por isso

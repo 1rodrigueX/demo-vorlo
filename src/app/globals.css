@@ -49,7 +49,7 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 
-  /* ---- Site público SYNEXA (agência): carbono + laranja "ignite".
+  /* ---- Site público VORLO (agência): carbono + laranja "ignite".
    * Tokens aditivos, isolados do app (que segue violeta). Usados só nas
    * páginas do grupo (site). ---- */
   --color-carbon-900: #121212;
@@ -153,12 +153,12 @@ body {
 
 /* Fundo do chat de Leads — identidade própria (grid de pontos violeta),
  * distinta do fundo padrão do WhatsApp. Acompanha claro/escuro. */
-.synexa-chat-bg {
+.vorlo-chat-bg {
   background-color: var(--color-gray-50);
   background-image: radial-gradient(rgba(255, 87, 34, 0.06) 1px, transparent 1px);
   background-size: 22px 22px;
 }
-:root[data-theme="dark"] .synexa-chat-bg {
+:root[data-theme="dark"] .vorlo-chat-bg {
   background-color: #0f0b08;
   background-image: radial-gradient(rgba(255, 87, 34, 0.1) 1px, transparent 1px);
 }
@@ -195,7 +195,7 @@ body {
   transition-delay: 0ms !important;
 }
 :root[data-lite="1"] .synflow-grid,
-:root[data-lite="1"] .synexa-chat-bg {
+:root[data-lite="1"] .vorlo-chat-bg {
   background-image: none !important;
 }
 :root[data-lite="1"] {
@@ -234,7 +234,7 @@ body {
 }
 
 /* ============================================================================
- * SITE PÚBLICO SYNEXA (agência) — tipografia + animações. Usadas só nas
+ * SITE PÚBLICO VORLO (agência) — tipografia + animações. Usadas só nas
  * páginas do grupo (site); as fontes (--font-montserrat / --font-plex) são
  * carregadas no layout desse grupo.
  * ========================================================================== */

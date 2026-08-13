@@ -15,7 +15,7 @@ async fn abrir_crm(app: tauri::AppHandle) -> Result<(), String> {
     let url: tauri::Url = APP_URL.parse().map_err(|_| "URL do CRM inválida".to_string())?;
 
     WebviewWindowBuilder::new(&app, "crm", WebviewUrl::External(url))
-        .title("Synexa")
+        .title("Vorlo")
         .inner_size(1280.0, 820.0)
         .min_inner_size(940.0, 620.0)
         .center()
@@ -47,7 +47,7 @@ pub fn run() {
             // ele que dá a aba de Atualizações ANTES do login, que é o ponto
             // de o usuário conseguir atualizar sem baixar nada à mão.
             WebviewWindowBuilder::new(app, "main", WebviewUrl::App("index.html".into()))
-                .title("Synexa")
+                .title("Vorlo")
                 .inner_size(460.0, 560.0)
                 .resizable(false)
                 .center()
@@ -55,5 +55,5 @@ pub fn run() {
             Ok(())
         })
         .run(tauri::generate_context!())
-        .expect("erro ao iniciar o app Synexa");
+        .expect("erro ao iniciar o app Vorlo");
 }

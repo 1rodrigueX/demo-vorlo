@@ -191,7 +191,7 @@ export function WhatsAppChatPanel({
         </div>
       )}
 
-      <div className="synexa-chat-bg flex-1 space-y-1.5 overflow-y-auto px-4 py-4">
+      <div className="vorlo-chat-bg flex-1 space-y-1.5 overflow-y-auto px-4 py-4">
         {!messages.length ? (
           <p className="mt-8 text-center text-sm text-gray-500">
             Nenhuma mensagem ainda. Envie a primeira abaixo.

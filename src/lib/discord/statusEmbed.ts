@@ -1,7 +1,7 @@
 import "server-only";
 import { getPlatformStats } from "./stats";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://synexa.cloud";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://vorlo.com.br";
 const BRAND_COLOR = 0xff7a3d; // mesma cor de marca do site (BRAND_COLOR em TenantThemeContext.tsx)
 
 /** Embed + botões do /status, no estilo "card de status de servidor" pedido — dados reais da plataforma no lugar de jogadores/connect. */
@@ -12,7 +12,7 @@ export async function buildStatusMessage() {
 
   const embed = {
     color: healthy ? 0x22c55e : 0xef4444,
-    author: { name: "Synexa", icon_url: `${SITE_URL}/favicon.ico` },
+    author: { name: "Vorlo", icon_url: `${SITE_URL}/favicon.ico` },
     title: "Status da plataforma",
     description: "CRM com IA para equipes de vendas — Transportadora, automações e tudo mais.",
     thumbnail: { url: `${SITE_URL}/favicon.ico` },
@@ -38,7 +38,7 @@ export async function buildStatusMessage() {
           ]
         : []),
     ],
-    footer: { text: "Synexa" },
+    footer: { text: "Vorlo" },
     timestamp: new Date().toISOString(),
   };
 
@@ -47,7 +47,7 @@ export async function buildStatusMessage() {
       type: 1, // ACTION_ROW
       components: [
         { type: 2, style: 5, label: "Painel Dev", url: `${SITE_URL}/dev` },
-        { type: 2, style: 5, label: "Central Synexa", url: `${SITE_URL}/central` },
+        { type: 2, style: 5, label: "Central Vorlo", url: `${SITE_URL}/central` },
         { type: 2, style: 5, label: "Site", url: SITE_URL },
       ],
     },

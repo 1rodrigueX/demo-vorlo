@@ -25,7 +25,7 @@ const updateSchema = z.object({
 });
 
 export async function saveUpdate(_prevState: UpdateActionState, formData: FormData): Promise<UpdateActionState> {
-  if (!(await isCurrentUserDev())) return { error: "Só o time Synexa pode criar comunicados" };
+  if (!(await isCurrentUserDev())) return { error: "Só o time Vorlo pode criar comunicados" };
 
   const parsed = updateSchema.safeParse({
     title: formData.get("title"),
@@ -71,7 +71,7 @@ export type GeneratedUpdate = {
 
 const WRITE_UPDATE_TOOL: Anthropic.Tool = {
   name: "escrever_comunicado",
-  description: "Escreve o comunicado de atualização da Synexa pronto para enviar por e-mail.",
+  description: "Escreve o comunicado de atualização da Vorlo pronto para enviar por e-mail.",
   input_schema: {
     type: "object",
     properties: {
@@ -80,7 +80,7 @@ const WRITE_UPDATE_TOOL: Anthropic.Tool = {
       body: {
         type: "string",
         description:
-          "Corpo do e-mail em português do Brasil, em PRIMEIRA PESSOA (eu), voz calorosa e direta do fundador da Synexa. Parágrafos separados por linha em branco. Conta o que mudou e o que a pessoa ganha com isso. Sem jargão corporativo, sem 'estamos felizes em anunciar'.",
+          "Corpo do e-mail em português do Brasil, em PRIMEIRA PESSOA (eu), voz calorosa e direta do fundador da Vorlo. Parágrafos separados por linha em branco. Conta o que mudou e o que a pessoa ganha com isso. Sem jargão corporativo, sem 'estamos felizes em anunciar'.",
       },
       ctaLabel: { type: "string", description: "Texto curto do botão, se houver ação (ex: 'Ver no CRM'). Vazio se não precisar." },
       ctaUrl: { type: "string", description: "Link do botão, se houver. Vazio se não souber a URL." },
@@ -122,9 +122,9 @@ export async function generatePlatformUpdate(
   }
 
   const system = [
-    "Você é a voz da Synexa (uma plataforma brasileira de CRM com IA) escrevendo um comunicado de atualização por e-mail para os clientes.",
+    "Você é a voz da Vorlo (uma plataforma brasileira de CRM com IA) escrevendo um comunicado de atualização por e-mail para os clientes.",
     "Escreva SEMPRE chamando a ferramenta escrever_comunicado — nunca texto solto.",
-    "Voz: primeira pessoa do singular (eu), calorosa, direta e humana — como o fundador falando com quem usa o produto. Nada de 'nós, da Synexa' nem 'estamos felizes em anunciar'.",
+    "Voz: primeira pessoa do singular (eu), calorosa, direta e humana — como o fundador falando com quem usa o produto. Nada de 'nós, da Vorlo' nem 'estamos felizes em anunciar'.",
     "Foque no que a pessoa GANHA com a mudança, em linguagem simples. Português do Brasil.",
     "Se a instrução não mencionar link, deixe ctaUrl e ctaLabel vazios.",
   ].join("\n");

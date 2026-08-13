@@ -34,7 +34,7 @@ export default async function NovidadesPage() {
         </Link>
 
         <h1 className="text-2xl font-bold text-gray-900">Novidades</h1>
-        <p className="mt-1 text-sm text-gray-500">O que mudou em cada versão da Synexa.</p>
+        <p className="mt-1 text-sm text-gray-500">O que mudou em cada versão da Vorlo.</p>
 
         {!releases?.length ? (
           <div className="mt-8 rounded-xl border border-gray-200 bg-panel p-10 text-center">

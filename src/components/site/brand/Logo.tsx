@@ -26,7 +26,7 @@ export function Logo({
 
   return (
     <span className={cn("inline-flex items-center gap-2.5", className)}>
-      <LogoMark mode={markMode} title="SYNEXA" className={cn("h-[1.65em] w-auto shrink-0", markTone)} />
+      <LogoMark mode={markMode} title="VORLO" className={cn("h-[1.65em] w-auto shrink-0", markTone)} />
 
       <span className={cn("flex-col leading-none", wordmarkVisibility)}>
         <span className={cn("type-display text-[1em] tracking-[-0.02em]", wordTone)}>

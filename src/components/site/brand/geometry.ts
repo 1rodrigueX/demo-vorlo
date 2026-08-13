@@ -1,4 +1,4 @@
-/** Geometria da marca SYNEXA — 7 nós, 13 arestas + flanco curvo esquerdo.
+/** Geometria da marca VORLO — 7 nós, 13 arestas + flanco curvo esquerdo.
  * viewBox 0 0 120 136. Fonte única do símbolo. */
 
 export type NodeId = "TL" | "UM" | "LM" | "C" | "R" | "BM" | "BL";

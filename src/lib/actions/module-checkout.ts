@@ -65,7 +65,7 @@ export async function startModuleCheckout(_prevState: ActionState, formData: For
         items: [
           {
             id: moduleKey,
-            title: `Assinatura Synexa ${catalog.label}`,
+            title: `Assinatura Vorlo ${catalog.label}`,
             description: `Acesso ao módulo ${catalog.label}`,
             quantity: 1,
             currency_id: "BRL",

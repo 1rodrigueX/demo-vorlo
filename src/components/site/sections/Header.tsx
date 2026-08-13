@@ -48,7 +48,7 @@ export function Header({ user }: { user: { name: string } | null }) {
         <div className="flex items-center gap-4">
           <a
             href="/"
-            aria-label="SYNEXA — início"
+            aria-label="VORLO — início"
             className="group inline-flex min-h-11 items-center text-[1.15rem] sm:text-[1.3rem]"
           >
             <Logo compactBelow="sm" markMode="hover" />

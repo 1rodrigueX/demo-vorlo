@@ -11,6 +11,6 @@ export const supabase = createClient(url, anonKey, {
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: false,
-    storageKey: "synexa-app-auth",
+    storageKey: "vorlo-app-auth",
   },
 });

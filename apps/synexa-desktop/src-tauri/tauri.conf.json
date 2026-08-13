@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Synexa",
+  "productName": "Vorlo",
   "version": "0.1.0",
-  "identifier": "cloud.synexa.desktop",
+  "identifier": "cloud.vorlo.desktop",
   "build": {
     "frontendDist": "../dist"
   },
@@ -26,9 +26,9 @@
     "active": true,
     "targets": ["nsis"],
     "createUpdaterArtifacts": true,
-    "publisher": "Synexa",
+    "publisher": "Vorlo",
     "category": "Business",
-    "shortDescription": "Synexa — CRM, vendas e automações",
+    "shortDescription": "Vorlo — CRM, vendas e automações",
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",

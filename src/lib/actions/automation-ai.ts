@@ -227,7 +227,7 @@ export async function generateFlowGraph(
   ]);
 
   // Usa a chave Anthropic do PRÓPRIO cliente (a mesma da SDR) — a chave da
-  // Synexa/plataforma é só pro suporte, não pra rodar a trajetória do tenant.
+  // Vorlo/plataforma é só pro suporte, não pra rodar a trajetória do tenant.
   let client: Anthropic;
   try {
     client = await getAnthropicClientForTenant(tenantId);

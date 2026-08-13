@@ -1,9 +1,9 @@
-/* Conteúdo do site público SYNEXA (agência). Portado da referência.
+/* Conteúdo do site público VORLO (agência). Portado da referência.
  * Edite aqui para trocar textos/números. */
 
 export const WHATSAPP = "5511947521848";
 export const WHATSAPP_URL = `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(
-  "Olá! Vim pelo site da SYNEXA e quero um orçamento.",
+  "Olá! Vim pelo site da VORLO e quero um orçamento.",
 )}`;
 export const EMAIL_DESTINO = "rodriguesdanillo633@gmail.com";
 /** Cole a chave do Web3Forms para o e-mail automático funcionar (opcional). */
@@ -123,10 +123,10 @@ export const FINAL_CTA = {
 export const SOBRE = {
   eyebrow: "Sobre",
   nome: "Danillo Rodrigues",
-  papel: "Desenvolvedor full-stack e fundador da SYNEXA",
+  papel: "Desenvolvedor full-stack e fundador da VORLO",
   local: "São Paulo, SP",
   manifesto:
-    "Comecei a SYNEXA porque cansei de ver empresa boa perdendo cliente por causa de site ruim. Não o site feio — o site que não carrega, que não abre direito no celular, que ninguém consegue atualizar sem chamar alguém. Empresa que resolve o problema do cliente todo dia merece um site que faça o mesmo.",
+    "Comecei a VORLO porque cansei de ver empresa boa perdendo cliente por causa de site ruim. Não o site feio — o site que não carrega, que não abre direito no celular, que ninguém consegue atualizar sem chamar alguém. Empresa que resolve o problema do cliente todo dia merece um site que faça o mesmo.",
   historia: [
     "Trabalho com código porque gosto de resolver problema que dá para medir: a página carregava em oito segundos, agora carrega em dois; o cliente ligava para pedir orçamento, agora pede sozinho pelo site.",
     "Cada projeto aqui é escrito do zero. Não uso construtor de arrastar e soltar nem tema comprado, porque quando o cliente pede uma coisa que o tema não faz, a resposta não pode ser \"não dá\".",
@@ -161,8 +161,8 @@ export interface Projeto {
 
 export const PROJETOS: Projeto[] = [
   {
-    id: "synexa-crm",
-    titulo: "Synexa CRM",
+    id: "vorlo-crm",
+    titulo: "Vorlo CRM",
     categoria: "Plataforma SaaS",
     descricao:
       "CRM de vendas com pipeline, WhatsApp integrado e agentes de IA que atendem e qualificam leads. Produto próprio, multi-empresa.",

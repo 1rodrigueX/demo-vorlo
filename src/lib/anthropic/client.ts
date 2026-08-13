@@ -47,8 +47,8 @@ export async function getAnthropicClientForTenant(tenantId: string): Promise<Ant
 
 /**
  * Igual a getAnthropicClientForTenant, mas com fallback pra chave da
- * plataforma (PLATFORM_ANTHROPIC_API_KEY) quando o agente é o Synexa e o
- * tenant não conectou a própria chave — o Synexa funciona out-of-the-box em
+ * plataforma (PLATFORM_ANTHROPIC_API_KEY) quando o agente é o Vorlo e o
+ * tenant não conectou a própria chave — o Vorlo funciona out-of-the-box em
  * todo CRM, sem custo pro tenant. Outros tipos de agente (SDR etc.) exigem a
  * chave do próprio tenant, sem fallback, pra não gerar custo de negócio do
  * cliente na conta da plataforma.
@@ -68,8 +68,8 @@ export async function getAnthropicClientForAgent(
 }
 
 /**
- * Client Anthropic da PLATAFORMA (Synexa), não de um tenant. Usa a chave
- * PLATFORM_ANTHROPIC_API_KEY — a mesma que banca o agente Synexa out-of-the-box.
+ * Client Anthropic da PLATAFORMA (Vorlo), não de um tenant. Usa a chave
+ * PLATFORM_ANTHROPIC_API_KEY — a mesma que banca o agente Vorlo out-of-the-box.
  * Uso interno do time (ex.: redigir comunicado de atualização no painel dev),
  * nunca custo do cliente. Lança AnthropicNotConfiguredError se não houver chave.
  */

@@ -16,17 +16,17 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://falaai.cloud"),
   title: {
-    default: "Synexa — CRM de vendas com IA",
-    template: "%s · Synexa",
+    default: "Vorlo — CRM de vendas com IA",
+    template: "%s · Vorlo",
   },
   description: "CRM de vendas com assistente de IA: WhatsApp, funil, automações e SDR de IA para vender mais.",
-  applicationName: "Synexa",
-  keywords: ["Synexa", "CRM", "CRM com IA", "SDR de IA", "WhatsApp CRM", "automação de vendas"],
+  applicationName: "Vorlo",
+  keywords: ["Vorlo", "CRM", "CRM com IA", "SDR de IA", "WhatsApp CRM", "automação de vendas"],
   verification: { google: "9ux8kd9gFsLNLaRZhA2mxh5duJ2xkRKVVqxDnr0y_4Q" },
   openGraph: {
     type: "website",
-    siteName: "Synexa",
-    title: "Synexa — CRM de vendas com IA",
+    siteName: "Vorlo",
+    title: "Vorlo — CRM de vendas com IA",
     description: "CRM de vendas com assistente de IA: WhatsApp, funil, automações e SDR de IA para vender mais.",
     url: "/",
     locale: "pt_BR",

@@ -83,7 +83,7 @@ export async function startTransportadoraCheckout(
         items: [
           {
             id: plan.id,
-            title: `Assinatura Synexa Transportadora — ${plan.name}`,
+            title: `Assinatura Vorlo Transportadora — ${plan.name}`,
             description: "Acesso ao app de gestão de fretes (Android)",
             quantity: 1,
             currency_id: "BRL",

@@ -37,7 +37,7 @@ export async function enrollMfa(): Promise<EnrollResult> {
 
   const secret = authenticator.generateSecret();
   const factorId = await createTotpFactor(user.id, secret, null);
-  const otpauth = authenticator.keyuri(user.email, "Synexa", secret);
+  const otpauth = authenticator.keyuri(user.email, "Vorlo", secret);
 
   try {
     const qrCode = await QRCode.toString(otpauth, { type: "svg", margin: 1, width: 200 });

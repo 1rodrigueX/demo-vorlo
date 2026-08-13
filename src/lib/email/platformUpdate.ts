@@ -3,7 +3,7 @@ import { createHmac, timingSafeEqual } from "crypto";
 import { Resend } from "resend";
 
 /**
- * E-mail de comunicado de atualização da Synexa.
+ * E-mail de comunicado de atualização da Vorlo.
  *
  * O "banner" é HTML, não imagem: cliente de e-mail bloqueia imagem externa por
  * padrão, e um banner bloqueado deixa o e-mail começando com um retângulo
@@ -95,7 +95,7 @@ export function renderPlatformUpdateHtml(update: PlatformUpdateEmail, recipientE
     <tr>
       <td style="background:linear-gradient(135deg,${BRAND_DARK} 0%,#2d1a10 100%);padding:28px 32px;">
         <div style="color:#ffffff;font-size:21px;font-weight:700;letter-spacing:-0.4px;">
-          Synexa<span style="color:${BRAND};">.</span>
+          Vorlo<span style="color:${BRAND};">.</span>
         </div>
         <div style="color:rgba(255,255,255,0.55);font-size:13px;margin-top:2px;">Novidades da plataforma</div>
         ${versionTag}
@@ -114,14 +114,14 @@ export function renderPlatformUpdateHtml(update: PlatformUpdateEmail, recipientE
           Qualquer dúvida, é só responder este e-mail — a gente lê todas.
         </p>
         <p style="margin:16px 0 0;font-size:15px;color:#111827;">
-          Att,<br><strong>Time Synexa</strong>
+          Att,<br><strong>Time Vorlo</strong>
         </p>
       </td>
     </tr>
     <tr>
       <td style="background:#fafafa;padding:18px 32px;text-align:center;">
         <p style="margin:0;font-size:12px;color:#9ca3af;line-height:1.6;">
-          Você recebe este e-mail porque tem uma conta na Synexa.<br>
+          Você recebe este e-mail porque tem uma conta na Vorlo.<br>
           <a href="${unsubscribeUrl(recipientEmail)}" style="color:#6b7280;text-decoration:underline;">
             Não quero mais receber novidades
           </a>
@@ -136,7 +136,7 @@ export function renderPlatformUpdateHtml(update: PlatformUpdateEmail, recipientE
 /** Versão texto puro — melhora entregabilidade e atende quem lê sem HTML. */
 export function renderPlatformUpdateText(update: PlatformUpdateEmail, recipientEmail: string): string {
   return [
-    `SYNEXA — Novidades da plataforma${update.version ? ` (${update.version})` : ""}`,
+    `VORLO — Novidades da plataforma${update.version ? ` (${update.version})` : ""}`,
     "",
     update.title,
     "",
@@ -146,7 +146,7 @@ export function renderPlatformUpdateText(update: PlatformUpdateEmail, recipientE
     "Qualquer dúvida, é só responder este e-mail — a gente lê todas.",
     "",
     "Att,",
-    "Time Synexa",
+    "Time Vorlo",
     "",
     `Não quer mais receber novidades? ${unsubscribeUrl(recipientEmail)}`,
   ]

@@ -57,7 +57,7 @@ export function AppReleasesCard({ releases }: { releases: ReleaseItem[] }) {
       </div>
       <p className="mb-4 text-xs text-gray-500">
         O app desktop consulta essa versão na aba Atualizações e se atualiza sozinho. Publique depois de rodar{" "}
-        <code className="rounded bg-gray-100 px-1">npm run build</code> em <code>apps/synexa-desktop</code> e
+        <code className="rounded bg-gray-100 px-1">npm run build</code> em <code>apps/vorlo-desktop</code> e
         subir o instalador para o servidor.
       </p>
 
@@ -85,7 +85,7 @@ export function AppReleasesCard({ releases }: { releases: ReleaseItem[] }) {
               id="url"
               name="url"
               type="url"
-              placeholder="https://falaai.cloud/downloads/Synexa_0.2.0_x64-setup.exe"
+              placeholder="https://falaai.cloud/downloads/Vorlo_0.2.0_x64-setup.exe"
               required
             />
           </div>

@@ -122,7 +122,7 @@ export default function PortfolioPage() {
           <CaseStudy
             index="01"
             meta="Produto próprio · Plataforma SaaS · 2026"
-            title="Synexa CRM"
+            title="Vorlo CRM"
             desc="Um CRM de vendas onde o WhatsApp, o pipeline e agentes de IA trabalham juntos. Multi-empresa, em tempo real, com app desktop nativo."
             feats={[
               "Pipeline visual arrastar-e-soltar, com etapas por cliente",
@@ -139,7 +139,7 @@ export default function PortfolioPage() {
           <CaseStudy
             index="02"
             meta="Marca própria · Site institucional · 2026"
-            title="synexa.cloud"
+            title="vorlo.com.br"
             desc="O site que você está navegando. Identidade construída em torno do símbolo-constelação, com movimento sutil e carregamento abaixo de 2 segundos."
             feats={[
               "Símbolo da marca em SVG animado — montagem + rotação 360°",
@@ -158,12 +158,12 @@ export default function PortfolioPage() {
                     <i />
                     <i />
                   </div>
-                  <div className="pf-browser__url">synexa.cloud</div>
+                  <div className="pf-browser__url">vorlo.com.br</div>
                 </div>
                 <div className="pf-browser__body">
                   <div className="pf-site">
                     <div className="pf-site__bar">
-                      <span className="pf-site__brand">SYNEXA</span>
+                      <span className="pf-site__brand">VORLO</span>
                       <div className="pf-site__nav">
                         <i />
                         <i />

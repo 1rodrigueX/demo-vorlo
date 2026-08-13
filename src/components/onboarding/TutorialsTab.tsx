@@ -6,7 +6,7 @@ export function TutorialsTab({ videos }: { videos: PlatformTutorialVideo[] }) {
   if (!videos.length) {
     return (
       <p className="py-12 text-center text-sm text-gray-500">
-        Ainda estamos gravando os tutoriais em vídeo — assim que sua conta for liberada, o Synexa já te ajuda com
+        Ainda estamos gravando os tutoriais em vídeo — assim que sua conta for liberada, o Vorlo já te ajuda com
         qualquer dúvida de como usar o CRM.
       </p>
     );

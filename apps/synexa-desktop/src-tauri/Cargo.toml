@@ -1,13 +1,13 @@
 [package]
-name = "synexa-desktop"
+name = "vorlo-desktop"
 version = "0.1.0"
-description = "App desktop da Synexa"
-authors = ["Synexa"]
+description = "App desktop da Vorlo"
+authors = ["Vorlo"]
 edition = "2021"
 
 # O binário do app puxa a lib abaixo (padrão do template Tauri v2).
 [lib]
-name = "synexa_desktop_lib"
+name = "vorlo_desktop_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]

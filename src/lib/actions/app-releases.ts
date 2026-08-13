@@ -25,7 +25,7 @@ export async function publishRelease(
   _prevState: ReleaseActionState,
   formData: FormData,
 ): Promise<ReleaseActionState> {
-  if (!(await isCurrentUserDev())) return { error: "Só o time Synexa pode publicar versões" };
+  if (!(await isCurrentUserDev())) return { error: "Só o time Vorlo pode publicar versões" };
 
   const parsed = releaseSchema.safeParse({
     version: formData.get("version"),

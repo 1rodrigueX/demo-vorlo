@@ -79,7 +79,7 @@ export function CompanyProfileSettingsCard({
   return (
     <div className="space-y-6">
       <p className="text-sm text-gray-500">
-        Essas informações alimentam automaticamente os agentes de IA (Synexa, SDR) — assim eles conseguem
+        Essas informações alimentam automaticamente os agentes de IA (Vorlo, SDR) — assim eles conseguem
         falar sobre a empresa, os produtos e onde o lead pode ver mais, sem você precisar reescrever isso no
         prompt.
       </p>

@@ -30,7 +30,7 @@ function SignupForm() {
       <div className="w-full max-w-sm rounded-lg border border-gray-200 bg-panel p-8 shadow-sm">
         <h1 className="mb-1 text-xl font-semibold text-gray-900">Criar conta</h1>
         <p className="mb-6 text-sm text-gray-500">
-          Crie sua conta no Synexa CRM — escolha o plano depois de conhecer a plataforma.
+          Crie sua conta no Vorlo CRM — escolha o plano depois de conhecer a plataforma.
         </p>
 
         {state?.message ? (

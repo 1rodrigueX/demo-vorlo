@@ -14,7 +14,7 @@ const PUBLIC_PATHS = [
   "/auth", // /auth/callback (pós-Google) e /auth/confirm (e-mail) resolvem sozinhos
   "/api/auth", // handler do Auth.js (login, callback do Google)
   "/compra",
-  // Site institucional público SYNEXA (agência) + página do produto CRM.
+  // Site institucional público VORLO (agência) + página do produto CRM.
   "/orcamento",
   "/portfolio",
   "/sobre",

@@ -1,6 +1,6 @@
-/** Marca Synexa em SVG estático (mesma geometria do app web). Herda a cor via
+/** Marca Vorlo em SVG estático (mesma geometria do app web). Herda a cor via
  * currentColor — use com text-ignite. */
-export function SynexaMark({ size = 40, className = "" }: { size?: number; className?: string }) {
+export function VorloMark({ size = 40, className = "" }: { size?: number; className?: string }) {
   return (
     <svg
       width={size}

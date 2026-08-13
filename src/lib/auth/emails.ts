@@ -31,7 +31,7 @@ function render(heading: string, intro: string, ctaLabel: string, ctaUrl: string
 <html lang="pt-BR"><body style="margin:0;padding:24px 12px;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:#111827;">
   <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="max-width:520px;margin:0 auto;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 1px 3px rgba(16,24,40,0.08);">
     <tr><td style="background:linear-gradient(135deg,${BRAND_DARK} 0%,#2d1a10 100%);padding:26px 32px;">
-      <div style="color:#fff;font-size:21px;font-weight:700;letter-spacing:-0.4px;">Synexa<span style="color:${BRAND};">.</span></div>
+      <div style="color:#fff;font-size:21px;font-weight:700;letter-spacing:-0.4px;">Vorlo<span style="color:${BRAND};">.</span></div>
     </td></tr>
     <tr><td style="padding:30px 32px 8px;">
       <h1 style="margin:0 0 14px;font-size:20px;font-weight:700;color:#111827;">${heading}</h1>
@@ -73,10 +73,10 @@ export async function sendEmailVerification(
   const nome = target.fullName?.split(" ")[0];
   return send(
     target.email,
-    "Confirme seu e-mail — Synexa",
+    "Confirme seu e-mail — Vorlo",
     render(
       `Bem-vindo${nome ? `, ${nome}` : ""}! 👋`,
-      "Confirme seu e-mail pra ativar sua conta na Synexa. É só clicar no botão abaixo.",
+      "Confirme seu e-mail pra ativar sua conta na Vorlo. É só clicar no botão abaixo.",
       "Confirmar e-mail",
       url.toString(),
     ),
@@ -90,7 +90,7 @@ export async function sendPasswordReset(target: { userId?: string; email: string
   url.searchParams.set("token", token);
   return send(
     target.email,
-    "Redefinir senha — Synexa",
+    "Redefinir senha — Vorlo",
     render(
       "Redefinir sua senha",
       "Recebemos um pedido pra redefinir a senha da sua conta. O link abaixo vale por 1 hora.",

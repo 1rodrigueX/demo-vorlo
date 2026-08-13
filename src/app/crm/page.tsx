@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { LandingPage } from "@/components/marketing/LandingPage";
 
-/** Página do produto CRM (antes era a home). O site institucional da SYNEXA
+/** Página do produto CRM (antes era a home). O site institucional da VORLO
  * agora ocupa a "/"; o CRM é apresentado aqui e linkado pelo site/agência. */
 export default async function CrmProductPage() {
   const supabase = await createClient();

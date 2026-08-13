@@ -17,14 +17,14 @@ export default async function SuportePage({ params }: { params: Promise<{ tenant
     .maybeSingle();
 
   if (!falaAi) {
-    return <p className="text-sm text-gray-500">O Synexa ainda não foi configurado neste CRM.</p>;
+    return <p className="text-sm text-gray-500">O Vorlo ainda não foi configurado neste CRM.</p>;
   }
 
   return (
     <AgentChatPanel
       agentId={falaAi.id}
       mode="inline"
-      title="Synexa"
+      title="Vorlo"
       subtitle="Administre seus agentes e tire dúvidas"
       emptyStateHint='Peça algo como "crie um agente SDR" ou "como marco uma venda como ganha?".'
     />

@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { useAuth } from "@/lib/auth";
-import { SynexaMark } from "@/components/SynexaMark";
+import { VorloMark } from "@/components/VorloMark";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 
@@ -28,9 +28,9 @@ export function Login() {
       <div className="w-full max-w-sm">
         <div className="mb-8 flex flex-col items-center text-center">
           <span className="text-ignite">
-            <SynexaMark size={46} />
+            <VorloMark size={46} />
           </span>
-          <h1 className="mt-6 text-2xl font-bold tracking-tight text-white-soft">Entrar na Synexa</h1>
+          <h1 className="mt-6 text-2xl font-bold tracking-tight text-white-soft">Entrar na Vorlo</h1>
           <p className="mt-1.5 text-sm text-grey">Acesse seu CRM.</p>
         </div>
 
@@ -56,7 +56,7 @@ export function Login() {
           </Button>
         </form>
 
-        <p className="mt-8 text-center text-xs text-grey-dim">Synexa · app desktop</p>
+        <p className="mt-8 text-center text-xs text-grey-dim">Vorlo · app desktop</p>
       </div>
     </div>
   );

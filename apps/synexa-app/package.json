@@ -1,9 +1,9 @@
 {
-  "name": "synexa-app",
+  "name": "vorlo-app",
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "Cliente desktop nativo da Synexa (Vite + React + Tauri).",
+  "description": "Cliente desktop nativo da Vorlo (Vite + React + Tauri).",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

@@ -12,7 +12,7 @@ import { useSyncExternalStore } from "react";
  * dentro de efeito.
  *
  * A janela do CRM recebe a API do Tauri por autorização explícita — ver
- * apps/synexa-desktop/src-tauri/capabilities/remote-crm.json.
+ * apps/vorlo-desktop/src-tauri/capabilities/remote-crm.json.
  */
 
 /** Não muda em tempo de execução: ou o app injetou a API no carregamento, ou não. */

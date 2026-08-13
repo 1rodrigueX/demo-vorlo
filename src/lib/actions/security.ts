@@ -40,7 +40,7 @@ export type SecuritySnapshot = {
  * de dev já barra quem não é do time antes de chegar aqui.
  */
 export async function getSecuritySnapshot(): Promise<SecuritySnapshot | { error: string }> {
-  if (!(await isCurrentUserDev())) return { error: "Acesso restrito ao time Synexa" };
+  if (!(await isCurrentUserDev())) return { error: "Acesso restrito ao time Vorlo" };
 
   const admin = createAdminClient();
   const since = new Date(Date.now() - 24 * 3_600_000).toISOString();

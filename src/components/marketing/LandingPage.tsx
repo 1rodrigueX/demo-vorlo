@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
-import { SynexaMark } from "@/components/brand/SynexaLogo";
+import { VorloMark } from "@/components/brand/VorloLogo";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { formatCentsBrl } from "@/lib/billing/pricing";
 import { getPlanCopy } from "@/lib/billing/plan-copy";
@@ -26,7 +26,7 @@ import type { BillingPlan } from "@/types/domain";
 const TRUST_POINTS = [
   "Cada empresa fica isolada — ninguém vê dado de outro CRM",
   "Pagamento via PIX, boleto ou cartão",
-  "Suporte pelo próprio Synexa, direto no CRM",
+  "Suporte pelo próprio Vorlo, direto no CRM",
 ];
 
 /** Acento único da marca (laranja) nos cards de recurso — sem cores neon. */
@@ -88,7 +88,7 @@ export function LandingPage({
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3.5">
           <div className="flex items-center gap-2.5">
             <BrandMark />
-            <span className="text-base font-semibold tracking-tight text-gray-900">Synexa</span>
+            <span className="text-base font-semibold tracking-tight text-gray-900">Vorlo</span>
           </div>
           <div className="flex items-center gap-2 sm:gap-4">
             <a
@@ -130,10 +130,10 @@ export function LandingPage({
             <span className="bg-gradient-to-r from-[#ff9f78] via-[#ff5722] to-[#ff7a4d] bg-clip-text text-transparent">
               suas vendas
             </span>
-            <br className="hidden sm:block" /> com o Synexa CRM
+            <br className="hidden sm:block" /> com o Vorlo CRM
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-pretty text-base text-gray-600 sm:text-lg">
-            Pipeline, WhatsApp e agentes de IA que atendem, qualificam e cobram por você — o Synexa administra
+            Pipeline, WhatsApp e agentes de IA que atendem, qualificam e cobram por você — o Vorlo administra
             tudo isso a partir de uma conversa.
           </p>
           <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
@@ -206,7 +206,7 @@ export function LandingPage({
               A IA responde no WhatsApp antes do lead esfriar
             </h2>
             <p className="mt-4 text-base text-gray-600">
-              O Synexa qualifica, tira dúvida e já registra o contato no pipeline — tudo isso enquanto sua equipe
+              O Vorlo qualifica, tira dúvida e já registra o contato no pipeline — tudo isso enquanto sua equipe
               está ocupada em outra ligação. Você só entra na conversa quando o negócio já está quente.
             </p>
             <Link href="/signup" className="mt-6 inline-block">
@@ -355,7 +355,7 @@ export function LandingPage({
           {/* MAIS PRODUTOS — módulos além do CRM (transportadora, finanças, ...) */}
           <div className="mt-20">
             <div className="text-center">
-              <h3 className="text-2xl font-bold tracking-tight text-gray-900">Mais produtos Synexa</h3>
+              <h3 className="text-2xl font-bold tracking-tight text-gray-900">Mais produtos Vorlo</h3>
               <p className="mt-2 text-sm text-gray-500">
                 Módulos que você contrata à parte, quando a operação precisar.
               </p>
@@ -416,18 +416,18 @@ export function LandingPage({
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-4 text-sm text-gray-500 sm:flex-row">
           <div className="flex items-center gap-2">
             <BrandMark />
-            <span className="font-semibold text-gray-900">Synexa CRM</span>
+            <span className="font-semibold text-gray-900">Vorlo CRM</span>
           </div>
-          <p>© {new Date().getFullYear()} Synexa — CRM de vendas com IA</p>
+          <p>© {new Date().getFullYear()} Vorlo — CRM de vendas com IA</p>
         </div>
       </footer>
     </div>
   );
 }
 
-/** Marca Synexa (S angular em gradiente azul→violeta). */
+/** Marca Vorlo (S angular em gradiente azul→violeta). */
 function BrandMark() {
-  return <SynexaMark size={32} />;
+  return <VorloMark size={32} />;
 }
 
 /** Fundo do hero: grid sutil que some nas bordas (sem halos neon). */
@@ -464,14 +464,14 @@ function PipelineMockup() {
         <span className="h-2.5 w-2.5 rounded-full bg-red-400/70" />
         <span className="h-2.5 w-2.5 rounded-full bg-amber-400/70" />
         <span className="h-2.5 w-2.5 rounded-full bg-emerald-400/70" />
-        <span className="ml-3 text-xs text-white/35">app.synexa.com.br/pipeline</span>
+        <span className="ml-3 text-xs text-white/35">app.vorlo.com.br/pipeline</span>
         <span className="ml-auto rounded-md bg-white/5 px-2 py-0.5 text-[10px] text-white/40">+ Adicionar</span>
       </div>
       <div className="flex">
         <div className="hidden w-40 shrink-0 flex-col gap-1 border-r border-white/5 p-4 sm:flex">
           <div className="mb-3 flex items-center gap-2">
-            <SynexaMark size={22} withCircuit={false} />
-            <span className="text-[11px] font-semibold text-white">Synexa CRM</span>
+            <VorloMark size={22} withCircuit={false} />
+            <span className="text-[11px] font-semibold text-white">Vorlo CRM</span>
           </div>
           {["Dashboard", "Pipeline", "Leads", "E-mails"].map((item, i) => (
             <div
@@ -516,7 +516,7 @@ function PipelineMockup() {
   );
 }
 
-/** Prévia estilizada de conversa no WhatsApp respondida pelo Synexa. */
+/** Prévia estilizada de conversa no WhatsApp respondida pelo Vorlo. */
 function ChatMockup() {
   return (
     <div className="mx-auto w-full max-w-sm rounded-2xl border border-gray-200/70 bg-panel p-4 shadow-md shadow-black/10">
@@ -525,7 +525,7 @@ function ChatMockup() {
           <Bot size={16} />
         </div>
         <div>
-          <p className="text-xs font-semibold text-gray-900">Synexa</p>
+          <p className="text-xs font-semibold text-gray-900">Vorlo</p>
           <p className="text-[11px] text-gray-400">respondendo agora</p>
         </div>
       </div>

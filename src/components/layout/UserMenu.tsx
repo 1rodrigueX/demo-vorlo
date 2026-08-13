@@ -81,7 +81,7 @@ export function UserMenu({
                 className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
               >
                 <LayoutGrid size={16} />
-                Central Synexa
+                Central Vorlo
               </Link>
               <Link
                 href="/central/seguranca"

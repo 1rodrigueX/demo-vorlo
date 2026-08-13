@@ -142,7 +142,7 @@ export function PlatformUpdatesManager({
       <div>
         <h1 className="text-lg font-semibold text-gray-900">Atualizações</h1>
         <p className="mt-1 text-sm text-gray-500">
-          Comunicado por e-mail para todo mundo que tem cadastro na Synexa — inclusive quem nunca acessou.
+          Comunicado por e-mail para todo mundo que tem cadastro na Vorlo — inclusive quem nunca acessou.
           Sempre com link de descadastro, que é obrigatório em envio em massa.
         </p>
       </div>
@@ -156,7 +156,7 @@ export function PlatformUpdatesManager({
             <span className="text-sm font-semibold text-indigo-900">Escrever com IA</span>
           </div>
           <p className="mb-3 text-xs text-indigo-700/80">
-            Diga em uma frase o que foi lançado — a IA escreve o comunicado inteiro na voz da Synexa. Você revisa antes de enviar.
+            Diga em uma frase o que foi lançado — a IA escreve o comunicado inteiro na voz da Vorlo. Você revisa antes de enviar.
           </p>
           <div className="flex flex-col gap-2 sm:flex-row">
             <Input

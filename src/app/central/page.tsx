@@ -8,7 +8,7 @@ import { UserMenu } from "@/components/layout/UserMenu";
 import { LiteToggle } from "@/components/layout/LiteToggle";
 import { CentralServices } from "@/components/central/CentralServices";
 import { AppUpdateCard } from "@/components/central/AppUpdateCard";
-import { SynexaMark } from "@/components/brand/SynexaLogo";
+import { VorloMark } from "@/components/brand/VorloLogo";
 
 export default async function CentralPage() {
   const supabase = await createClient();
@@ -23,8 +23,8 @@ export default async function CentralPage() {
 
   // O botão de baixar serve o MESMO arquivo que o updater instala: uma fonte
   // de verdade só. Sem isso o link ficaria preso num nome fixo
-  // ("Synexa-Setup.exe") e daria 404 a cada release, porque o instalador sai
-  // com a versão no nome (Synexa_0.2.0_x64-setup.exe).
+  // ("Vorlo-Setup.exe") e daria 404 a cada release, porque o instalador sai
+  // com a versão no nome (Vorlo_0.2.0_x64-setup.exe).
   //
   // Via admin client porque app_releases é legível só por dev (0075). A URL em
   // si não é segredo — já vai pública no manifesto de /api/app/update —, então
@@ -37,14 +37,14 @@ export default async function CentralPage() {
     .limit(1)
     .maybeSingle();
 
-  const downloadUrl = release?.url ?? "/downloads/Synexa-Setup.exe";
+  const downloadUrl = release?.url ?? "/downloads/Vorlo-Setup.exe";
 
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-6">
       <header className="mx-auto flex max-w-4xl items-center justify-between pb-10">
-        <Link href="/" className="flex items-center gap-2" aria-label="Voltar ao site Synexa">
-          <SynexaMark size={22} withCircuit={false} />
-          <span className="text-sm font-semibold text-gray-900">Synexa</span>
+        <Link href="/" className="flex items-center gap-2" aria-label="Voltar ao site Vorlo">
+          <VorloMark size={22} withCircuit={false} />
+          <span className="text-sm font-semibold text-gray-900">Vorlo</span>
         </Link>
         <div className="flex items-center gap-3">
           <Link

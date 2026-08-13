@@ -154,7 +154,7 @@ export async function provisionTransportadoraFromCheckout(
     try {
       await sendBillingEmail({
         to: email,
-        subject: "Seu acesso ao Synexa Transportadora está liberado!",
+        subject: "Seu acesso ao Vorlo Transportadora está liberado!",
         heading: "Pagamento confirmado 🎉",
         message:
           "Sua assinatura da <strong>Transportadora</strong> foi confirmada. Baixe o app no Android e entre com o mesmo e-mail e senha (ou Google) que você usa aqui no site.",

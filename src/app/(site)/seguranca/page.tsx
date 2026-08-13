@@ -218,7 +218,7 @@ export default function SegurancaPage() {
           </div>
           <div className="flex flex-col gap-3 sm:flex-row">
             <CtaButton href="/orcamento" className="shrink-0">
-              Falar com a Synexa
+              Falar com a Vorlo
             </CtaButton>
             <CtaButton href="/produtos" variant="ghost" className="shrink-0">
               Ver os produtos

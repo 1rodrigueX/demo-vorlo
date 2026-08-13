@@ -16,7 +16,7 @@ export type LeadResumoResult = { ok: true; data: LeadResumo } | { ok: false; err
  * Resumo por IA da conversa do lead: gera um resumo curto, uma probabilidade
  * estimada de fechamento (0-100) e a próxima ação sugerida. Roda sob demanda
  * (botão "Gerar resumo") pra não gastar token a cada carga da tela. Usa a chave
- * do tenant ou, no fallback do Synexa, a chave da plataforma.
+ * do tenant ou, no fallback do Vorlo, a chave da plataforma.
  */
 export async function generateLeadResumo(contactId: string): Promise<LeadResumoResult> {
   const supabase = await createClient();
@@ -61,7 +61,7 @@ export async function generateLeadResumo(contactId: string): Promise<LeadResumoR
 
   const dealLine = deal ? `Negócio: R$ ${Number(deal.value).toFixed(2)}, status ${deal.status}.` : "Sem negócio registrado ainda.";
 
-  const prompt = `Você é o Synexa, assistente de vendas do CRM. Analise a conversa do lead "${contact.name}" e responda SOMENTE com um JSON válido, sem texto antes ou depois, no formato:
+  const prompt = `Você é o Vorlo, assistente de vendas do CRM. Analise a conversa do lead "${contact.name}" e responda SOMENTE com um JSON válido, sem texto antes ou depois, no formato:
 {"resumo": "<2-3 frases sobre o interesse e a situação do lead>", "probabilidade": <número inteiro de 0 a 100 estimando a chance de fechamento>, "proximaAcao": "<uma ação objetiva sugerida para o vendedor>"}
 
 ${dealLine}

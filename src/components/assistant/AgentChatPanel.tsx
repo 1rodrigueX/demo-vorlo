@@ -8,7 +8,7 @@ import { useTenantTheme } from "@/lib/theme/TenantThemeContext";
 
 type ChatMessage = { role: "user" | "assistant"; content: string };
 
-/** Painel de chat genérico com um agente de IA — usado tanto pelo botão flutuante do Synexa quanto embutido (fixo) numa tela específica, como a conversa de um lead no WhatsApp. */
+/** Painel de chat genérico com um agente de IA — usado tanto pelo botão flutuante do Vorlo quanto embutido (fixo) numa tela específica, como a conversa de um lead no WhatsApp. */
 export function AgentChatPanel({
   agentId,
   title,

@@ -1,8 +1,8 @@
 [package]
 name = "synexa-app"
 version = "0.1.0"
-description = "App desktop da Synexa"
-authors = ["Synexa"]
+description = "App desktop da Vorlo"
+authors = ["Vorlo"]
 edition = "2021"
 
 [lib]

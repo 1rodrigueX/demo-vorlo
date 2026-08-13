@@ -39,7 +39,7 @@ function validar(c: Campos): Erros {
 
 function montarMensagem(c: Campos): string {
   const linhas = [
-    "SOLICITAÇÃO DE ORÇAMENTO — SYNEXA",
+    "SOLICITAÇÃO DE ORÇAMENTO — VORLO",
     "",
     `Nome: ${c.nome}`,
     `Empresa / operação: ${c.empresa}`,
@@ -147,7 +147,7 @@ export function QuoteForm() {
           body: JSON.stringify({
             access_key: WEB3FORMS_KEY,
             subject: `Orçamento — ${campos.empresa}`,
-            from_name: "Site SYNEXA",
+            from_name: "Site VORLO",
             replyto: campos.email,
             nome: campos.nome,
             empresa: campos.empresa,

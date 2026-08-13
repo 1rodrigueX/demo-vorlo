@@ -21,7 +21,7 @@ export default async function SettingsWebhooksPage() {
       : Promise.resolve({ data: [] }),
   ]);
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://synexa.cloud";
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://vorlo.com.br";
 
   return (
     <LeadWebhooksManager webhooks={webhooks ?? []} stages={stages ?? []} siteUrl={siteUrl} />
