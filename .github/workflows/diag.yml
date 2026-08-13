@@ -15,11 +15,12 @@ jobs:
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           script: |
             cd /opt/crm
-            echo "=== pm2 status ==="
-            pm2 list
-            echo "=== pm2 describe crm ==="
-            pm2 describe crm 2>&1 | grep -iE "status|restarts|uptime"
-            echo "=== últimas 80 linhas de erro ==="
-            pm2 logs crm --err --lines 80 --nostream 2>&1 | tail -85
-            echo "=== últimas 40 linhas gerais (pode ter stack trace) ==="
-            pm2 logs crm --lines 40 --nostream 2>&1 | tail -45
+            echo "=== disco ==="
+            df -h / 2>&1
+            echo "=== memória ==="
+            free -h 2>&1
+            echo "=== conteúdo de .next (existe? tamanho?) ==="
+            du -sh .next 2>&1 || echo "sem .next"
+            ls -la .next 2>&1 | head -20
+            echo "=== .next/server existe? ==="
+            ls -la .next/server 2>&1 | head -10 || echo "sem .next/server"
