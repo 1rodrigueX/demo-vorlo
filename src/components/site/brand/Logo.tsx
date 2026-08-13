@@ -9,7 +9,7 @@ interface LogoProps {
   markMode?: "static" | "assemble" | "hover";
 }
 
-/** Logo composta: símbolo + wordmark SYN·EXA (Montserrat 800). */
+/** Logo composta: símbolo + wordmark VOR·LO (Montserrat 800). */
 export function Logo({
   className,
   variant = "dark",
@@ -30,7 +30,7 @@ export function Logo({
 
       <span className={cn("flex-col leading-none", wordmarkVisibility)}>
         <span className={cn("type-display text-[1em] tracking-[-0.02em]", wordTone)}>
-          SYN<span className="text-ignite">EXA</span>
+          VOR<span className="text-ignite">LO</span>
         </span>
 
         {showTagline ? (
