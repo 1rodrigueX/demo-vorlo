@@ -50,6 +50,10 @@ export type ProducaoFuncionario = Database["public"]["Tables"]["producao_funcion
 export type ProducaoApontamento = Database["public"]["Tables"]["producao_apontamentos"]["Row"];
 export type DealProduto = Database["public"]["Tables"]["deal_produtos"]["Row"];
 export type ProfileProductAccess = Database["public"]["Tables"]["profile_product_access"]["Row"];
+export type ErpCategoria = Database["public"]["Tables"]["erp_categorias"]["Row"];
+export type ErpProduto = Database["public"]["Tables"]["erp_produtos"]["Row"];
+export type ErpFornecedor = Database["public"]["Tables"]["erp_fornecedores"]["Row"];
+export type ErpFuncionario = Database["public"]["Tables"]["erp_funcionarios"]["Row"];
 
 export type ContactWithCompany = Contact & {
   company: Pick<Company, "id" | "name"> | null;

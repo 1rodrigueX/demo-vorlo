@@ -3554,6 +3554,193 @@ export interface Database {
           },
         ];
       };
+      erp_categorias: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          name: string;
+          parent_id: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          name: string;
+          parent_id?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          name?: string;
+          parent_id?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "erp_categorias_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "erp_categorias_parent_id_fkey";
+            columns: ["parent_id"];
+            isOneToOne: false;
+            referencedRelation: "erp_categorias";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      erp_produtos: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          name: string;
+          sku: string | null;
+          category_id: string | null;
+          unit: string;
+          cost_price_cents: number;
+          sale_price_cents: number;
+          quantity: number;
+          min_stock: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          name: string;
+          sku?: string | null;
+          category_id?: string | null;
+          unit?: string;
+          cost_price_cents?: number;
+          sale_price_cents?: number;
+          quantity?: number;
+          min_stock?: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          name?: string;
+          sku?: string | null;
+          category_id?: string | null;
+          unit?: string;
+          cost_price_cents?: number;
+          sale_price_cents?: number;
+          quantity?: number;
+          min_stock?: number;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "erp_produtos_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "erp_produtos_category_id_fkey";
+            columns: ["category_id"];
+            isOneToOne: false;
+            referencedRelation: "erp_categorias";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      erp_fornecedores: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          name: string;
+          document: string | null;
+          email: string | null;
+          phone: string | null;
+          city: string | null;
+          state: string | null;
+          category: string | null;
+          status: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          name: string;
+          document?: string | null;
+          email?: string | null;
+          phone?: string | null;
+          city?: string | null;
+          state?: string | null;
+          category?: string | null;
+          status?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          name?: string;
+          document?: string | null;
+          email?: string | null;
+          phone?: string | null;
+          city?: string | null;
+          state?: string | null;
+          category?: string | null;
+          status?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "erp_fornecedores_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      erp_funcionarios: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          full_name: string;
+          role: string | null;
+          department: string | null;
+          admission_date: string | null;
+          status: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          full_name: string;
+          role?: string | null;
+          department?: string | null;
+          admission_date?: string | null;
+          status?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          full_name?: string;
+          role?: string | null;
+          department?: string | null;
+          admission_date?: string | null;
+          status?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "erp_funcionarios_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       estoque_itens: {
         Row: {
           id: string;
