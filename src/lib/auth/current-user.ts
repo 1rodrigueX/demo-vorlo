@@ -157,11 +157,13 @@ export async function resolveHomeRoute(): Promise<string> {
 }
 
 export type AccountService = {
-  key: "crm" | "transportadora" | "financas" | "estoque" | "producao";
+  key: "crm" | "transportadora" | "financas" | "estoque" | "producao" | "erp";
   name: string;
   description: string;
   active: boolean;
   href: string;
+  /** Prévia gratuita liberada junto do CRM — sem checkout próprio, badge "Beta" em vez de "Ativo". */
+  beta?: boolean;
 };
 
 /** Produtos da conta pra tela /central — cada um resolve seu próprio status e destino, sem depender um do outro. */
@@ -244,6 +246,22 @@ export async function getAccountServices(): Promise<{
         active: !!hasProducao,
         href: hasProducao && crmSlug ? `/${crmSlug}/producao` : "/comprar-producao",
       },
+      // Prévia visual do ERP: liberada de graça pra quem já tem CRM ativo, sem
+      // gate de billing próprio (não existe RPC current_tenant_has_erp — o
+      // módulo ainda não tem regra de negócio real, só mock). Some da lista
+      // pra quem não tem CRM, porque não há como "assinar" isso à parte.
+      ...(crmActive && crmSlug
+        ? [
+            {
+              key: "erp" as const,
+              name: "ERP",
+              description: "Gestão completa: vendas, produção, estoque e financeiro (prévia).",
+              active: true,
+              beta: true,
+              href: `/${crmSlug}/erp`,
+            },
+          ]
+        : []),
     ],
   };
 }

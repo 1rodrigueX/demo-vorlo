@@ -13,6 +13,7 @@ const ICONS: Record<AccountService["key"], typeof LayoutDashboard> = {
   financas: Wallet,
   estoque: Boxes,
   producao: Factory,
+  erp: LayoutGrid,
 };
 
 type Tab = "acessos" | "produtos";
@@ -31,7 +32,9 @@ function ServiceCard({ service, mode }: { service: AccountService; mode: Tab }) 
         <div className="flex h-11 w-11 items-center justify-center rounded-full bg-indigo-50 text-indigo-600">
           <Icon size={20} />
         </div>
-        {service.active ? (
+        {service.active && service.beta ? (
+          <span className="rounded-full bg-[#ff5722]/10 px-2.5 py-1 text-xs font-medium text-[#ff5722]">Beta</span>
+        ) : service.active ? (
           <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">Ativo</span>
         ) : (
           <span className="flex items-center gap-1 rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-500">

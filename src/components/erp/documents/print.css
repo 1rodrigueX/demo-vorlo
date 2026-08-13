@@ -1,0 +1,26 @@
+/**
+ * Impressão do ERP (Proposta, Pedido de venda, Relatório de produção).
+ * Técnica de visibilidade seletiva: some com tudo, exceto o conteúdo dentro de
+ * #erp-print-area (ver DocumentLayout). Sem rota dedicada, sem window.open —
+ * o próprio navegador cuida do preview de impressão (Ctrl+P / botão Imprimir).
+ */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #erp-print-area,
+  #erp-print-area * {
+    visibility: visible;
+  }
+  #erp-print-area {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+  }
+  .erp-print-hide {
+    display: none !important;
+  }
+  @page {
+    margin: 14mm;
+  }
+}

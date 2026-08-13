@@ -21,8 +21,8 @@ export const metadata: Metadata = {
   },
   description: "CRM de vendas com assistente de IA: WhatsApp, funil, automações e SDR de IA para vender mais.",
   applicationName: "Vorlo",
-  keywords: ["Vorlo", "CRM", "CRM com IA", "SDR de IA", "WhatsApp CRM", "automação de vendas"],
-  verification: { google: "9ux8kd9gFsLNLaRZhA2mxh5duJ2xkRKVVqxDnr0y_4Q" },
+  keywords: ["Vorlo", "CRM", "CRM com IA", "SDR de IA", "WhatsApp CRM", "automação de vendas", "ERP"],
+  verification: { google: "gRjm8CU5m81gatZlSW2mb-b51YAhYgAAZ-qmdBe3Z40" },
   openGraph: {
     type: "website",
     siteName: "Vorlo",

@@ -11,6 +11,7 @@ import {
   MessageCircle,
   Mail,
   Workflow,
+  LayoutGrid,
   Megaphone,
   Sparkles,
   Lightbulb,
@@ -32,6 +33,7 @@ const mainLinks: NavLink[] = [
   { href: "/contacts", label: "Contatos", icon: Users },
   { href: "/whatsapp", label: "Leads", icon: MessageCircle },
   { href: "/trajetorias", label: "Trajetórias", icon: Workflow, badge: "Beta" },
+  { href: "/erp", label: "ERP", icon: LayoutGrid, badge: "Beta" },
   { href: "/emails", label: "E-mails", icon: Mail },
 ];
 
