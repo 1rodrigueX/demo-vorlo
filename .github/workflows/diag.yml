@@ -1,0 +1,21 @@
+name: Diag (resend check)
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  diag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Confirmar .env.local
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            cd /opt/crm
+            echo "=== RESEND_API_KEY (só tamanho/prefixo) ==="
+            awk -F= '/^RESEND_API_KEY=/{v=substr($0,index($0,"=")+1); print "len:", length(v), "| prefixo:", substr(v,1,7)}' .env.local
+            echo "=== RESEND_FROM_EMAIL ==="
+            grep '^RESEND_FROM_EMAIL=' .env.local
