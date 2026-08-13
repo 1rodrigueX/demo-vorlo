@@ -19,8 +19,10 @@ jobs:
             cd /opt/crm
             echo "=== disco (antes) ==="
             df -h / 2>&1
-            echo "=== removendo .next corrompido/incompleto ==="
-            rm -rf .next
+            echo "=== removendo .next e node_modules corrompidos/incompletos ==="
+            rm -rf .next node_modules
+            echo "=== reinstalando dependências do zero ==="
+            npm ci
             echo "=== rebuild ==="
             npm run build
             echo "=== disco (depois) ==="
