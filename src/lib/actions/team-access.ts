@@ -95,9 +95,20 @@ export async function createTeamMemberWithAccess(_prevState: ActionState, formDa
     return { error: `Não foi possível criar o acesso: ${error?.message ?? "erro desconhecido"}` };
   }
 
-  // handle_new_user só copia full_name/tenant_id/role do user_metadata pro
-  // profiles novo — a cor é setada num segundo passo aqui.
-  await admin.from("profiles").update({ color: parsed.data.color }).eq("id", created.user.id);
+  // handle_new_user() (trigger em auth.users) é código morto desde a migração
+  // pro Auth.js — createUser() do shim só grava em app_users, nunca em
+  // auth.users, então o trigger nunca dispara. Sem isso, o convidado não
+  // ganhava profile nenhum e não conseguia nem logar.
+  const { error: profileError } = await admin.from("profiles").insert({
+    id: created.user.id,
+    full_name: parsed.data.fullName,
+    tenant_id: owner.tenantId,
+    role: parsed.data.role,
+    color: parsed.data.color,
+  });
+  if (profileError) {
+    return { error: `Não foi possível criar o acesso: ${profileError.message}` };
+  }
 
   const selectedProducts = TOGGLEABLE_PRODUCTS.filter((p) => formData.get(`product_${p}`) === "on");
   if (selectedProducts.length > 0) {
