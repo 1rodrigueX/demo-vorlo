@@ -8,15 +8,10 @@ import { UserMenu } from "@/components/layout/UserMenu";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { LiteToggle } from "@/components/layout/LiteToggle";
 import { useTenantSlug } from "@/lib/tenant/useTenantSlug";
-import { getMockCompanies, getMockNotifications, type NotificationTone } from "@/mocks/erp/session";
+import { getMockCompanies } from "@/mocks/erp/session";
+import { markAllErpNotificacoesRead, markErpNotificacaoRead } from "@/lib/actions/erp-notificacoes";
 import { formatRelative } from "@/lib/utils/dates";
-
-const TONE_DOT: Record<NotificationTone, string> = {
-  info: "bg-sky-500",
-  success: "bg-emerald-500",
-  warning: "bg-amber-500",
-  danger: "bg-red-500",
-};
+import type { ErpNotificacao } from "@/types/domain";
 
 function useClickOutside<T extends HTMLElement>(onOutside: () => void) {
   const ref = useRef<T>(null);
@@ -75,11 +70,26 @@ function CompanySwitcher() {
   );
 }
 
-function NotificationsMenu() {
-  const [notifications, setNotifications] = useState(getMockNotifications());
+/** Só o evento "SDR montou uma proposta" usa notificação real por enquanto —
+ * o resto do sino era mock e continua sem fonte de dado própria ainda. */
+function NotificationsMenu({ initialNotifications }: { initialNotifications: ErpNotificacao[] }) {
+  const [notifications, setNotifications] = useState(initialNotifications);
   const [open, setOpen] = useState(false);
   const ref = useClickOutside<HTMLDivElement>(() => setOpen(false));
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  const unreadCount = notifications.filter((n) => !n.read_at).length;
+
+  function handleMarkAllRead() {
+    setNotifications((prev) => prev.map((n) => ({ ...n, read_at: n.read_at ?? new Date().toISOString() })));
+    void markAllErpNotificacoesRead();
+  }
+
+  function handleOpenNotification(n: ErpNotificacao) {
+    if (!n.read_at) {
+      setNotifications((prev) => prev.map((x) => (x.id === n.id ? { ...x, read_at: new Date().toISOString() } : x)));
+      void markErpNotificacaoRead(n.id);
+    }
+    setOpen(false);
+  }
 
   return (
     <div className="relative" ref={ref}>
@@ -101,26 +111,33 @@ function NotificationsMenu() {
           <div className="flex items-center justify-between border-b border-gray-100 px-4 py-2.5">
             <p className="text-sm font-semibold text-gray-900">Notificações</p>
             {unreadCount > 0 && (
-              <button
-                type="button"
-                onClick={() => setNotifications((prev) => prev.map((n) => ({ ...n, read: true })))}
-                className="text-xs font-medium text-[#ff5722] hover:underline"
-              >
+              <button type="button" onClick={handleMarkAllRead} className="text-xs font-medium text-[#ff5722] hover:underline">
                 Marcar todas como lidas
               </button>
             )}
           </div>
           <div className="max-h-80 overflow-y-auto">
-            {notifications.map((n) => (
-              <div key={n.id} className={cn("flex gap-2.5 px-4 py-2.5", !n.read && "bg-[#ff5722]/[0.03]")}>
-                <span className={cn("mt-1.5 h-2 w-2 shrink-0 rounded-full", TONE_DOT[n.tone])} />
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-gray-900">{n.title}</p>
-                  <p className="line-clamp-2 text-xs text-gray-500">{n.description}</p>
-                  <p className="mt-0.5 text-[11px] text-gray-400">{formatRelative(n.createdAt)}</p>
+            {notifications.map((n) => {
+              const row = (
+                <div className={cn("flex gap-2.5 px-4 py-2.5", !n.read_at && "bg-[#ff5722]/[0.03]")}>
+                  <span className={cn("mt-1.5 h-2 w-2 shrink-0 rounded-full", n.read_at ? "bg-gray-300" : "bg-[#ff5722]")} />
+                  <div className="min-w-0">
+                    <p className="line-clamp-2 text-sm font-medium text-gray-900">{n.message}</p>
+                    <p className="mt-0.5 text-[11px] text-gray-400">{formatRelative(n.created_at)}</p>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+              return n.link ? (
+                <Link key={n.id} href={n.link} onClick={() => handleOpenNotification(n)} className="block hover:bg-gray-50">
+                  {row}
+                </Link>
+              ) : (
+                <button key={n.id} type="button" onClick={() => handleOpenNotification(n)} className="block w-full text-left hover:bg-gray-50">
+                  {row}
+                </button>
+              );
+            })}
+            {notifications.length === 0 && <p className="px-4 py-6 text-center text-sm text-gray-400">Nenhuma notificação ainda.</p>}
           </div>
         </div>
       )}
@@ -133,11 +150,13 @@ export function ErpTopbar({
   email,
   role,
   onMenuClick,
+  initialNotifications,
 }: {
   name: string;
   email: string;
   role?: string;
   onMenuClick: () => void;
+  initialNotifications: ErpNotificacao[];
 }) {
   const tenantSlug = useTenantSlug();
   const [query, setQuery] = useState("");
@@ -173,7 +192,7 @@ export function ErpTopbar({
         >
           <HelpCircle size={17} />
         </Link>
-        <NotificationsMenu />
+        <NotificationsMenu initialNotifications={initialNotifications} />
         <LiteToggle />
         <ThemeToggle />
         <UserMenu name={name} email={email} role={role} />

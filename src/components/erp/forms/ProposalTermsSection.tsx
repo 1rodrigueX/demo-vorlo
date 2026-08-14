@@ -1,15 +1,23 @@
 import { Card } from "@/components/ui/Card";
 import { Label } from "@/components/ui/Label";
 import { Select } from "@/components/ui/Select";
-import { getMockSuppliers } from "@/mocks/erp/suppliers";
+import type { ErpFornecedor } from "@/types/domain";
 
-export type TermsSectionValue = { paymentTerm: string; freightType: "CIF" | "FOB"; carrier: string };
+export type TermsSectionValue = { paymentTerm: string; freightType: "CIF" | "FOB"; carrierId: string };
 
 const PAYMENT_TERMS = ["À vista", "30 dias", "30/60 dias", "30/60/90 dias", "45 dias", "60 dias"];
 
 /** Seção "Condições comerciais": forma de pagamento, frete e transportadora. */
-export function ProposalTermsSection({ value, onChange }: { value: TermsSectionValue; onChange: (value: TermsSectionValue) => void }) {
-  const carriers = getMockSuppliers().filter((s) => s.category === "Logística");
+export function ProposalTermsSection({
+  value,
+  onChange,
+  fornecedores,
+}: {
+  value: TermsSectionValue;
+  onChange: (value: TermsSectionValue) => void;
+  fornecedores: ErpFornecedor[];
+}) {
+  const carriers = fornecedores.filter((s) => s.category === "Logística");
 
   return (
     <Card className="p-5">
@@ -45,12 +53,12 @@ export function ProposalTermsSection({ value, onChange }: { value: TermsSectionV
           <Label htmlFor="proposal-carrier">Transportadora</Label>
           <Select
             id="proposal-carrier"
-            value={value.carrier}
-            onChange={(e) => onChange({ ...value, carrier: e.target.value })}
+            value={value.carrierId}
+            onChange={(e) => onChange({ ...value, carrierId: e.target.value })}
           >
             <option value="">Nenhuma</option>
             {carriers.map((c) => (
-              <option key={c.id} value={c.name}>
+              <option key={c.id} value={c.id}>
                 {c.name}
               </option>
             ))}

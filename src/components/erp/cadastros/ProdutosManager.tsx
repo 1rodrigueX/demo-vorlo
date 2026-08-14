@@ -53,7 +53,11 @@ export function ProdutosManager({
   }
   function handleDelete(row: ProdutoRow) {
     if (!window.confirm(`Excluir o produto "${row.name}"?`)) return;
-    startDelete(() => deleteErpProduto(row.id));
+    startDelete(async () => {
+      const result = await deleteErpProduto(row.id);
+      if (result.error) toast.error(result.error);
+      else toast.success("Produto excluído");
+    });
   }
 
   const columns: DataTableColumn<ProdutoRow>[] = [

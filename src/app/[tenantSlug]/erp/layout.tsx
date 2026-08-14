@@ -4,6 +4,7 @@ import { Inter } from "next/font/google";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { createClient } from "@/lib/supabase/server";
 import { getCompanyAssetSignedUrl } from "@/lib/storage/companyAssets";
+import { getErpNotificacoes } from "@/lib/actions/erp-notificacoes";
 import { TenantThemeProvider } from "@/lib/theme/TenantThemeContext";
 import { ErpShell } from "@/components/erp/layout/ErpShell";
 import "@/components/erp/documents/print.css";
@@ -19,9 +20,10 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-erp-sans" });
  * Estoque/Produção reais) — mesmo padrão deles: current_tenant_has_erp()
  * decide o acesso, sem depender de assinatura de CRM.
  *
- * Fase atual: 100% visual/mock nas telas (ver plano aprovado) — só o gate de
- * billing e o nome/logo do tenant são reais. Resto do shell (notificações,
- * empresa/filial) é mock em src/mocks/erp/session.ts.
+ * Grande parte das telas ainda é mock (ver plano aprovado) — Cadastros e
+ * Propostas já são reais. Notificações do sino agora buscam de verdade
+ * (só o evento "SDR montou proposta" tem dado real; empresa/filial no
+ * seletor do Topbar continua mock em src/mocks/erp/session.ts).
  */
 export default async function ErpLayout({
   children,
@@ -50,6 +52,7 @@ export default async function ErpLayout({
 
   const userName = current.profile.full_name || current.user.email || "Usuário";
   const sidebarCollapsed = (await cookies()).get("erp_sidebar_collapsed")?.value === "1";
+  const notifications = await getErpNotificacoes();
 
   return (
     <div className={`${inter.variable} font-[family-name:var(--font-erp-sans)]`}>
@@ -60,6 +63,7 @@ export default async function ErpLayout({
           userEmail={current.user.email ?? ""}
           userRole={current.profile.role}
           sidebarDefaultCollapsed={sidebarCollapsed}
+          initialNotifications={notifications}
         >
           {children}
         </ErpShell>

@@ -54,6 +54,9 @@ export type ErpCategoria = Database["public"]["Tables"]["erp_categorias"]["Row"]
 export type ErpProduto = Database["public"]["Tables"]["erp_produtos"]["Row"];
 export type ErpFornecedor = Database["public"]["Tables"]["erp_fornecedores"]["Row"];
 export type ErpFuncionario = Database["public"]["Tables"]["erp_funcionarios"]["Row"];
+export type ErpProposta = Database["public"]["Tables"]["erp_propostas"]["Row"];
+export type ErpPropostaItem = Database["public"]["Tables"]["erp_proposta_itens"]["Row"];
+export type ErpNotificacao = Database["public"]["Tables"]["erp_notificacoes"]["Row"];
 
 export type ContactWithCompany = Contact & {
   company: Pick<Company, "id" | "name"> | null;

@@ -8,6 +8,8 @@ import { ensureLeadInSdrStage } from "@/lib/ai-agents/sdrPipelineStage";
 import { SEARCH_COMPANY_WEBSITE_TOOL, executeSearchCompanyWebsite } from "@/lib/ai-agents/companyWebsiteTool";
 import { SEND_CATALOG_TOOL, executeSendCatalog } from "@/lib/ai-agents/sendCatalogTool";
 import { SEND_PRODUCT_PHOTOS_TOOL, executeSendProductPhotos } from "@/lib/ai-agents/sendProductPhotosTool";
+import { BUSCAR_PRODUTOS_ERP_TOOL, executeBuscarProdutosErp } from "@/lib/ai-agents/erpCatalogTool";
+import { MONTAR_PROPOSTA_ERP_TOOL, executeMontarPropostaErp } from "@/lib/ai-agents/erpPropostaTool";
 import { sendWhatsAppMessage, type OutgoingMedia } from "@/lib/whatsapp/send";
 import {
   getMessageAttachmentBytes,
@@ -200,7 +202,11 @@ export async function runSdrLeadTurn(tenantId: string, contactId: string): Promi
     : null;
 
   const system = buildSdrLeadPrompt(agent, contact, company);
-  const tools: Anthropic.Tool[] = [COMPLETE_LEAD_REGISTRATION_TOOL];
+  // Catálogo/proposta do ERP entram sempre (igual complete_lead_registration) —
+  // não são condicionadas a needs_registration: essa função inteira já só roda
+  // enquanto o cadastro não terminou (guard lá em cima), então gatear por
+  // "cadastro completo" faria a tool nunca ficar disponível na prática.
+  const tools: Anthropic.Tool[] = [COMPLETE_LEAD_REGISTRATION_TOOL, BUSCAR_PRODUTOS_ERP_TOOL, MONTAR_PROPOSTA_ERP_TOOL];
   if (company?.website) tools.push(SEARCH_COMPANY_WEBSITE_TOOL);
   if (company?.catalogNames.length) tools.push(SEND_CATALOG_TOOL);
   if (company?.hasProductPhotos) tools.push(SEND_PRODUCT_PHOTOS_TOOL);
@@ -235,6 +241,16 @@ export async function runSdrLeadTurn(tenantId: string, contactId: string): Promi
             : { content: "Informe o file_name exato do catálogo escolhido pelo lead.", isError: true };
         } else if (toolUse.name === "send_product_photos") {
           result = await executeSendProductPhotos(admin, tenantId, contactId, contact.phone);
+        } else if (toolUse.name === "buscar_produtos_erp") {
+          result = await executeBuscarProdutosErp(admin, tenantId, (toolUse.input ?? {}) as Record<string, unknown>);
+        } else if (toolUse.name === "montar_proposta_erp") {
+          result = await executeMontarPropostaErp(
+            admin,
+            tenantId,
+            contactId,
+            contact.created_by,
+            (toolUse.input ?? {}) as Record<string, unknown>,
+          );
         } else {
           result = await executeCompleteLeadRegistration(
             admin,

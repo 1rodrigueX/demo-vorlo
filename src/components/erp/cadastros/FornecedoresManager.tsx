@@ -50,7 +50,11 @@ export function FornecedoresManager({ tenantSlug, initialFornecedores }: { tenan
   }
   function handleDelete(row: ErpFornecedor) {
     if (!window.confirm(`Excluir o fornecedor "${row.name}"?`)) return;
-    startDelete(() => deleteErpFornecedor(row.id));
+    startDelete(async () => {
+      const result = await deleteErpFornecedor(row.id);
+      if (result.error) toast.error(result.error);
+      else toast.success("Fornecedor excluído");
+    });
   }
 
   const columns: DataTableColumn<ErpFornecedor>[] = [

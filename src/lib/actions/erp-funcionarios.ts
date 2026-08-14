@@ -75,8 +75,12 @@ export async function updateErpFuncionario(
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
 
-  const { supabase, tenantId } = await currentTenant();
+  const { supabase, user, tenantId } = await currentTenant();
+  if (!user) return { error: "Sessão expirada, faça login novamente" };
   if (!tenantId) return { error: "Tenant não encontrado" };
+
+  const { data: hasErp } = await supabase.rpc("current_tenant_has_erp", { p_user_id: user.id });
+  if (!hasErp) return { error: "ERP não está ativo pra este tenant" };
 
   const { error } = await supabase
     .from("erp_funcionarios")
@@ -97,9 +101,17 @@ export async function updateErpFuncionario(
   return null;
 }
 
-export async function deleteErpFuncionario(id: string) {
-  const { supabase, tenantId } = await currentTenant();
-  if (!tenantId) return;
-  await supabase.from("erp_funcionarios").delete().eq("id", id).eq("tenant_id", tenantId);
+export async function deleteErpFuncionario(id: string): Promise<{ error?: string }> {
+  const { supabase, user, tenantId } = await currentTenant();
+  if (!user) return { error: "Sessão expirada, faça login novamente" };
+  if (!tenantId) return { error: "Tenant não encontrado" };
+
+  const { data: hasErp } = await supabase.rpc("current_tenant_has_erp", { p_user_id: user.id });
+  if (!hasErp) return { error: "ERP não está ativo pra este tenant" };
+
+  const { error } = await supabase.from("erp_funcionarios").delete().eq("id", id).eq("tenant_id", tenantId);
+  if (error) return { error: `Não foi possível excluir: ${error.message}` };
+
   await revalidateErpCadastros(supabase, tenantId);
+  return {};
 }
