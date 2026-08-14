@@ -113,10 +113,10 @@ export async function generatePlatformUpdate(
 
   let client: Anthropic;
   try {
-    client = getPlatformAnthropicClient();
+    client = await getPlatformAnthropicClient();
   } catch (err) {
     if (err instanceof AnthropicNotConfiguredError) {
-      return { error: "IA da plataforma indisponível: configure PLATFORM_ANTHROPIC_API_KEY no servidor." };
+      return { error: "IA da plataforma indisponível: configure a chave em /dev/ia." };
     }
     return { error: "IA indisponível no momento." };
   }

@@ -3423,6 +3423,36 @@ export interface Database {
         };
         Relationships: [];
       };
+      platform_ai_config: {
+        Row: {
+          id: boolean;
+          anthropic_api_key: string | null;
+          status: "disconnected" | "connected" | "error";
+          connected_at: string | null;
+          last_tested_at: string | null;
+          last_error: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          id?: boolean;
+          anthropic_api_key?: string | null;
+          status?: "disconnected" | "connected" | "error";
+          connected_at?: string | null;
+          last_tested_at?: string | null;
+          last_error?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          id?: boolean;
+          anthropic_api_key?: string | null;
+          status?: "disconnected" | "connected" | "error";
+          connected_at?: string | null;
+          last_tested_at?: string | null;
+          last_error?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       financas_lancamentos: {
         Row: {
           id: string;
