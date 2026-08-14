@@ -1,5 +1,5 @@
 import "server-only";
-import { createClient } from "@/lib/supabase/server";
+import { currentTenantContext } from "@/lib/auth/current-user";
 
 export type EmailConversation = {
   contact: { id: string; name: string; email: string | null };
@@ -13,13 +13,23 @@ export type EmailConversation = {
 
 const RECENT_MESSAGE_LIMIT = 500;
 
-/** Mesma estratégia de getConversations() do WhatsApp: 2 consultas + agrupamento em JS. */
+/**
+ * Mesma estratégia de getConversations() do WhatsApp: 2 consultas +
+ * agrupamento em JS — inclusive o mesmo filtro de tenant (ver o comentário
+ * lá: faltava aqui também, mesmo gap deixado pelo fix(security) c896226).
+ */
 export async function getEmailConversations(): Promise<EmailConversation[]> {
-  const supabase = await createClient();
+  const { supabase, tenantId } = await currentTenantContext();
+  if (!tenantId) return [];
+
+  const { data: tenantContacts } = await supabase.from("contacts").select("id").eq("tenant_id", tenantId);
+  const tenantContactIds = (tenantContacts ?? []).map((c) => c.id);
+  if (tenantContactIds.length === 0) return [];
 
   const { data: messages } = await supabase
     .from("email_messages")
     .select("contact_id, subject, body, direction, created_at")
+    .in("contact_id", tenantContactIds)
     .order("created_at", { ascending: false })
     .limit(RECENT_MESSAGE_LIMIT);
 
@@ -32,7 +42,11 @@ export async function getEmailConversations(): Promise<EmailConversation[]> {
 
   const contactIds = [...lastByContact.keys()];
 
-  const { data: contacts } = await supabase.from("contacts").select("id, name, email").in("id", contactIds);
+  const { data: contacts } = await supabase
+    .from("contacts")
+    .select("id, name, email")
+    .in("id", contactIds)
+    .eq("tenant_id", tenantId);
   const contactById = new Map((contacts ?? []).map((c) => [c.id, c]));
 
   const conversations: EmailConversation[] = [];
