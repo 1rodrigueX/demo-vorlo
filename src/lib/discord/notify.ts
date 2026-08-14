@@ -48,6 +48,14 @@ export function notifyNewProducaoTenant(name: string, slug: string) {
   });
 }
 
+export function notifyNewErpTenant(name: string, slug: string) {
+  return sendDiscordMessage({
+    title: "🧾 Novo ERP standalone criado",
+    description: `**${name}** (\`${slug}\`)`,
+    color: COLOR.success,
+  });
+}
+
 export function notifyNewFeedback(email: string, message: string) {
   return sendDiscordMessage({
     title: "💬 Novo feedback",

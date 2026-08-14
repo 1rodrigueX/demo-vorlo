@@ -10,10 +10,15 @@ import { MODULE_CATALOG, isModuleKey } from "@/lib/billing/modules";
 export type ActionState = { error?: string } | null;
 
 /**
- * Compra de um módulo add-on (Finanças / Estoque / Produção). Sempre add-on de
- * um tenant existente — o usuário já tem conta. Cria uma linha de staging em
- * module_pending_checkouts e uma preference do Mercado Pago; a concessão do
- * acesso (upsert em tenant_products) acontece no webhook, após o pagamento.
+ * Compra de um módulo add-on (Finanças / Estoque / Produção / ERP). Add-on de
+ * um tenant existente na maioria dos casos — mas módulos com
+ * `standalone: true` no MODULE_CATALOG (hoje só o ERP) também aceitam quem
+ * nunca teve conta, desde que informe o nome da empresa (mesmo padrão dual de
+ * transportadora-checkout.ts: tenant_id preenchido = add-on; nulo + company_name
+ * = tenant novo, sem CRM). Cria uma linha de staging em module_pending_checkouts
+ * e uma preference do Mercado Pago; a concessão do acesso (e, se for o caso,
+ * a criação do tenant) acontece no webhook, após o pagamento — ver
+ * provision-module.ts.
  */
 export async function startModuleCheckout(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   const moduleRaw = formData.get("module");
@@ -32,8 +37,12 @@ export async function startModuleCheckout(_prevState: ActionState, formData: For
 
   const { data: profile } = await supabase.from("profiles").select("tenant_id").eq("id", user.id).maybeSingle();
   const tenantId = profile?.tenant_id ?? null;
-  if (!tenantId) {
-    return { error: "Crie sua conta primeiro para assinar este módulo." };
+
+  const companyNameRaw = formData.get("companyName");
+  const companyName = typeof companyNameRaw === "string" ? companyNameRaw.trim() : "";
+
+  if (!tenantId && !(catalog.standalone && companyName)) {
+    return { error: catalog.standalone ? "Informe o nome da sua empresa" : "Crie sua conta primeiro para assinar este módulo." };
   }
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://45.149.153.20";
@@ -44,6 +53,7 @@ export async function startModuleCheckout(_prevState: ActionState, formData: For
     .insert({
       user_id: user.id,
       tenant_id: tenantId,
+      company_name: tenantId ? null : companyName,
       module: moduleKey,
       monthly_amount_cents: catalog.priceCents,
     })

@@ -3,6 +3,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { sendBillingEmail } from "@/lib/email/resend";
 import { addOneMonth } from "@/lib/billing/cycle";
 import { MODULE_CATALOG, isModuleKey } from "@/lib/billing/modules";
+import { createStandaloneTenant } from "@/lib/billing/createStandaloneTenant";
+import { notifyNewErpTenant } from "@/lib/discord/notify";
 
 export type ProvisionModuleParams = {
   pendingCheckoutId: string;
@@ -27,12 +29,28 @@ export async function provisionModuleFromCheckout(
     .eq("id", params.pendingCheckoutId)
     .maybeSingle();
   if (!pending) return { error: `module_pending_checkouts não encontrado: ${params.pendingCheckoutId}` };
-  if (pending.status === "completed") return { tenantId: pending.tenant_id }; // reentrega do webhook
+  if (pending.status === "completed") return { tenantId: pending.tenant_id ?? "" }; // reentrega do webhook
   if (!isModuleKey(pending.module)) return { error: `Módulo inválido no checkout: ${pending.module}` };
+
+  let tenantId = pending.tenant_id;
+  let isNewTenant = false;
+
+  // Standalone (só o ERP por enquanto, ver MODULE_CATALOG): quem nunca teve
+  // tenant paga o módulo sozinho — cria um tenant do zero, sem CRM (mesmo
+  // molde de provision-transportadora.ts).
+  if (!tenantId) {
+    if (!MODULE_CATALOG[pending.module].standalone || !pending.company_name) {
+      return { error: "Checkout inválido: módulo não permite compra standalone ou faltou o nome da empresa" };
+    }
+    const created = await createStandaloneTenant(admin, pending.user_id, pending.company_name);
+    if ("error" in created) return created;
+    tenantId = created.tenantId;
+    isNewTenant = true;
+  }
 
   const { error: productError } = await admin.from("tenant_products").upsert(
     {
-      tenant_id: pending.tenant_id,
+      tenant_id: tenantId,
       product: pending.module,
       status: "active",
       mp_payer_id: params.mpPayerId,
@@ -62,9 +80,14 @@ export async function provisionModuleFromCheckout(
         ctaUrl: `${siteUrl}/central`,
       });
     } catch (err) {
-      console.error("provisionModuleFromCheckout: e-mail falhou (módulo já ativado)", pending.tenant_id, err);
+      console.error("provisionModuleFromCheckout: e-mail falhou (módulo já ativado)", tenantId, err);
     }
   }
 
-  return { tenantId: pending.tenant_id };
+  if (isNewTenant && pending.module === "erp") {
+    const { data: notifiedTenant } = await admin.from("tenants").select("name, slug").eq("id", tenantId).maybeSingle();
+    if (notifiedTenant) void notifyNewErpTenant(notifiedTenant.name, notifiedTenant.slug);
+  }
+
+  return { tenantId };
 }

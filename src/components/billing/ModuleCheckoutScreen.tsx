@@ -39,11 +39,14 @@ export async function ModuleCheckoutScreen({ module }: { module: ModuleKey }) {
     .eq("id", user.id)
     .maybeSingle();
 
-  // Módulo é add-on de um tenant existente — quem ainda não tem conta/CRM
-  // precisa criar uma primeiro.
-  if (!profile?.tenant_id) redirect("/choose-plan");
-
   const catalog = MODULE_CATALOG[module];
+  const hasExistingTenant = !!profile?.tenant_id;
+
+  // Módulo é add-on de um tenant existente na maioria dos casos — quem ainda
+  // não tem conta/CRM precisa criar uma primeiro, EXCETO nos módulos
+  // standalone (hoje só o ERP), que aceitam criar um tenant novo, sem CRM,
+  // direto no formulário (ver ModuleCheckoutForm + startModuleCheckout).
+  if (!hasExistingTenant && !catalog.standalone) redirect("/choose-plan");
   const admin = createAdminClient();
 
   // Limpa tentativa pendente velha (checkout abandonado) antes de checar.
@@ -75,7 +78,8 @@ export async function ModuleCheckoutScreen({ module }: { module: ModuleKey }) {
           label={catalog.label}
           priceCents={catalog.priceCents}
           laterHref={laterHref}
-          ownerName={profile.full_name ?? null}
+          ownerName={profile?.full_name ?? (user.user_metadata?.full_name as string | undefined) ?? null}
+          hasExistingTenant={hasExistingTenant}
         />
       )}
     </div>
