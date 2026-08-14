@@ -1,49 +1,8 @@
-export type DashboardKpis = {
-  revenue: number;
-  sales: number;
-  openQuotes: number;
-  productionOrders: number;
-  receivable: number;
-  overdue: number;
-};
-
-export function getMockDashboardKpis(): DashboardKpis {
-  return {
-    revenue: 697707.93,
-    sales: 128,
-    openQuotes: 103,
-    productionOrders: 24,
-    receivable: 183500,
-    overdue: 41200,
-  };
-}
-
-export type RevenuePoint = { month: string; faturamento: number };
-
-export function getMockRevenueSeries(): RevenuePoint[] {
-  return [
-    { month: "Fev", faturamento: 412300 },
-    { month: "Mar", faturamento: 458900 },
-    { month: "Abr", faturamento: 401200 },
-    { month: "Mai", faturamento: 489700 },
-    { month: "Jun", faturamento: 512400 },
-    { month: "Jul", faturamento: 548900 },
-    { month: "Ago", faturamento: 531200 },
-    { month: "Set", faturamento: 587600 },
-    { month: "Out", faturamento: 612300 },
-    { month: "Nov", faturamento: 634800 },
-    { month: "Dez", faturamento: 658100 },
-    { month: "Jan", faturamento: 697707.93 },
-  ];
-}
-
-export function getMockSalesByStatus(): { label: string; value: number }[] {
-  return [
-    { label: "Ganhas", value: 128 },
-    { label: "Em negociação", value: 47 },
-    { label: "Perdidas", value: 21 },
-  ];
-}
+// getMockDashboardKpis/getMockRevenueSeries/getMockSalesByStatus saíram
+// daqui — o Dashboard geral do ERP (src/app/[tenantSlug]/erp/page.tsx) usa
+// dado real de erp_propostas agora (ver src/lib/actions/erp-dashboard.ts).
+// O que sobrou aqui ainda alimenta Financeiro e Produção, que continuam
+// mock (nenhuma tabela própria no ERP pra isso ainda).
 
 export type FinancePoint = { month: string; entradas: number; saidas: number };
 

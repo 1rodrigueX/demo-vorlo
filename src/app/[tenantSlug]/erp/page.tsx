@@ -1,19 +1,10 @@
-"use client";
-
 import { DollarSign, ShoppingCart, FileText, Factory, ArrowDownCircle, AlertTriangle } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { StatCard } from "@/components/erp/cards/StatCard";
 import { LineAreaChart } from "@/components/erp/charts/LineAreaChart";
-import { BarChartErp } from "@/components/erp/charts/BarChartErp";
 import { DonutChart } from "@/components/erp/charts/DonutChart";
 import { formatCurrency } from "@/lib/utils/currency";
-import {
-  getMockDashboardKpis,
-  getMockRevenueSeries,
-  getMockSalesByStatus,
-  getMockFinanceInOutSeries,
-  getMockProductionSummary,
-} from "@/mocks/erp/dashboard";
+import { getErpDashboardData } from "@/lib/actions/erp-dashboard";
 
 /** Formata valores grandes de forma compacta nos eixos dos gráficos (R$ 500K em vez de R$ 500.000). */
 function formatCompactCurrency(value: number): string {
@@ -21,12 +12,16 @@ function formatCompactCurrency(value: number): string {
   return formatCurrency(value);
 }
 
-export default function ErpDashboardPage() {
-  const kpis = getMockDashboardKpis();
-  const revenueSeries = getMockRevenueSeries();
-  const salesByStatus = getMockSalesByStatus();
-  const financeSeries = getMockFinanceInOutSeries();
-  const production = getMockProductionSummary();
+/**
+ * Faturamento/Vendas/Propostas abertas/gráfico de faturamento e Vendas por
+ * status vêm de erp_propostas (real). Financeiro (A receber/Vencido/entradas
+ * x saídas) e Produção (ordens por status) ainda não têm tabela própria no
+ * ERP — em vez de mostrar números inventados aqui, ficam com "ainda sem esse
+ * controle" até essas frentes virarem reais (ver /erp/financeiro e
+ * /erp/producao, que continuam mock por enquanto).
+ */
+export default async function ErpDashboardPage() {
+  const { kpis, revenueSeries, salesByStatus } = await getErpDashboardData();
 
   return (
     <div className="space-y-5">
@@ -39,9 +34,9 @@ export default function ErpDashboardPage() {
         <StatCard label="Faturamento" value={formatCurrency(kpis.revenue)} icon={DollarSign} />
         <StatCard label="Vendas" value={kpis.sales} icon={ShoppingCart} />
         <StatCard label="Propostas abertas" value={kpis.openQuotes} icon={FileText} tone="warning" />
-        <StatCard label="Produção" value={`${kpis.productionOrders} OPs`} icon={Factory} />
-        <StatCard label="A receber" value={formatCurrency(kpis.receivable)} icon={ArrowDownCircle} tone="success" />
-        <StatCard label="Vencido" value={formatCurrency(kpis.overdue)} icon={AlertTriangle} tone="danger" />
+        <StatCard label="Produção" value="—" icon={Factory} />
+        <StatCard label="A receber" value="—" icon={ArrowDownCircle} tone="success" />
+        <StatCard label="Vencido" value="—" icon={AlertTriangle} tone="danger" />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
@@ -62,41 +57,18 @@ export default function ErpDashboardPage() {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
-        <Card className="p-5 lg:col-span-2">
+        <Card className="flex flex-col p-5 lg:col-span-2">
           <h2 className="text-sm font-semibold text-gray-900">Financeiro — entradas x saídas</h2>
           <p className="mt-0.5 text-xs text-gray-500">Últimos 6 meses</p>
-          <div className="mt-4">
-            <BarChartErp
-              data={financeSeries}
-              xKey="month"
-              series={[
-                { key: "entradas", label: "Entradas" },
-                { key: "saidas", label: "Saídas" },
-              ]}
-              valueFormatter={formatCompactCurrency}
-            />
+          <div className="flex flex-1 items-center justify-center py-10 text-center text-sm text-gray-500">
+            Controle financeiro do ERP ainda não está disponível.
           </div>
         </Card>
-        <Card className="p-5">
+        <Card className="flex flex-col p-5">
           <h2 className="text-sm font-semibold text-gray-900">Produção</h2>
           <p className="mt-0.5 text-xs text-gray-500">Ordens de produção por status</p>
-          <div className="mt-4 grid grid-cols-2 gap-3">
-            <div className="rounded-lg bg-gray-50 p-3">
-              <p className="text-xs text-gray-500">Planejadas</p>
-              <p className="mt-1 text-xl font-semibold text-gray-900">{production.planned}</p>
-            </div>
-            <div className="rounded-lg bg-sky-50 p-3">
-              <p className="text-xs text-sky-700">Em produção</p>
-              <p className="mt-1 text-xl font-semibold text-sky-700">{production.inProgress}</p>
-            </div>
-            <div className="rounded-lg bg-red-50 p-3">
-              <p className="text-xs text-red-700">Atrasadas</p>
-              <p className="mt-1 text-xl font-semibold text-red-700">{production.late}</p>
-            </div>
-            <div className="rounded-lg bg-emerald-50 p-3">
-              <p className="text-xs text-emerald-700">Concluídas</p>
-              <p className="mt-1 text-xl font-semibold text-emerald-700">{production.completed}</p>
-            </div>
+          <div className="flex flex-1 items-center justify-center py-10 text-center text-sm text-gray-500">
+            Ordens de produção ainda não estão disponíveis.
           </div>
         </Card>
       </div>
