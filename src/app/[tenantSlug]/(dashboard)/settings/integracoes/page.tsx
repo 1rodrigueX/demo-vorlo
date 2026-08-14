@@ -107,6 +107,7 @@ export default async function SettingsIntegracoesPage({
     supabase
       .from("tenant_api_keys")
       .select("id, name, key_prefix, created_at, last_used_at")
+      .eq("tenant_id", current.profile.tenant_id)
       .order("created_at", { ascending: false }),
   ]);
 

@@ -111,6 +111,9 @@ export async function updateAgent(agentId: string, input: UpdateAgentInput): Pro
   } = await supabase.auth.getUser();
   if (!user) return { error: "Sessão expirada, faça login novamente" };
 
+  const tenantId = await requireTenantId(supabase, user.id);
+  if (!tenantId) return { error: "Tenant não encontrado" };
+
   const payload: AiAgentUpdate = {};
   if (parsed.data.name !== undefined) payload.name = parsed.data.name;
   if (parsed.data.objective !== undefined) payload.objective = parsed.data.objective;
@@ -122,6 +125,7 @@ export async function updateAgent(agentId: string, input: UpdateAgentInput): Pro
     .from("ai_agents")
     .update(payload)
     .eq("id", agentId)
+    .eq("tenant_id", tenantId)
     .select("name")
     .maybeSingle();
 
@@ -142,10 +146,14 @@ export async function toggleAgentStatus(
   } = await supabase.auth.getUser();
   if (!user) return { error: "Sessão expirada, faça login novamente" };
 
+  const tenantId = await requireTenantId(supabase, user.id);
+  if (!tenantId) return { error: "Tenant não encontrado" };
+
   const { data: target } = await supabase
     .from("ai_agents")
     .select("is_fala_ai")
     .eq("id", agentId)
+    .eq("tenant_id", tenantId)
     .maybeSingle();
   if (target?.is_fala_ai) return { error: "Não é possível desativar o Vorlo" };
 
@@ -153,6 +161,7 @@ export async function toggleAgentStatus(
     .from("ai_agents")
     .update({ status })
     .eq("id", agentId)
+    .eq("tenant_id", tenantId)
     .select("name, status")
     .maybeSingle();
 
@@ -170,15 +179,19 @@ export async function deleteAgent(agentId: string): Promise<Result<{ name: strin
   } = await supabase.auth.getUser();
   if (!user) return { error: "Sessão expirada, faça login novamente" };
 
+  const tenantId = await requireTenantId(supabase, user.id);
+  if (!tenantId) return { error: "Tenant não encontrado" };
+
   const { data: target } = await supabase
     .from("ai_agents")
     .select("is_fala_ai, name")
     .eq("id", agentId)
+    .eq("tenant_id", tenantId)
     .maybeSingle();
   if (!target) return { error: "Agente não encontrado" };
   if (target.is_fala_ai) return { error: "Não é possível excluir o Vorlo" };
 
-  const { error } = await supabase.from("ai_agents").delete().eq("id", agentId);
+  const { error } = await supabase.from("ai_agents").delete().eq("id", agentId).eq("tenant_id", tenantId);
   if (error) return { error: friendlyError(`Não foi possível excluir: ${error.message}`, error.code) };
 
   revalidatePath("/agents");

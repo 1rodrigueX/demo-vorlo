@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@/lib/supabase/server";
+import { requireTenantId } from "@/lib/auth/current-user";
 import { getAnthropicClientForAgent, AnthropicNotConfiguredError } from "@/lib/anthropic/client";
 import { getToolsForAgent } from "@/lib/ai-agents/tools";
 import { executeAgentTool } from "@/lib/ai-agents/execute-tool";
@@ -20,7 +21,15 @@ export async function GET(_request: Request, { params }: { params: Promise<{ age
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
-  const { data: agent } = await supabase.from("ai_agents").select("id").eq("id", agentId).maybeSingle();
+  const tenantId = await requireTenantId(supabase, user.id);
+  if (!tenantId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+
+  const { data: agent } = await supabase
+    .from("ai_agents")
+    .select("id")
+    .eq("id", agentId)
+    .eq("tenant_id", tenantId)
+    .maybeSingle();
   if (!agent) return NextResponse.json({ error: "Agente não encontrado" }, { status: 404 });
 
   const { data } = await supabase
@@ -56,12 +65,6 @@ export async function POST(request: Request, { params }: { params: Promise<{ age
   }
   const contextHint = (body.contextHint ?? "").trim().slice(0, 500) || undefined;
 
-  const { data: agent } = await supabase.from("ai_agents").select("*").eq("id", agentId).maybeSingle();
-  if (!agent) return NextResponse.json({ error: "Agente não encontrado" }, { status: 404 });
-  if (agent.status !== "active") {
-    return NextResponse.json({ error: "Este agente está desativado" }, { status: 400 });
-  }
-
   const { data: profile } = await supabase
     .from("profiles")
     .select("full_name, tenant_id")
@@ -70,6 +73,17 @@ export async function POST(request: Request, { params }: { params: Promise<{ age
 
   if (!profile) {
     return NextResponse.json({ error: "Perfil não encontrado" }, { status: 400 });
+  }
+
+  const { data: agent } = await supabase
+    .from("ai_agents")
+    .select("*")
+    .eq("id", agentId)
+    .eq("tenant_id", profile.tenant_id)
+    .maybeSingle();
+  if (!agent) return NextResponse.json({ error: "Agente não encontrado" }, { status: 404 });
+  if (agent.status !== "active") {
+    return NextResponse.json({ error: "Este agente está desativado" }, { status: 400 });
   }
 
   let client;
@@ -94,6 +108,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ age
       .from("ai_agent_memory")
       .select("label, content")
       .eq("agent_id", agentId)
+      .eq("tenant_id", profile.tenant_id)
       .order("updated_at", { ascending: false })
       .limit(MAX_MEMORY_FACTS),
   ]);

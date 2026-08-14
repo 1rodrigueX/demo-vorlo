@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { requireTenantId } from "@/lib/auth/current-user";
 import { getMessageAttachmentSignedUrl } from "@/lib/storage/messageAttachments";
 
 export async function GET(_request: Request, { params }: { params: Promise<{ messageId: string }> }) {
@@ -11,12 +12,14 @@ export async function GET(_request: Request, { params }: { params: Promise<{ mes
 
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
-  // RLS de whatsapp_messages já garante que só vem de volta se o usuário
-  // puder ver essa mensagem (dono do contato ou admin do tenant).
+  const tenantId = await requireTenantId(supabase, user.id);
+  if (!tenantId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+
   const { data: message } = await supabase
     .from("whatsapp_messages")
     .select("media_storage_path")
     .eq("id", messageId)
+    .eq("tenant_id", tenantId)
     .maybeSingle();
 
   if (!message?.media_storage_path) {

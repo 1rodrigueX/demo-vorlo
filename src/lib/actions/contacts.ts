@@ -227,11 +227,11 @@ export async function updateContact(
   } = await supabase.auth.getUser();
   if (!user) return { error: "Sessão expirada, faça login novamente" };
 
+  const tenantId = await requireTenantId(supabase, user.id);
+  if (!tenantId) return { error: "Tenant não encontrado para este usuário" };
+
   let companyId = parsed.data.companyId || null;
   if (parsed.data.companyName) {
-    const tenantId = await requireTenantId(supabase, user.id);
-    if (!tenantId) return { error: "Tenant não encontrado para este usuário" };
-
     companyId = await createInlineCompany(
       supabase,
       user.id,
@@ -260,16 +260,12 @@ export async function updateContact(
       address_city: parsed.data.addressCity || null,
       address_state: parsed.data.addressState || null,
     })
-    .eq("id", contactId);
+    .eq("id", contactId)
+    .eq("tenant_id", tenantId);
 
   if (error) {
     if (isDuplicatePhoneError(error)) {
-      const tenantId = await requireTenantId(supabase, user.id);
-      return {
-        error: tenantId
-          ? await duplicatePhoneMessage(supabase, tenantId, parsed.data.phone)
-          : "Este telefone já está cadastrado em outro contato.",
-      };
+      return { error: await duplicatePhoneMessage(supabase, tenantId, parsed.data.phone) };
     }
     console.error("updateContact failed:", error);
     return { error: `Não foi possível salvar: ${error.message}` };
@@ -290,14 +286,44 @@ export async function updateContact(
  */
 export async function updateContactOwner(contactId: string, ownerId: string) {
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Sessão expirada, faça login novamente" };
 
-  const { error } = await supabase.from("contacts").update({ created_by: ownerId }).eq("id", contactId);
+  const tenantId = await requireTenantId(supabase, user.id);
+  if (!tenantId) return { error: "Tenant não encontrado" };
+
+  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
+  if (profile && !["owner", "manager"].includes(profile.role)) {
+    return { error: "Só o dono ou um gerente pode reatribuir o vendedor responsável" };
+  }
+
+  // ownerId precisa ser alguém do mesmo tenant, senão a reatribuição vaza pra outro tenant.
+  const { data: newOwner } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("id", ownerId)
+    .eq("tenant_id", tenantId)
+    .maybeSingle();
+  if (!newOwner) return { error: "Vendedor inválido" };
+
+  const { error } = await supabase
+    .from("contacts")
+    .update({ created_by: ownerId })
+    .eq("id", contactId)
+    .eq("tenant_id", tenantId);
 
   if (error) {
     return { error: "Não foi possível reatribuir o contato (só o dono da conta pode mudar o vendedor)" };
   }
 
-  await supabase.from("deals").update({ owner_id: ownerId }).eq("contact_id", contactId).eq("status", "open");
+  await supabase
+    .from("deals")
+    .update({ owner_id: ownerId })
+    .eq("contact_id", contactId)
+    .eq("tenant_id", tenantId)
+    .eq("status", "open");
 
   revalidatePath("/[tenantSlug]/contacts", "page");
   revalidatePath(`/[tenantSlug]/contacts/${contactId}`, "page");
@@ -311,8 +337,16 @@ export async function deleteContact(contactId: string) {
     data: { user },
   } = await supabase.auth.getUser();
   const tenantId = user ? await requireTenantId(supabase, user.id) : null;
-  await supabase.from("contacts").delete().eq("id", contactId);
+  if (!tenantId) redirect("/login");
+
+  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user!.id).maybeSingle();
+  if (profile && !["owner", "manager"].includes(profile.role)) {
+    const slug = await getTenantSlug(supabase, tenantId);
+    redirect(slug ? `/${slug}/contacts/${contactId}` : "/login");
+  }
+
+  await supabase.from("contacts").delete().eq("id", contactId).eq("tenant_id", tenantId);
   revalidatePath("/[tenantSlug]/contacts", "page");
-  const slug = tenantId ? await getTenantSlug(supabase, tenantId) : null;
+  const slug = await getTenantSlug(supabase, tenantId);
   redirect(slug ? `/${slug}/contacts` : "/login");
 }

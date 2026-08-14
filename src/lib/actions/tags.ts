@@ -43,8 +43,17 @@ export async function createTag(_prevState: ActionState, formData: FormData): Pr
 
 export async function deleteTag(tagId: string) {
   const supabase = await createClient();
-  await supabase.from("tags").delete().eq("id", tagId);
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Sessão expirada, faça login novamente" };
+
+  const tenantId = await requireTenantId(supabase, user.id);
+  if (!tenantId) return { error: "Tenant não encontrado" };
+
+  await supabase.from("tags").delete().eq("id", tagId).eq("tenant_id", tenantId);
   revalidatePath("/[tenantSlug]/settings/empresa", "page");
+  return { error: undefined };
 }
 
 export async function setContactTags(contactId: string, tagIds: string[]) {
@@ -58,13 +67,20 @@ export async function setContactTags(contactId: string, tagIds: string[]) {
   if (!tenantId) return { error: "Tenant não encontrado" };
 
   // Substitui: apaga as tags atuais do contato e insere de novo as escolhidas.
-  await supabase.from("contact_tags").delete().eq("contact_id", contactId);
+  await supabase.from("contact_tags").delete().eq("contact_id", contactId).eq("tenant_id", tenantId);
 
   if (tagIds.length) {
-    const { error } = await supabase
-      .from("contact_tags")
-      .insert(tagIds.map((tagId) => ({ contact_id: contactId, tag_id: tagId, tenant_id: tenantId })));
-    if (error) return { error: "Não foi possível salvar as tags" };
+    // Só aceita tags que realmente pertencem a este tenant — senão dava pra
+    // linkar um tag_id de outro tenant no contact_tags deste.
+    const { data: ownTags } = await supabase.from("tags").select("id").eq("tenant_id", tenantId).in("id", tagIds);
+    const validTagIds = (ownTags ?? []).map((t) => t.id);
+
+    if (validTagIds.length) {
+      const { error } = await supabase
+        .from("contact_tags")
+        .insert(validTagIds.map((tagId) => ({ contact_id: contactId, tag_id: tagId, tenant_id: tenantId })));
+      if (error) return { error: "Não foi possível salvar as tags" };
+    }
   }
 
   revalidatePath(`/[tenantSlug]/contacts/${contactId}`, "page");

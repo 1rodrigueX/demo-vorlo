@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { SquarePen, Building2, Phone, Mail, Radio } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { LeadConversationPanel } from "@/components/whatsapp/LeadConversationPanel";
@@ -25,6 +25,9 @@ export default async function WhatsAppConversationPage({
 }) {
   const { tenantSlug, contactId } = await params;
   const supabase = await createClient();
+  const currentUser = await getCurrentUser();
+  const tenantId = currentUser?.profile?.tenant_id ?? null;
+  if (!tenantId) redirect("/login");
 
   const [
     { data: contact },
@@ -36,34 +39,35 @@ export default async function WhatsAppConversationPage({
     { data: allTags },
     { data: contactTagRows },
     { data: channelRows },
-    currentUser,
     tasks,
   ] = await Promise.all([
-    supabase.from("contacts").select("*").eq("id", contactId).single(),
-    supabase.from("companies").select("id, name").order("name"),
+    supabase.from("contacts").select("*").eq("id", contactId).eq("tenant_id", tenantId).maybeSingle(),
+    supabase.from("companies").select("id, name").eq("tenant_id", tenantId).order("name"),
     supabase
       .from("deals")
       .select("id, title, value, status, stage_id, owner_id, proposal_sent_at")
       .eq("contact_id", contactId)
+      .eq("tenant_id", tenantId)
       .order("created_at", { ascending: false }),
-    supabase.from("pipeline_stages").select("*").order("position"),
+    supabase.from("pipeline_stages").select("*").eq("tenant_id", tenantId).order("position"),
     supabase
       .from("activities")
       .select(
         "id, type, body, direction, created_at, profile:profiles(full_name), whatsapp_message:whatsapp_messages(status)",
       )
       .eq("contact_id", contactId)
+      .eq("tenant_id", tenantId)
       .neq("type", "whatsapp")
       .order("created_at", { ascending: false }),
     supabase
       .from("whatsapp_messages")
       .select("*")
       .eq("contact_id", contactId)
+      .eq("tenant_id", tenantId)
       .order("created_at", { ascending: true }),
-    supabase.from("tags").select("*").order("name"),
-    supabase.from("contact_tags").select("tag_id").eq("contact_id", contactId),
-    supabase.from("lead_channels").select("channel").eq("contact_id", contactId),
-    getCurrentUser(),
+    supabase.from("tags").select("*").eq("tenant_id", tenantId).order("name"),
+    supabase.from("contact_tags").select("tag_id").eq("contact_id", contactId).eq("tenant_id", tenantId),
+    supabase.from("lead_channels").select("channel").eq("contact_id", contactId).eq("tenant_id", tenantId),
     getLeadTasks(contactId),
   ]);
 
@@ -75,7 +79,11 @@ export default async function WhatsAppConversationPage({
   const primaryDeal = (deals ?? []).find((d) => d.status === "open") ?? deals?.[0] ?? null;
   const companyName = companies?.find((c) => c.id === contact.company_id)?.name ?? null;
   const isAdmin = currentUser?.profile?.role === "owner" || currentUser?.profile?.role === "manager";
-  const { data: sellers } = await supabase.from("profiles").select("id, full_name").order("full_name");
+  const { data: sellers } = await supabase
+    .from("profiles")
+    .select("id, full_name")
+    .eq("tenant_id", tenantId)
+    .order("full_name");
   const ownerName = sellers?.find((s) => s.id === contact.created_by)?.full_name ?? null;
 
   const { data: hasEstoqueRaw } = await supabase.rpc("current_tenant_has_estoque", {

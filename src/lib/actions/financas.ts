@@ -79,8 +79,9 @@ export async function deleteLancamento(id: string) {
   if (!user) return;
 
   const tenantId = await requireTenantId(supabase, user.id);
-  await supabase.from("financas_lancamentos").delete().eq("id", id);
+  if (!tenantId) return;
+  await supabase.from("financas_lancamentos").delete().eq("id", id).eq("tenant_id", tenantId);
 
-  const slug = tenantId ? await getTenantSlug(supabase, tenantId) : null;
+  const slug = await getTenantSlug(supabase, tenantId);
   if (slug) revalidatePath(`/${slug}/financeiro`);
 }

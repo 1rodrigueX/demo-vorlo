@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { requireTenantId } from "@/lib/auth/current-user";
 import { getMessageAttachmentSignedUrl } from "@/lib/storage/messageAttachments";
 
 export async function GET(request: Request, { params }: { params: Promise<{ messageId: string }> }) {
@@ -14,12 +15,14 @@ export async function GET(request: Request, { params }: { params: Promise<{ mess
 
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
-  // RLS de email_messages já garante que só vem de volta se o usuário puder
-  // ver essa mensagem (dono do contato ou admin do tenant).
+  const tenantId = await requireTenantId(supabase, user.id);
+  if (!tenantId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+
   const { data: message } = await supabase
     .from("email_messages")
     .select("attachments")
     .eq("id", messageId)
+    .eq("tenant_id", tenantId)
     .maybeSingle();
 
   const attachments = (message?.attachments as { storagePath: string }[] | null) ?? [];

@@ -78,6 +78,9 @@ export async function updateBlingCredentials(
   } = await supabase.auth.getUser();
   if (!user) return { error: "Sessão expirada, faça login novamente" };
 
+  const tenantId = await requireTenantId(supabase, user.id);
+  if (!tenantId) return { error: "Tenant não encontrado" };
+
   const { error } = await supabase
     .from("bling_connections")
     .update({
@@ -85,7 +88,8 @@ export async function updateBlingCredentials(
       client_secret: encryptSecret(parsed.data.clientSecret),
       updated_at: new Date().toISOString(),
     })
-    .eq("id", connectionId);
+    .eq("id", connectionId)
+    .eq("tenant_id", tenantId);
 
   if (error) {
     console.error("updateBlingCredentials failed:", error);
@@ -98,7 +102,19 @@ export async function updateBlingCredentials(
 
 export async function setBlingConnectionTag(connectionId: string, tagId: string | null) {
   const supabase = await createClient();
-  const { error } = await supabase.from("bling_connections").update({ tag_id: tagId }).eq("id", connectionId);
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Sessão expirada, faça login novamente" };
+
+  const tenantId = await requireTenantId(supabase, user.id);
+  if (!tenantId) return { error: "Tenant não encontrado" };
+
+  const { error } = await supabase
+    .from("bling_connections")
+    .update({ tag_id: tagId })
+    .eq("id", connectionId)
+    .eq("tenant_id", tenantId);
 
   if (error) {
     const message = error.code === "23505" ? "Essa tag já está em uso por outra conexão" : error.message;
@@ -116,6 +132,9 @@ export async function disconnectBlingConnection(connectionId: string): Promise<A
   } = await supabase.auth.getUser();
   if (!user) return { error: "Sessão expirada, faça login novamente" };
 
+  const tenantId = await requireTenantId(supabase, user.id);
+  if (!tenantId) return { error: "Tenant não encontrado" };
+
   const { error } = await supabase
     .from("bling_connections")
     .update({
@@ -125,7 +144,8 @@ export async function disconnectBlingConnection(connectionId: string): Promise<A
       connected_at: null,
       updated_at: new Date().toISOString(),
     })
-    .eq("id", connectionId);
+    .eq("id", connectionId)
+    .eq("tenant_id", tenantId);
 
   if (error) return { error: "Não foi possível desconectar" };
 
@@ -140,6 +160,22 @@ export async function setBlingConnectionSeller(
   blingVendedorName: string,
 ) {
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Sessão expirada, faça login novamente" };
+
+  const tenantId = await requireTenantId(supabase, user.id);
+  if (!tenantId) return { error: "Tenant não encontrado" };
+
+  // connectionId e profileId precisam pertencer ao tenant de quem chama —
+  // bling_connection_sellers não tem tenant_id próprio, então valida pelas
+  // tabelas donas antes de tocar nela.
+  const [{ data: connection }, { data: profile }] = await Promise.all([
+    supabase.from("bling_connections").select("id").eq("id", connectionId).eq("tenant_id", tenantId).maybeSingle(),
+    supabase.from("profiles").select("id").eq("id", profileId).eq("tenant_id", tenantId).maybeSingle(),
+  ]);
+  if (!connection || !profile) return { error: "Conexão ou vendedor inválido" };
 
   if (!blingVendedorId) {
     const { error } = await supabase
@@ -166,7 +202,19 @@ export async function setBlingConnectionSeller(
 
 export async function deleteBlingConnection(connectionId: string): Promise<ActionState> {
   const supabase = await createClient();
-  const { error } = await supabase.from("bling_connections").delete().eq("id", connectionId);
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Sessão expirada, faça login novamente" };
+
+  const tenantId = await requireTenantId(supabase, user.id);
+  if (!tenantId) return { error: "Tenant não encontrado" };
+
+  const { error } = await supabase
+    .from("bling_connections")
+    .delete()
+    .eq("id", connectionId)
+    .eq("tenant_id", tenantId);
 
   if (error) {
     return { error: "Não foi possível excluir (a conexão padrão não pode ser removida)" };

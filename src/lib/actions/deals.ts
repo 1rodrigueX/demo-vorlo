@@ -127,12 +127,21 @@ export async function updateDealStage(input: {
   }
 
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Sessão expirada, faça login novamente" };
+
+  const tenantId = await requireTenantId(supabase, user.id);
+  if (!tenantId) return { error: "Tenant não encontrado" };
 
   const { data: stage } = await supabase
     .from("pipeline_stages")
     .select("name, is_won, is_lost")
     .eq("id", parsed.data.stageId)
+    .eq("tenant_id", tenantId)
     .single();
+  if (!stage) return { error: "Estágio inválido" };
 
   const closingNow = stage?.is_won || stage?.is_lost;
 
@@ -140,7 +149,9 @@ export async function updateDealStage(input: {
     .from("deals")
     .select("status, tenant_id, title, value")
     .eq("id", parsed.data.dealId)
+    .eq("tenant_id", tenantId)
     .single();
+  if (!previousDeal) return { error: "Negócio não encontrado" };
 
   const { error } = await supabase
     .from("deals")
@@ -150,7 +161,8 @@ export async function updateDealStage(input: {
       status: stage?.is_won ? "won" : stage?.is_lost ? "lost" : "open",
       closed_at: closingNow ? new Date().toISOString() : null,
     })
-    .eq("id", parsed.data.dealId);
+    .eq("id", parsed.data.dealId)
+    .eq("tenant_id", tenantId);
 
   if (error) {
     return { error: "Não foi possível mover o negócio (você só move negócios que é o dono)" };
@@ -167,19 +179,14 @@ export async function updateDealStage(input: {
       void baixarEstoqueVenda(previousDeal.tenant_id, parsed.data.dealId, previousDeal.title);
   }
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
   const { data: deal } = await supabase
     .from("deals")
     .select<{ contact_id: string; contact: { name: string; phone: string | null } | null }>(
       "contact_id, contact:contacts(name, phone)",
     )
     .eq("id", parsed.data.dealId)
+    .eq("tenant_id", tenantId)
     .single();
-
-  const tenantId = user ? await requireTenantId(supabase, user.id) : null;
 
   if (deal && tenantId) {
     await supabase.from("activities").insert({
@@ -249,11 +256,33 @@ export async function updateDealOwner(input: { dealId: string; ownerId: string }
   }
 
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Sessão expirada, faça login novamente" };
+
+  const tenantId = await requireTenantId(supabase, user.id);
+  if (!tenantId) return { error: "Tenant não encontrado" };
+
+  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
+  if (profile && !["owner", "manager"].includes(profile.role)) {
+    return { error: "Só o dono ou um gerente pode reatribuir o vendedor responsável" };
+  }
+
+  // ownerId precisa ser alguém do mesmo tenant, senão a reatribuição vaza pra outro tenant.
+  const { data: newOwner } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("id", parsed.data.ownerId)
+    .eq("tenant_id", tenantId)
+    .maybeSingle();
+  if (!newOwner) return { error: "Vendedor inválido" };
 
   const { data: deal, error } = await supabase
     .from("deals")
     .update({ owner_id: parsed.data.ownerId })
     .eq("id", parsed.data.dealId)
+    .eq("tenant_id", tenantId)
     .select("contact_id")
     .single();
 
@@ -269,7 +298,18 @@ export async function updateDealOwner(input: { dealId: string; ownerId: string }
 
 export async function deleteDeal(dealId: string) {
   const supabase = await createClient();
-  await supabase.from("deals").delete().eq("id", dealId);
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return;
+
+  const tenantId = await requireTenantId(supabase, user.id);
+  if (!tenantId) return;
+
+  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
+  if (profile && !["owner", "manager"].includes(profile.role)) return;
+
+  await supabase.from("deals").delete().eq("id", dealId).eq("tenant_id", tenantId);
   revalidatePath("/[tenantSlug]/pipeline", "page");
   revalidatePath("/[tenantSlug]/dashboard", "page");
 }
@@ -290,8 +330,15 @@ export async function setDealBudget(contactId: string, dealId: string | null, va
   } = await supabase.auth.getUser();
   if (!user) return { error: "Sessão expirada, faça login novamente" };
 
+  const tenantId = await requireTenantId(supabase, user.id);
+  if (!tenantId) return { error: "Tenant não encontrado para este usuário" };
+
   if (dealId) {
-    const { error } = await supabase.from("deals").update({ value }).eq("id", dealId);
+    const { error } = await supabase
+      .from("deals")
+      .update({ value })
+      .eq("id", dealId)
+      .eq("tenant_id", tenantId);
     if (error) return { error: "Não foi possível salvar o orçamento" };
 
     revalidatePath(`/[tenantSlug]/whatsapp/${contactId}`, "page");
@@ -302,17 +349,20 @@ export async function setDealBudget(contactId: string, dealId: string | null, va
   }
 
   const [{ data: firstStage, error: stageError }, { data: contact }] = await Promise.all([
-    supabase.from("pipeline_stages").select("id").order("position", { ascending: true }).limit(1).single(),
-    supabase.from("contacts").select("name").eq("id", contactId).single(),
+    supabase
+      .from("pipeline_stages")
+      .select("id")
+      .eq("tenant_id", tenantId)
+      .order("position", { ascending: true })
+      .limit(1)
+      .single(),
+    supabase.from("contacts").select("name").eq("id", contactId).eq("tenant_id", tenantId).single(),
   ]);
 
   if (!firstStage) {
     console.error("setDealBudget: falha ao buscar estágio inicial", stageError);
     return { error: `Nenhum estágio de pipeline configurado: ${stageError?.message ?? "erro desconhecido"}` };
   }
-
-  const tenantId = await requireTenantId(supabase, user.id);
-  if (!tenantId) return { error: "Tenant não encontrado para este usuário" };
 
   const { data: created, error } = await supabase
     .from("deals")
@@ -349,10 +399,18 @@ export async function setDealBudget(contactId: string, dealId: string | null, va
  */
 export async function markProposalSent(dealId: string) {
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Sessão expirada, faça login novamente" };
+
+  const tenantId = await requireTenantId(supabase, user.id);
+  if (!tenantId) return { error: "Tenant não encontrado" };
 
   const { data: proposalStage } = await supabase
     .from("pipeline_stages")
     .select("id")
+    .eq("tenant_id", tenantId)
     .ilike("name", "%proposta%")
     .limit(1)
     .maybeSingle();
@@ -364,6 +422,7 @@ export async function markProposalSent(dealId: string) {
       ...(proposalStage ? { stage_id: proposalStage.id } : {}),
     })
     .eq("id", dealId)
+    .eq("tenant_id", tenantId)
     .select<{
       tenant_id: string;
       title: string;
@@ -398,10 +457,18 @@ export async function markProposalSent(dealId: string) {
 /** Marca o negócio como venda ganha — move pro estágio "ganho" do pipeline (ex: Fechado). */
 export async function markDealWon(dealId: string) {
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Sessão expirada, faça login novamente" };
+
+  const tenantId = await requireTenantId(supabase, user.id);
+  if (!tenantId) return { error: "Tenant não encontrado" };
 
   const { data: wonStage } = await supabase
     .from("pipeline_stages")
     .select("id")
+    .eq("tenant_id", tenantId)
     .eq("is_won", true)
     .limit(1)
     .maybeSingle();
@@ -411,7 +478,8 @@ export async function markDealWon(dealId: string) {
   const { count } = await supabase
     .from("deals")
     .select("id", { count: "exact", head: true })
-    .eq("stage_id", wonStage.id);
+    .eq("stage_id", wonStage.id)
+    .eq("tenant_id", tenantId);
 
   return updateDealStage({ dealId, stageId: wonStage.id, position: count ?? 0 });
 }

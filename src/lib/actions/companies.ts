@@ -66,6 +66,14 @@ export async function updateCompany(
   }
 
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Sessão expirada, faça login novamente" };
+
+  const tenantId = await requireTenantId(supabase, user.id);
+  if (!tenantId) return { error: "Tenant não encontrado para este usuário" };
+
   const { error } = await supabase
     .from("companies")
     .update({
@@ -73,7 +81,8 @@ export async function updateCompany(
       website: parsed.data.website || null,
       notes: parsed.data.notes || null,
     })
-    .eq("id", companyId);
+    .eq("id", companyId)
+    .eq("tenant_id", tenantId);
 
   if (error) {
     console.error("updateCompany failed:", error);
@@ -91,8 +100,9 @@ export async function deleteCompany(companyId: string) {
     data: { user },
   } = await supabase.auth.getUser();
   const tenantId = user ? await requireTenantId(supabase, user.id) : null;
-  await supabase.from("companies").delete().eq("id", companyId);
+  if (!tenantId) redirect("/login");
+  await supabase.from("companies").delete().eq("id", companyId).eq("tenant_id", tenantId);
   revalidatePath("/[tenantSlug]/companies", "page");
-  const slug = tenantId ? await getTenantSlug(supabase, tenantId) : null;
+  const slug = await getTenantSlug(supabase, tenantId);
   redirect(slug ? `/${slug}/companies` : "/login");
 }

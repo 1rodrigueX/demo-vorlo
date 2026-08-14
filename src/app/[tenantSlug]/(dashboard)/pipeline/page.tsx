@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { X } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth/current-user";
@@ -17,15 +18,18 @@ export default async function PipelinePage({
   const { vendedor, produto } = await searchParams;
   const supabase = await createClient();
   const currentUser = await getCurrentUser();
+  const profile = currentUser?.profile ?? null;
+  if (!profile) redirect("/login");
+  const tenantId = profile.tenant_id;
 
   // Membro comum já só enxerga os próprios negócios via RLS (deals_select_own_or_admin)
   // — o filtro por vendedor/produto é um recurso de visão completa, só faz
   // sentido pro dono/gerente que vê o pipeline inteiro.
-  const isAdmin = currentUser?.profile?.role === "owner" || currentUser?.profile?.role === "manager";
+  const isAdmin = profile.role === "owner" || profile.role === "manager";
 
   const [{ data: stages }, { data: contacts }, { data: hasEstoque }] = await Promise.all([
-    supabase.from("pipeline_stages").select("*").order("position"),
-    supabase.from("contacts").select("id, name, phone, email").order("name"),
+    supabase.from("pipeline_stages").select("*").eq("tenant_id", tenantId).order("position"),
+    supabase.from("contacts").select("id, name, phone, email").eq("tenant_id", tenantId).order("name"),
     supabase.rpc("current_tenant_has_estoque", { p_user_id: currentUser?.user.id }),
   ]);
 
@@ -33,9 +37,9 @@ export default async function PipelinePage({
   let produtos: { id: string; name: string }[] = [];
   if (isAdmin) {
     const [{ data: sellerRows }, produtosResult] = await Promise.all([
-      supabase.from("profiles").select("id, full_name").order("full_name"),
+      supabase.from("profiles").select("id, full_name").eq("tenant_id", tenantId).order("full_name"),
       hasEstoque
-        ? supabase.from("estoque_itens").select("id, name").order("name")
+        ? supabase.from("estoque_itens").select("id, name").eq("tenant_id", tenantId).order("name")
         : Promise.resolve({ data: [] as { id: string; name: string }[] }),
     ]);
     sellers = sellerRows ?? [];
@@ -44,13 +48,18 @@ export default async function PipelinePage({
 
   let dealIdsFromProduto: string[] | null = null;
   if (isAdmin && produto) {
-    const { data: rows } = await supabase.from("deal_produtos").select("deal_id").eq("estoque_item_id", produto);
+    const { data: rows } = await supabase
+      .from("deal_produtos")
+      .select("deal_id")
+      .eq("estoque_item_id", produto)
+      .eq("tenant_id", tenantId);
     dealIdsFromProduto = (rows ?? []).map((r) => r.deal_id);
   }
 
   let dealsQuery = supabase
     .from("deals")
     .select("*, contact:contacts(id, name, phone), owner:profiles(id, full_name, color)")
+    .eq("tenant_id", tenantId)
     .order("position");
   if (isAdmin && vendedor) dealsQuery = dealsQuery.eq("owner_id", vendedor);
   if (dealIdsFromProduto) dealsQuery = dealsQuery.in("id", dealIdsFromProduto.length ? dealIdsFromProduto : ["-"]);

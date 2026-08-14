@@ -44,7 +44,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Escreva uma mensagem ou anexe um arquivo" }, { status: 400 });
   }
 
-  const { data: contact } = await supabase.from("contacts").select("id, phone").eq("id", contactId).single();
+  const { data: contact } = await supabase
+    .from("contacts")
+    .select("id, phone")
+    .eq("id", contactId)
+    .eq("tenant_id", tenantId)
+    .single();
 
   if (!contact?.phone) {
     return NextResponse.json({ error: "Este contato não tem telefone cadastrado" }, { status: 400 });
