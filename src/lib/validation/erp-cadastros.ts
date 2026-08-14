@@ -18,6 +18,21 @@ export const erpProdutoSchema = z.object({
 });
 export type ErpProdutoInput = z.infer<typeof erpProdutoSchema>;
 
+export const erpEmpresaSchema = z.object({
+  name: z.string().trim().min(2, "Informe a razão social").max(120, "Máx. 120 caracteres"),
+  cnpj: z
+    .string()
+    .trim()
+    .transform((v) => v.replace(/\D/g, ""))
+    .refine((v) => v.length === 14, "CNPJ precisa ter 14 dígitos"),
+  regimeTributario: z.enum(["simples", "presumido", "real"]),
+  isMatriz: z.boolean().optional(),
+  city: z.string().trim().max(60, "Máx. 60 caracteres").optional().or(z.literal("")),
+  state: z.string().trim().max(2, "Use a sigla (ex.: SP)").optional().or(z.literal("")),
+  status: z.enum(["ativo", "inativo"]).optional(),
+});
+export type ErpEmpresaInput = z.infer<typeof erpEmpresaSchema>;
+
 export const erpFornecedorSchema = z.object({
   name: z.string().trim().min(2, "Dê um nome pro fornecedor").max(80, "Máx. 80 caracteres"),
   document: z.string().trim().max(20, "Máx. 20 caracteres").optional().or(z.literal("")),

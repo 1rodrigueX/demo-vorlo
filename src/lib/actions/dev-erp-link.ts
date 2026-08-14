@@ -152,3 +152,28 @@ export async function linkCrmToErpTenant(
   revalidatePath("/dev");
   return null;
 }
+
+/**
+ * Concede uma empresa extra direto pelo /dev, sem passar pelo Vorlo — pro
+ * suporte humano resolver um caso na mão (mesmo efeito de
+ * solicitar_empresa_extra, ver execute-tool.ts, só que sem teto e sem log
+ * de IA — a ação já fica registrada só de existir aqui, no /dev).
+ */
+export async function grantExtraEmpresaAsDev(tenantId: string): Promise<ActionState> {
+  if (!(await isCurrentUserDev())) {
+    return { error: "Acesso restrito a devs da plataforma" };
+  }
+
+  const admin = createAdminClient();
+  const { data: tenant } = await admin.from("tenants").select("erp_extra_empresas_granted").eq("id", tenantId).maybeSingle();
+  if (!tenant) return { error: "Tenant não encontrado" };
+
+  const { error } = await admin
+    .from("tenants")
+    .update({ erp_extra_empresas_granted: tenant.erp_extra_empresas_granted + 1 })
+    .eq("id", tenantId);
+  if (error) return { error: `Não foi possível conceder: ${error.message}` };
+
+  revalidatePath("/dev");
+  return null;
+}

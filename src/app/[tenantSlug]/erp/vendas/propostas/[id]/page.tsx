@@ -6,7 +6,13 @@ import { QUOTE_STATUS_MAP } from "@/components/erp/badges/statusMaps";
 import { PropostaDetalheActions } from "@/components/erp/vendas/PropostaDetalheActions";
 import { getErpPropostaById } from "@/lib/actions/erp-propostas";
 import { formatCurrency } from "@/lib/utils/currency";
-import { formatShortDate } from "@/components/erp/lib/format";
+import { formatDocument, formatShortDate } from "@/components/erp/lib/format";
+
+const REGIME_LABEL: Record<string, string> = {
+  simples: "Simples Nacional",
+  presumido: "Lucro Presumido",
+  real: "Lucro Real",
+};
 
 export default async function PropostaDetalhePage({ params }: { params: Promise<{ tenantSlug: string; id: string }> }) {
   const { tenantSlug, id } = await params;
@@ -38,7 +44,10 @@ export default async function PropostaDetalhePage({ params }: { params: Promise<
       <DocumentLayout
         title="Proposta Comercial"
         documentNumber={proposta.number}
-        issuer={{ name: "Sua Empresa Ltda", document: "00.000.000/0001-00" }}
+        issuer={{
+          name: proposta.empresa?.name ?? "Sua Empresa Ltda",
+          document: proposta.empresa ? formatDocument(proposta.empresa.cnpj ?? "") : "00.000.000/0001-00",
+        }}
         meta={[
           { label: "Cliente", value: proposta.contact?.name ?? "—" },
           { label: "Vendedor", value: proposta.seller?.full_name ?? "—" },
@@ -46,6 +55,9 @@ export default async function PropostaDetalhePage({ params }: { params: Promise<
           { label: "Validade", value: proposta.valid_until ? formatShortDate(proposta.valid_until) : "—" },
           { label: "Pagamento", value: proposta.payment_term ?? "—" },
           { label: "Frete", value: proposta.freight_type ?? "—" },
+          ...(proposta.empresa
+            ? [{ label: "Regime tributário", value: REGIME_LABEL[proposta.empresa.regime_tributario] ?? proposta.empresa.regime_tributario }]
+            : []),
         ]}
         footer={
           <div className="ml-auto w-full max-w-xs space-y-1.5 text-sm">

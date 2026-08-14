@@ -5,8 +5,10 @@ import { getCurrentUser } from "@/lib/auth/current-user";
 import { createClient } from "@/lib/supabase/server";
 import { getCompanyAssetSignedUrl } from "@/lib/storage/companyAssets";
 import { getErpNotificacoes } from "@/lib/actions/erp-notificacoes";
+import { getErpEmpresas } from "@/lib/actions/erp-empresas";
 import { TenantThemeProvider } from "@/lib/theme/TenantThemeContext";
 import { ErpShell } from "@/components/erp/layout/ErpShell";
+import { CURRENT_EMPRESA_COOKIE } from "@/lib/erp/empresaCookie";
 import "@/components/erp/documents/print.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-erp-sans" });
@@ -51,8 +53,10 @@ export default async function ErpLayout({
   void logoUrl; // reservado — ErpSidebar hoje usa um ícone fixo; trocar por logo real é ajuste visual futuro, não estrutural.
 
   const userName = current.profile.full_name || current.user.email || "Usuário";
-  const sidebarCollapsed = (await cookies()).get("erp_sidebar_collapsed")?.value === "1";
-  const notifications = await getErpNotificacoes();
+  const cookieStore = await cookies();
+  const sidebarCollapsed = cookieStore.get("erp_sidebar_collapsed")?.value === "1";
+  const currentEmpresaId = cookieStore.get(CURRENT_EMPRESA_COOKIE)?.value ?? null;
+  const [notifications, empresas] = await Promise.all([getErpNotificacoes(), getErpEmpresas()]);
 
   return (
     <div className={`${inter.variable} font-[family-name:var(--font-erp-sans)]`}>
@@ -64,6 +68,8 @@ export default async function ErpLayout({
           userRole={current.profile.role}
           sidebarDefaultCollapsed={sidebarCollapsed}
           initialNotifications={notifications}
+          empresas={empresas}
+          currentEmpresaId={currentEmpresaId}
         >
           {children}
         </ErpShell>

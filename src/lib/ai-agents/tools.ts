@@ -164,6 +164,15 @@ export const AGENT_TOOL_REGISTRY: Record<string, Anthropic.Tool> = {
       required: ["provider"],
     },
   },
+  solicitar_empresa_extra: {
+    name: "solicitar_empresa_extra",
+    description:
+      "Concede ao tenant deste CRM+ERP uma vaga a mais pra cadastrar outra empresa/CNPJ/filial (a 1ª é sempre " +
+      "grátis; isso libera a próxima). Não pede nem preenche os dados da empresa — só abre a vaga; o dono " +
+      "cadastra CNPJ/razão social/regime tributário de verdade depois em Cadastros > Empresas. Só o Vorlo pode " +
+      "chamar esta ferramenta.",
+    input_schema: { type: "object", properties: {} },
+  },
   check_integration_status: {
     name: "check_integration_status",
     description:

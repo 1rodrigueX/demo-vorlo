@@ -10,6 +10,7 @@ export type ErpPropostaItemInput = z.infer<typeof erpPropostaItemSchema>;
 
 export const erpPropostaSchema = z.object({
   contactId: z.string().uuid("Selecione um cliente"),
+  empresaId: z.string().uuid("Empresa inválida").optional().or(z.literal("")),
   sellerId: z.string().uuid("Selecione um vendedor").optional().or(z.literal("")),
   validUntil: z.string().trim().optional().or(z.literal("")),
   paymentTerm: z.string().trim().max(60, "Máx. 60 caracteres").optional().or(z.literal("")),

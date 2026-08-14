@@ -22,6 +22,7 @@ export type CoreOpts = {
   freightCents?: number;
   discountCents?: number;
   notes?: string | null;
+  empresaId?: string | null;
 };
 
 /**
@@ -85,6 +86,19 @@ export async function createErpPropostaCore(
     if (!seller) sellerId = null;
   }
 
+  // Se o tenant só tem 1 empresa cadastrada, ela é sempre a dona da proposta
+  // (não força ninguém a escolher). Com 2+, o chamador precisa informar —
+  // e mesmo informando, revalida que pertence a este tenant.
+  let empresaId = opts.empresaId ?? null;
+  if (empresaId) {
+    const { data: empresa } = await supabase.from("erp_empresas").select("id").eq("id", empresaId).eq("tenant_id", tenantId).maybeSingle();
+    if (!empresa) empresaId = null;
+  }
+  if (!empresaId) {
+    const { data: empresas } = await supabase.from("erp_empresas").select("id").eq("tenant_id", tenantId).limit(2);
+    if (empresas?.length === 1) empresaId = empresas[0].id;
+  }
+
   const { data: number } = await supabase.rpc("next_erp_document_number", {
     p_tenant_id: tenantId,
     p_doc_type: "proposta",
@@ -108,6 +122,7 @@ export async function createErpPropostaCore(
       discount_cents: opts.discountCents ?? 0,
       notes: opts.notes || null,
       created_by: opts.createdBy ?? null,
+      empresa_id: empresaId,
     })
     .select("*")
     .single();

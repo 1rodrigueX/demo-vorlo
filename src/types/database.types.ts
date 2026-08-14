@@ -32,6 +32,7 @@ export interface Database {
           next_billing_at: string | null;
           pending_payment_url: string | null;
           linked_tenant_id: string | null;
+          erp_extra_empresas_granted: number;
           created_at: string;
         };
         Insert: {
@@ -52,6 +53,7 @@ export interface Database {
           next_billing_at?: string | null;
           pending_payment_url?: string | null;
           linked_tenant_id?: string | null;
+          erp_extra_empresas_granted?: number;
           created_at?: string;
         };
         Update: {
@@ -72,6 +74,7 @@ export interface Database {
           next_billing_at?: string | null;
           pending_payment_url?: string | null;
           linked_tenant_id?: string | null;
+          erp_extra_empresas_granted?: number;
           created_at?: string;
         };
         Relationships: [
@@ -3612,6 +3615,7 @@ export interface Database {
           notes: string | null;
           created_by: string | null;
           created_at: string;
+          empresa_id: string | null;
         };
         Insert: {
           id?: string;
@@ -3631,6 +3635,7 @@ export interface Database {
           notes?: string | null;
           created_by?: string | null;
           created_at?: string;
+          empresa_id?: string | null;
         };
         Update: {
           id?: string;
@@ -3650,6 +3655,7 @@ export interface Database {
           notes?: string | null;
           created_by?: string | null;
           created_at?: string;
+          empresa_id?: string | null;
         };
         Relationships: [
           {
@@ -3671,6 +3677,13 @@ export interface Database {
             columns: ["seller_id"];
             isOneToOne: false;
             referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "erp_propostas_empresa_id_fkey";
+            columns: ["empresa_id"];
+            isOneToOne: false;
+            referencedRelation: "erp_empresas";
             referencedColumns: ["id"];
           },
           {
@@ -3921,6 +3934,53 @@ export interface Database {
         Relationships: [
           {
             foreignKeyName: "erp_fornecedores_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      erp_empresas: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          name: string;
+          cnpj: string;
+          regime_tributario: "simples" | "presumido" | "real";
+          is_matriz: boolean;
+          city: string | null;
+          state: string | null;
+          status: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          name: string;
+          cnpj: string;
+          regime_tributario?: "simples" | "presumido" | "real";
+          is_matriz?: boolean;
+          city?: string | null;
+          state?: string | null;
+          status?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          name?: string;
+          cnpj?: string;
+          regime_tributario?: "simples" | "presumido" | "real";
+          is_matriz?: boolean;
+          city?: string | null;
+          state?: string | null;
+          status?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "erp_empresas_tenant_id_fkey";
             columns: ["tenant_id"];
             isOneToOne: false;
             referencedRelation: "tenants";

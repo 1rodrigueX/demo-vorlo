@@ -34,11 +34,12 @@ async function revalidateErpPropostas(supabase: DbClient, tenantId: string, prop
 export type ErpPropostaWithRelations = ErpProposta & {
   contact: { id: string; name: string; phone: string | null } | null;
   seller: { id: string; full_name: string | null } | null;
+  empresa: { id: string; name: string; cnpj: string; regime_tributario: string } | null;
   itens: ErpPropostaItem[];
 };
 
 const SELECT_WITH_RELATIONS =
-  "*, contact:contacts(id,name,phone), seller:profiles(id,full_name), itens:erp_proposta_itens(*)";
+  "*, contact:contacts(id,name,phone), seller:profiles(id,full_name), empresa:erp_empresas(id,name,cnpj,regime_tributario), itens:erp_proposta_itens(*)";
 
 export async function getErpPropostas(): Promise<ErpPropostaWithRelations[]> {
   const { supabase, tenantId } = await currentTenant();
@@ -75,6 +76,7 @@ export async function createErpProposta(_prevState: ActionState, formData: FormD
 
   const parsed = erpPropostaSchema.safeParse({
     contactId: formData.get("contactId"),
+    empresaId: formData.get("empresaId"),
     sellerId: formData.get("sellerId"),
     validUntil: formData.get("validUntil"),
     paymentTerm: formData.get("paymentTerm"),
@@ -107,6 +109,7 @@ export async function createErpProposta(_prevState: ActionState, formData: FormD
     {
       source: "manual",
       sellerId: parsed.data.sellerId || null,
+      empresaId: parsed.data.empresaId || null,
       createdBy: user.id,
       validUntil: parsed.data.validUntil || null,
       paymentTerm: parsed.data.paymentTerm || null,
