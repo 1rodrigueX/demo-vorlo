@@ -29,17 +29,19 @@ export async function generateLeadResumo(contactId: string): Promise<LeadResumoR
   if (!tenantId) return { ok: false, error: "Tenant não encontrado" };
 
   const [{ data: contact }, { data: messages }, { data: deal }] = await Promise.all([
-    supabase.from("contacts").select("name, phone, lead_source").eq("id", contactId).single(),
+    supabase.from("contacts").select("name, phone, lead_source").eq("id", contactId).eq("tenant_id", tenantId).maybeSingle(),
     supabase
       .from("whatsapp_messages")
       .select("direction, body, created_at")
       .eq("contact_id", contactId)
+      .eq("tenant_id", tenantId)
       .order("created_at", { ascending: false })
       .limit(40),
     supabase
       .from("deals")
       .select("value, status")
       .eq("contact_id", contactId)
+      .eq("tenant_id", tenantId)
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle(),
