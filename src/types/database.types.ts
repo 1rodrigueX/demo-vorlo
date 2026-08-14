@@ -3554,6 +3554,221 @@ export interface Database {
           },
         ];
       };
+      erp_contadores: {
+        Row: {
+          tenant_id: string;
+          doc_type: string;
+          next_number: number;
+        };
+        Insert: {
+          tenant_id: string;
+          doc_type: string;
+          next_number?: number;
+        };
+        Update: {
+          tenant_id?: string;
+          doc_type?: string;
+          next_number?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "erp_contadores_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      erp_propostas: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          number: string;
+          contact_id: string;
+          seller_id: string | null;
+          status: string;
+          source: string;
+          quote_date: string;
+          valid_until: string | null;
+          payment_term: string | null;
+          freight_type: string | null;
+          carrier_id: string | null;
+          freight_cents: number;
+          discount_cents: number;
+          notes: string | null;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          number: string;
+          contact_id: string;
+          seller_id?: string | null;
+          status?: string;
+          source?: string;
+          quote_date?: string;
+          valid_until?: string | null;
+          payment_term?: string | null;
+          freight_type?: string | null;
+          carrier_id?: string | null;
+          freight_cents?: number;
+          discount_cents?: number;
+          notes?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          number?: string;
+          contact_id?: string;
+          seller_id?: string | null;
+          status?: string;
+          source?: string;
+          quote_date?: string;
+          valid_until?: string | null;
+          payment_term?: string | null;
+          freight_type?: string | null;
+          carrier_id?: string | null;
+          freight_cents?: number;
+          discount_cents?: number;
+          notes?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "erp_propostas_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "erp_propostas_contact_id_fkey";
+            columns: ["contact_id"];
+            isOneToOne: false;
+            referencedRelation: "contacts";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "erp_propostas_seller_id_fkey";
+            columns: ["seller_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "erp_propostas_carrier_id_fkey";
+            columns: ["carrier_id"];
+            isOneToOne: false;
+            referencedRelation: "erp_fornecedores";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      erp_proposta_itens: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          proposta_id: string;
+          produto_id: string | null;
+          product_name_snapshot: string;
+          quantity: number;
+          unit_price_cents: number;
+          discount_pct: number;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          proposta_id: string;
+          produto_id?: string | null;
+          product_name_snapshot: string;
+          quantity: number;
+          unit_price_cents?: number;
+          discount_pct?: number;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          proposta_id?: string;
+          produto_id?: string | null;
+          product_name_snapshot?: string;
+          quantity?: number;
+          unit_price_cents?: number;
+          discount_pct?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "erp_proposta_itens_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "erp_proposta_itens_proposta_id_fkey";
+            columns: ["proposta_id"];
+            isOneToOne: false;
+            referencedRelation: "erp_propostas";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "erp_proposta_itens_produto_id_fkey";
+            columns: ["produto_id"];
+            isOneToOne: false;
+            referencedRelation: "erp_produtos";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      erp_notificacoes: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          profile_id: string;
+          message: string;
+          link: string | null;
+          read_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          profile_id: string;
+          message: string;
+          link?: string | null;
+          read_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          profile_id?: string;
+          message?: string;
+          link?: string | null;
+          read_at?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "erp_notificacoes_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "erp_notificacoes_profile_id_fkey";
+            columns: ["profile_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       erp_categorias: {
         Row: {
           id: string;
@@ -3934,6 +4149,7 @@ export interface Database {
       current_tenant_has_producao: { Args: { p_user_id?: string }; Returns: boolean };
       current_tenant_has_producao_actor: { Args: { p_user_id?: string }; Returns: boolean };
       current_tenant_has_erp: { Args: { p_user_id?: string }; Returns: boolean };
+      next_erp_document_number: { Args: { p_tenant_id: string; p_doc_type: string; p_prefix: string }; Returns: string };
       merge_contacts: {
         Args: { winner_id: string; loser_id: string; reason?: string };
         Returns: undefined;

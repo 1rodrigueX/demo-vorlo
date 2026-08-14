@@ -4,6 +4,7 @@ import { useState, type ReactNode } from "react";
 import { ErpSidebar } from "./ErpSidebar";
 import { ErpTopbar } from "./ErpTopbar";
 import { ErpMobileNav } from "./ErpMobileNav";
+import type { ErpNotificacao } from "@/types/domain";
 
 export function ErpShell({
   tenantSlug,
@@ -11,6 +12,7 @@ export function ErpShell({
   userEmail,
   userRole,
   sidebarDefaultCollapsed,
+  initialNotifications,
   children,
 }: {
   tenantSlug: string;
@@ -18,6 +20,7 @@ export function ErpShell({
   userEmail: string;
   userRole?: string;
   sidebarDefaultCollapsed: boolean;
+  initialNotifications: ErpNotificacao[];
   children: ReactNode;
 }) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
@@ -33,7 +36,13 @@ export function ErpShell({
 
       <div className="flex min-w-0 flex-1 flex-col">
         <div className="erp-print-hide">
-          <ErpTopbar name={userName} email={userEmail} role={userRole} onMenuClick={() => setMobileNavOpen(true)} />
+          <ErpTopbar
+            name={userName}
+            email={userEmail}
+            role={userRole}
+            onMenuClick={() => setMobileNavOpen(true)}
+            initialNotifications={initialNotifications}
+          />
         </div>
         <main className="min-w-0 flex-1 px-4 py-6 md:px-8 md:py-8">
           <div className="mx-auto w-full max-w-[1400px]">{children}</div>

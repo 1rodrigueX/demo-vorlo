@@ -3,11 +3,12 @@
 import { Plus, Trash2 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { getMockProducts } from "@/mocks/erp/products";
 import { formatCurrency } from "@/lib/utils/currency";
+import type { ErpProduto } from "@/types/domain";
 
 export type DraftItem = {
   key: string;
+  produtoId: string;
   productName: string;
   quantity: number;
   unitPrice: number;
@@ -21,20 +22,26 @@ export function itemSubtotal(item: DraftItem): number {
 let rowSeq = 0;
 export function newDraftItem(): DraftItem {
   rowSeq += 1;
-  return { key: `row-${Date.now()}-${rowSeq}`, productName: "", quantity: 1, unitPrice: 0, discountPct: 0 };
+  return { key: `row-${Date.now()}-${rowSeq}`, produtoId: "", productName: "", quantity: 1, unitPrice: 0, discountPct: 0 };
 }
 
 /** Seção "Produtos" — tabela editável de itens da proposta (add/remove linha, subtotal calculado no cliente). */
-export function ProposalItemsTable({ items, onChange }: { items: DraftItem[]; onChange: (items: DraftItem[]) => void }) {
-  const products = getMockProducts();
-
+export function ProposalItemsTable({
+  items,
+  onChange,
+  produtos,
+}: {
+  items: DraftItem[];
+  onChange: (items: DraftItem[]) => void;
+  produtos: ErpProduto[];
+}) {
   function updateItem(key: string, patch: Partial<DraftItem>) {
     onChange(items.map((item) => (item.key === key ? { ...item, ...patch } : item)));
   }
 
-  function handleProductChange(key: string, productName: string) {
-    const product = products.find((p) => p.name === productName);
-    updateItem(key, { productName, unitPrice: product?.salePrice ?? 0 });
+  function handleProductChange(key: string, produtoId: string) {
+    const product = produtos.find((p) => p.id === produtoId);
+    updateItem(key, { produtoId, productName: product?.name ?? "", unitPrice: product ? product.sale_price_cents / 100 : 0 });
   }
 
   function removeItem(key: string) {
@@ -68,13 +75,13 @@ export function ProposalItemsTable({ items, onChange }: { items: DraftItem[]; on
               <tr key={item.key} className="border-b border-gray-50 last:border-0">
                 <td className="py-2 pr-2">
                   <select
-                    value={item.productName}
+                    value={item.produtoId}
                     onChange={(e) => handleProductChange(item.key, e.target.value)}
                     className="w-full rounded-md border border-gray-300 bg-panel px-2.5 py-1.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   >
                     <option value="">Selecione um produto</option>
-                    {products.map((p) => (
-                      <option key={p.id} value={p.name}>
+                    {produtos.map((p) => (
+                      <option key={p.id} value={p.id}>
                         {p.name}
                       </option>
                     ))}
