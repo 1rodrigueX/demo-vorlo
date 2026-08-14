@@ -77,6 +77,13 @@ jobs:
             fi
             git fetch origin main
             git reset --hard origin/main
+            # npm ci já apaga node_modules antes de instalar, mas se um deploy
+            # anterior morreu no meio disso (aconteceu: ENOTEMPTY tentando
+            # remover uma pasta que ficou pela metade), sobra lixo que quebra
+            # a instalação seguinte de um jeito difícil de diagnosticar (o
+            # erro aparece bem depois, no build, sem relação óbvia com a
+            # causa). Limpa géral antes, sempre — não some no build.
+            rm -rf node_modules .next
             npm ci
             npm run build
             # --update-env: pm2 relê as variáveis (senão mantém o env antigo em cache).
