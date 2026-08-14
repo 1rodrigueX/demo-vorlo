@@ -2,6 +2,7 @@ import "server-only";
 import Anthropic from "@anthropic-ai/sdk";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { decryptSecret } from "@/lib/crypto/secrets";
+import { getPlatformAnthropicApiKey } from "@/lib/anthropic/platformConfig";
 
 export const ASSISTANT_MODEL = process.env.ANTHROPIC_MODEL || "claude-opus-4-8";
 
@@ -46,35 +47,38 @@ export async function getAnthropicClientForTenant(tenantId: string): Promise<Ant
 }
 
 /**
- * Igual a getAnthropicClientForTenant, mas com fallback pra chave da
- * plataforma (PLATFORM_ANTHROPIC_API_KEY) quando o agente é o Vorlo e o
- * tenant não conectou a própria chave — o Vorlo funciona out-of-the-box em
- * todo CRM, sem custo pro tenant. Outros tipos de agente (SDR etc.) exigem a
- * chave do próprio tenant, sem fallback, pra não gerar custo de negócio do
- * cliente na conta da plataforma.
+ * O Vorlo (aba Suporte) é SEMPRE bancado pela chave da plataforma (editável
+ * em /dev/ia, ver platformConfig.ts) — mesmo que o tenant tenha conectado a
+ * própria chave pra usar outros agentes. Suporte é o canal com o dono da
+ * plataforma; não faz sentido esse custo cair na conta Anthropic do cliente.
+ * Os demais tipos de agente (SDR, atendente etc.) são o oposto: SEMPRE a
+ * chave do próprio tenant, sem fallback nenhum pra plataforma — são quem
+ * atende os clientes DELE, o custo é dele.
  */
 export async function getAnthropicClientForAgent(
   tenantId: string,
   agent: { is_fala_ai: boolean },
 ): Promise<Anthropic> {
-  const tenantKey = await getTenantAnthropicApiKey(tenantId);
-  if (tenantKey) return new Anthropic({ apiKey: tenantKey });
-
-  if (agent.is_fala_ai && process.env.PLATFORM_ANTHROPIC_API_KEY) {
-    return new Anthropic({ apiKey: process.env.PLATFORM_ANTHROPIC_API_KEY });
+  if (agent.is_fala_ai) {
+    const platformKey = await getPlatformAnthropicApiKey();
+    if (!platformKey) throw new AnthropicNotConfiguredError();
+    return new Anthropic({ apiKey: platformKey });
   }
 
-  throw new AnthropicNotConfiguredError();
+  const tenantKey = await getTenantAnthropicApiKey(tenantId);
+  if (!tenantKey) throw new AnthropicNotConfiguredError();
+  return new Anthropic({ apiKey: tenantKey });
 }
 
 /**
  * Client Anthropic da PLATAFORMA (Vorlo), não de um tenant. Usa a chave
- * PLATFORM_ANTHROPIC_API_KEY — a mesma que banca o agente Vorlo out-of-the-box.
- * Uso interno do time (ex.: redigir comunicado de atualização no painel dev),
- * nunca custo do cliente. Lança AnthropicNotConfiguredError se não houver chave.
+ * configurada em /dev/ia (com fallback pra PLATFORM_ANTHROPIC_API_KEY, env
+ * var, pra quem configurou assim antes dessa tela existir). Uso interno do
+ * time (ex.: redigir comunicado de atualização no painel dev), nunca custo
+ * do cliente. Lança AnthropicNotConfiguredError se não houver chave.
  */
-export function getPlatformAnthropicClient(): Anthropic {
-  const apiKey = process.env.PLATFORM_ANTHROPIC_API_KEY;
+export async function getPlatformAnthropicClient(): Promise<Anthropic> {
+  const apiKey = await getPlatformAnthropicApiKey();
   if (!apiKey) throw new AnthropicNotConfiguredError();
   return new Anthropic({ apiKey });
 }
