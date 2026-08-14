@@ -38,7 +38,14 @@ function normalizeAgentType(type: AgentType, name: string): AgentType {
   return knownType ?? type;
 }
 
-/** Lista os agentes do tenant pra tela de Configurações > Agentes de IA (o Vorlo sempre primeiro). */
+/**
+ * Lista os agentes do tenant pra tela de Configurações > Agentes de IA —
+ * exclui o Vorlo de propósito. O Vorlo é o agente da plataforma (banca a
+ * chave, banca o suporte, administra os demais agentes) e só é
+ * gerenciável pelo painel dev (/dev/empresas), nunca por essa tela do
+ * próprio cliente — aqui só aparecem os agentes que o tenant criou pra
+ * atender os clientes DELE (SDR, atendente etc).
+ */
 export async function listAgents(): Promise<AiAgent[]> {
   const { supabase, tenantId } = await currentTenantContext();
   if (!tenantId) return [];
@@ -46,7 +53,7 @@ export async function listAgents(): Promise<AiAgent[]> {
     .from("ai_agents")
     .select("*")
     .eq("tenant_id", tenantId)
-    .order("is_fala_ai", { ascending: false })
+    .eq("is_fala_ai", false)
     .order("created_at", { ascending: true });
   return data ?? [];
 }

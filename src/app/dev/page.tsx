@@ -12,6 +12,7 @@ import { AccessTenantButton } from "@/components/dev/AccessTenantButton";
 import { DeleteTenantButton } from "@/components/dev/DeleteTenantButton";
 import { LinkErpTenantButton } from "@/components/dev/LinkErpTenantButton";
 import { GrantExtraEmpresaButton } from "@/components/dev/GrantExtraEmpresaButton";
+import { EditFalaAiButton } from "@/components/dev/EditFalaAiButton";
 
 export default async function DevTenantsPage() {
   const admin = createAdminClient();
@@ -60,6 +61,11 @@ export default async function DevTenantsPage() {
   for (const row of empresaRows ?? []) {
     empresaCountByTenant.set(row.tenant_id, (empresaCountByTenant.get(row.tenant_id) ?? 0) + 1);
   }
+
+  // Vorlo de cada tenant — só editável por aqui (a tela de Agentes de IA do
+  // próprio cliente não lista o Vorlo, ver listAgents em ai-agents.ts).
+  const { data: falaAiRows } = await admin.from("ai_agents").select("*").eq("is_fala_ai", true);
+  const falaAiByTenant = new Map((falaAiRows ?? []).map((a) => [a.tenant_id, a]));
 
   return (
     <div>
@@ -147,6 +153,7 @@ export default async function DevTenantsPage() {
                     <LinkErpTenantButton crmTenantId={tenant.id} crmTenantName={tenant.name} />
                   )}
                   {hasErp && <GrantExtraEmpresaButton tenantId={tenant.id} />}
+                  <EditFalaAiButton tenantId={tenant.id} agent={falaAiByTenant.get(tenant.id) ?? null} />
                   {hasCrm && (
                     <>
                       <AccessTenantButton tenantId={tenant.id} />
