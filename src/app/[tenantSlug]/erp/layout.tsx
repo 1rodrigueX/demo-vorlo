@@ -23,9 +23,14 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-erp-sans" });
  * decide o acesso, sem depender de assinatura de CRM.
  *
  * Grande parte das telas ainda é mock (ver plano aprovado) — Cadastros,
- * Propostas e o seletor de empresa/filial do Topbar já são reais.
- * Notificações do sino também: só o evento "SDR montou proposta" tem dado
- * real, o resto do sino segue sem fonte própria ainda.
+ * Propostas e o seletor de empresa/filial do Topbar já são reais. O
+ * Dashboard geral também: Faturamento/Vendas/Propostas abertas/Vendas por
+ * status vêm de erp_propostas de verdade (ver erp-dashboard.ts); só os
+ * blocos de Financeiro e Produção do Dashboard continuam sem dado próprio
+ * (mostram "ainda não disponível" em vez de número inventado) até essas
+ * frentes virarem reais. Notificações do sino também: só o evento "SDR
+ * montou proposta" tem dado real, o resto do sino segue sem fonte própria
+ * ainda.
  */
 export default async function ErpLayout({
   children,
