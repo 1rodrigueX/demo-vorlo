@@ -2,16 +2,18 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Search, Bell, HelpCircle, Menu, ChevronsUpDown, Check } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Search, Bell, HelpCircle, Menu, ChevronsUpDown, Check, Building2 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { UserMenu } from "@/components/layout/UserMenu";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { LiteToggle } from "@/components/layout/LiteToggle";
 import { useTenantSlug } from "@/lib/tenant/useTenantSlug";
-import { getMockCompanies } from "@/mocks/erp/session";
+import { CURRENT_EMPRESA_COOKIE } from "@/lib/erp/empresaCookie";
 import { markAllErpNotificacoesRead, markErpNotificacaoRead } from "@/lib/actions/erp-notificacoes";
 import { formatRelative } from "@/lib/utils/dates";
-import type { ErpNotificacao } from "@/types/domain";
+import { formatDocument } from "@/components/erp/lib/format";
+import type { ErpNotificacao, ErpEmpresa } from "@/types/domain";
 
 function useClickOutside<T extends HTMLElement>(onOutside: () => void) {
   const ref = useRef<T>(null);
@@ -25,12 +27,36 @@ function useClickOutside<T extends HTMLElement>(onOutside: () => void) {
   return ref;
 }
 
-function CompanySwitcher() {
-  const companies = getMockCompanies();
-  const [selected, setSelected] = useState(companies[0].id);
+/** Seletor de empresa/filial real — lê de erp_empresas (Cadastros > Empresas).
+ * Sem nenhuma empresa cadastrada, some (nada pra escolher ainda). Com só
+ * uma, mostra ela sozinha, sem fricção — o cookie é gravado mesmo assim,
+ * pra Propostas sempre ter um default. */
+function CompanySwitcher({ empresas, currentEmpresaId }: { empresas: ErpEmpresa[]; currentEmpresaId: string | null }) {
+  const router = useRouter();
+  const [selected, setSelected] = useState(() => currentEmpresaId ?? empresas[0]?.id ?? null);
   const [open, setOpen] = useState(false);
   const ref = useClickOutside<HTMLDivElement>(() => setOpen(false));
-  const current = companies.find((c) => c.id === selected) ?? companies[0];
+  const current = empresas.find((c) => c.id === selected) ?? empresas[0];
+
+  if (!empresas.length || !current) return null;
+
+  function select(id: string) {
+    setSelected(() => {
+      document.cookie = `${CURRENT_EMPRESA_COOKIE}=${id}; path=/; max-age=31536000; samesite=lax`;
+      return id;
+    });
+    setOpen(false);
+    router.refresh();
+  }
+
+  if (empresas.length === 1) {
+    return (
+      <div className="hidden max-w-[220px] items-center gap-2 rounded-lg border border-gray-200 bg-panel px-3 py-1.5 text-sm md:flex">
+        <Building2 size={14} className="shrink-0 text-gray-400" />
+        <span className="min-w-0 flex-1 truncate text-xs font-medium text-gray-900">{current.name}</span>
+      </div>
+    );
+  }
 
   return (
     <div className="relative hidden md:block" ref={ref}>
@@ -47,19 +73,16 @@ function CompanySwitcher() {
       {open && (
         <div className="absolute left-0 mt-2 w-72 rounded-xl border border-gray-200 bg-panel py-1 shadow-lg shadow-gray-900/5">
           <p className="px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-gray-400">Empresa / filial</p>
-          {companies.map((c) => (
+          {empresas.map((c) => (
             <button
               key={c.id}
               type="button"
-              onClick={() => {
-                setSelected(c.id);
-                setOpen(false);
-              }}
+              onClick={() => select(c.id)}
               className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm hover:bg-gray-50"
             >
               <span className="min-w-0">
                 <span className="block truncate font-medium text-gray-900">{c.name}</span>
-                <span className="block truncate text-xs text-gray-400">{c.cnpj}</span>
+                <span className="block truncate text-xs text-gray-400">{formatDocument(c.cnpj)}</span>
               </span>
               {c.id === selected && <Check size={15} className="shrink-0 text-[#ff5722]" />}
             </button>
@@ -151,12 +174,16 @@ export function ErpTopbar({
   role,
   onMenuClick,
   initialNotifications,
+  empresas,
+  currentEmpresaId,
 }: {
   name: string;
   email: string;
   role?: string;
   onMenuClick: () => void;
   initialNotifications: ErpNotificacao[];
+  empresas: ErpEmpresa[];
+  currentEmpresaId: string | null;
 }) {
   const tenantSlug = useTenantSlug();
   const [query, setQuery] = useState("");
@@ -184,7 +211,7 @@ export function ErpTopbar({
       </div>
 
       <div className="ml-auto flex items-center gap-2">
-        <CompanySwitcher />
+        <CompanySwitcher empresas={empresas} currentEmpresaId={currentEmpresaId} />
         <Link
           href={`/${tenantSlug}/suporte`}
           aria-label="Ajuda"

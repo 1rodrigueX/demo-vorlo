@@ -19,7 +19,7 @@ import { createErpProposta, type ActionState } from "@/lib/actions/erp-propostas
 import { formatCurrency } from "@/lib/utils/currency";
 import { formatShortDate } from "@/components/erp/lib/format";
 import type { ErpCliente } from "@/lib/actions/erp-clientes";
-import type { Profile, ErpProduto, ErpFornecedor } from "@/types/domain";
+import type { Profile, ErpProduto, ErpFornecedor, ErpEmpresa } from "@/types/domain";
 
 function defaultValidUntil(): string {
   const d = new Date();
@@ -33,17 +33,26 @@ export function NovaPropostaForm({
   vendedores,
   produtos,
   fornecedores,
+  empresas,
+  defaultEmpresaId,
 }: {
   tenantSlug: string;
   clientes: ErpCliente[];
   vendedores: Profile[];
   produtos: ErpProduto[];
   fornecedores: ErpFornecedor[];
+  empresas: ErpEmpresa[];
+  defaultEmpresaId: string;
 }) {
   const router = useRouter();
   const [state, formAction, isPending] = useActionState<ActionState, FormData>(createErpProposta, null);
 
-  const [customer, setCustomer] = useState<CustomerSectionValue>({ contactId: "", sellerId: "", validUntil: defaultValidUntil() });
+  const [customer, setCustomer] = useState<CustomerSectionValue>({
+    contactId: "",
+    sellerId: "",
+    validUntil: defaultValidUntil(),
+    empresaId: defaultEmpresaId,
+  });
   const [items, setItems] = useState<DraftItem[]>([newDraftItem()]);
   const [terms, setTerms] = useState<TermsSectionValue>({ paymentTerm: "", freightType: "CIF", carrierId: "" });
   const [discount, setDiscount] = useState(0);
@@ -57,10 +66,15 @@ export function NovaPropostaForm({
   const customerName = clientes.find((c) => c.id === customer.contactId)?.name ?? "";
   const sellerName = vendedores.find((v) => v.id === customer.sellerId)?.full_name ?? "";
   const carrierName = fornecedores.find((f) => f.id === terms.carrierId)?.name ?? "";
+  const issuerEmpresa = empresas.find((e) => e.id === customer.empresaId) ?? empresas[0] ?? null;
 
   function handleSubmit() {
     if (!customer.contactId) {
       toast.error("Selecione um cliente.");
+      return;
+    }
+    if (empresas.length > 1 && !customer.empresaId) {
+      toast.error("Selecione de qual empresa é esta venda.");
       return;
     }
     const validItems = items.filter((i) => i.produtoId);
@@ -71,6 +85,7 @@ export function NovaPropostaForm({
 
     const fd = new FormData();
     fd.set("contactId", customer.contactId);
+    fd.set("empresaId", customer.empresaId);
     fd.set("sellerId", customer.sellerId);
     fd.set("validUntil", customer.validUntil);
     fd.set("paymentTerm", terms.paymentTerm);
@@ -103,7 +118,7 @@ export function NovaPropostaForm({
         <h1 className="mt-1 text-xl font-semibold tracking-tight text-gray-900">Nova proposta</h1>
       </div>
 
-      <ProposalCustomerSection value={customer} onChange={setCustomer} clientes={clientes} vendedores={vendedores} />
+      <ProposalCustomerSection value={customer} onChange={setCustomer} clientes={clientes} vendedores={vendedores} empresas={empresas} />
       <ProposalItemsTable items={items} onChange={setItems} produtos={produtos} />
       <ProposalTermsSection value={terms} onChange={setTerms} fornecedores={fornecedores} />
 
@@ -140,7 +155,7 @@ export function NovaPropostaForm({
         <DocumentLayout
           title="Proposta Comercial"
           documentNumber="Rascunho"
-          issuer={{ name: "Sua Empresa Ltda", document: "00.000.000/0001-00" }}
+          issuer={{ name: issuerEmpresa?.name ?? "Sua Empresa Ltda", document: issuerEmpresa?.cnpj ?? "00.000.000/0001-00" }}
           meta={[
             { label: "Cliente", value: customerName || "—" },
             { label: "Vendedor", value: sellerName || "—" },

@@ -11,12 +11,13 @@ import { TenantStatusToggle } from "@/components/dev/TenantStatusToggle";
 import { AccessTenantButton } from "@/components/dev/AccessTenantButton";
 import { DeleteTenantButton } from "@/components/dev/DeleteTenantButton";
 import { LinkErpTenantButton } from "@/components/dev/LinkErpTenantButton";
+import { GrantExtraEmpresaButton } from "@/components/dev/GrantExtraEmpresaButton";
 
 export default async function DevTenantsPage() {
   const admin = createAdminClient();
   const { data: tenants } = await admin
     .from("tenants")
-    .select("id, name, slug, status, seller_limit, manager_limit, billing_plan_id, created_at")
+    .select("id, name, slug, status, seller_limit, manager_limit, billing_plan_id, erp_extra_empresas_granted, created_at")
     .order("created_at", { ascending: false });
 
   const { data: transportadoraProducts } = await admin
@@ -53,6 +54,12 @@ export default async function DevTenantsPage() {
     .eq("product", "erp")
     .eq("status", "active");
   const erpTenantIds = new Set((erpProducts ?? []).map((p) => p.tenant_id));
+
+  const { data: empresaRows } = await admin.from("erp_empresas").select("tenant_id");
+  const empresaCountByTenant = new Map<string, number>();
+  for (const row of empresaRows ?? []) {
+    empresaCountByTenant.set(row.tenant_id, (empresaCountByTenant.get(row.tenant_id) ?? 0) + 1);
+  }
 
   return (
     <div>
@@ -121,6 +128,8 @@ export default async function DevTenantsPage() {
                   <p className="truncate text-xs text-gray-500">
                     /{tenant.slug}
                     {hasCrm && ` · até ${tenant.seller_limit} vendedores, ${tenant.manager_limit} gestores`}
+                    {hasErp &&
+                      ` · ${empresaCountByTenant.get(tenant.id) ?? 0}/${1 + tenant.erp_extra_empresas_granted} empresa(s) (${tenant.erp_extra_empresas_granted} extra concedida(s))`}
                   </p>
                 </div>
                 <div className="flex shrink-0 items-center gap-3">
@@ -137,6 +146,7 @@ export default async function DevTenantsPage() {
                   {hasCrm && !hasErp && (
                     <LinkErpTenantButton crmTenantId={tenant.id} crmTenantName={tenant.name} />
                   )}
+                  {hasErp && <GrantExtraEmpresaButton tenantId={tenant.id} />}
                   {hasCrm && (
                     <>
                       <AccessTenantButton tenantId={tenant.id} />

@@ -302,6 +302,46 @@ export async function executeAgentTool(
         return { content: `Agente "${result.data.name}" excluído.`, isError: false };
       }
 
+      case "solicitar_empresa_extra": {
+        if (!agent.is_fala_ai) return { content: "Só o Vorlo pode conceder empresa extra.", isError: true };
+
+        const MAX_EXTRA = 4; // 1 (matriz, grátis) + até 4 extras = 5 empresas no total, teto generoso.
+
+        const { data: tenant } = await supabase
+          .from("tenants")
+          .select("erp_extra_empresas_granted")
+          .eq("id", tenantId)
+          .maybeSingle();
+        const current = tenant?.erp_extra_empresas_granted ?? 0;
+
+        if (current >= MAX_EXTRA) {
+          return {
+            content:
+              "Esse CRM já está no limite de empresas extras que dá pra conceder por aqui. Fale direto com o suporte humano pra avaliar seu caso.",
+            isError: true,
+          };
+        }
+
+        const { error } = await supabase
+          .from("tenants")
+          .update({ erp_extra_empresas_granted: current + 1 })
+          .eq("id", tenantId);
+        if (error) return { content: "Não foi possível liberar a vaga agora, tente de novo em instantes.", isError: true };
+
+        await supabase.from("ai_agent_logs").insert({
+          tenant_id: tenantId,
+          agent_id: agent.id,
+          event_type: "tool_call",
+          detail: { tool: "solicitar_empresa_extra", extra_empresas_granted_total: current + 1 },
+        });
+
+        return {
+          content:
+            "Pronto! Liberei uma vaga a mais pra você cadastrar outra empresa/filial. Agora é só ir em Cadastros > Empresas, no ERP, e preencher CNPJ, razão social e regime tributário dela.",
+          isError: false,
+        };
+      }
+
       case "connect_integration": {
         if (!agent.is_fala_ai) return { content: "Só o Vorlo pode orientar sobre integrações.", isError: true };
 

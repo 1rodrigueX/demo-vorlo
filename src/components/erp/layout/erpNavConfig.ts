@@ -62,6 +62,7 @@ export const ERP_NAV_GROUPS: ErpNavGroup[] = [
     label: "Cadastros",
     icon: Users,
     items: [
+      { label: "Empresas", href: "/erp/cadastros/empresas", icon: Building2 },
       { label: "Clientes", href: "/erp/cadastros/clientes", icon: UserRound },
       { label: "Fornecedores", href: "/erp/cadastros/fornecedores", icon: Truck },
       { label: "Produtos", href: "/erp/cadastros/produtos", icon: Package },
