@@ -1,6 +1,18 @@
 import "server-only";
-import { Pool, type PoolClient } from "pg";
+import { Pool, type PoolClient, types } from "pg";
 import type { Database } from "@/types/database.types";
+
+// node-postgres por padrão converte date/timestamp/timestamptz em objetos
+// Date nativos do JS. Só que todo o app assume string ISO nesses campos —
+// os tipos gerados de Database, o domain.ts, e qualquer código que trate
+// created_at/etc como string (ex.: `.localeCompare()` em WhatsAppChatPanel/
+// EmailChatPanel pra ordenar mensagens) — do jeito que o supabase-js sempre
+// devolveu. Sem isso, esse tipo de código quebra em RUNTIME mesmo com o tsc
+// satisfeito (o tipo declarado não bate com o valor real). `(val) => val`
+// faz o driver devolver a string crua do Postgres, sem parsear pra Date.
+types.setTypeParser(types.builtins.DATE, (val) => val);
+types.setTypeParser(types.builtins.TIMESTAMP, (val) => val);
+types.setTypeParser(types.builtins.TIMESTAMPTZ, (val) => val);
 
 /** Tabelas do schema public, pra tipar `.from()` como o supabase-js fazia. */
 type PublicTables = Database["public"]["Tables"];
