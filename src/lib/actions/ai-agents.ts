@@ -1,8 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
-import { requireTenantId } from "@/lib/auth/current-user";
+import { currentTenantContext, revalidateTenantPaths } from "@/lib/auth/current-user";
 import {
   createAgentInputSchema,
   updateAgentInputSchema,
@@ -12,6 +10,7 @@ import {
 import { AGENT_TEMPLATES } from "@/lib/ai-agents/templates";
 import { ASSISTANT_MODEL } from "@/lib/anthropic/client";
 import type { Database } from "@/types/database.types";
+import type { AiAgent } from "@/types/domain";
 
 type AiAgentUpdate = Database["public"]["Tables"]["ai_agents"]["Update"];
 type AgentType = CreateAgentInput["type"];
@@ -37,6 +36,19 @@ function normalizeAgentType(type: AgentType, name: string): AgentType {
     (key) => key === normalized,
   );
   return knownType ?? type;
+}
+
+/** Lista os agentes do tenant pra tela de Configurações > Agentes de IA (o Vorlo sempre primeiro). */
+export async function listAgents(): Promise<AiAgent[]> {
+  const { supabase, tenantId } = await currentTenantContext();
+  if (!tenantId) return [];
+  const { data } = await supabase
+    .from("ai_agents")
+    .select("*")
+    .eq("tenant_id", tenantId)
+    .order("is_fala_ai", { ascending: false })
+    .order("created_at", { ascending: true });
+  return data ?? [];
 }
 
 export async function createAgent(
@@ -66,13 +78,8 @@ export async function createAgent(
     temperature = temperature ?? template.temperature;
   }
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { supabase, user, tenantId } = await currentTenantContext();
   if (!user) return { error: "Sessão expirada, faça login novamente" };
-
-  const tenantId = await requireTenantId(supabase, user.id);
   if (!tenantId) return { error: "Tenant não encontrado" };
 
   const { data, error } = await supabase
@@ -96,7 +103,7 @@ export async function createAgent(
     return { error: friendlyError(`Não foi possível criar o agente: ${error?.message ?? "erro desconhecido"}`, error?.code) };
   }
 
-  revalidatePath("/agents");
+  await revalidateTenantPaths(supabase, tenantId, ["/settings/agentes"]);
   return { data: { agentId: data.id, name: data.name, type: data.type } };
 }
 
@@ -105,13 +112,7 @@ export async function updateAgent(agentId: string, input: UpdateAgentInput): Pro
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
   if (Object.keys(parsed.data).length === 0) return { error: "Nada para atualizar" };
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { error: "Sessão expirada, faça login novamente" };
-
-  const tenantId = await requireTenantId(supabase, user.id);
+  const { supabase, tenantId } = await currentTenantContext();
   if (!tenantId) return { error: "Tenant não encontrado" };
 
   const payload: AiAgentUpdate = {};
@@ -132,7 +133,7 @@ export async function updateAgent(agentId: string, input: UpdateAgentInput): Pro
   if (error) return { error: friendlyError(`Não foi possível atualizar: ${error.message}`, error.code) };
   if (!data) return { error: "Agente não encontrado ou você não tem permissão pra editá-lo" };
 
-  revalidatePath("/agents");
+  await revalidateTenantPaths(supabase, tenantId, ["/settings/agentes"]);
   return { data: { name: data.name } };
 }
 
@@ -140,13 +141,7 @@ export async function toggleAgentStatus(
   agentId: string,
   status: "active" | "inactive",
 ): Promise<Result<{ name: string; status: string }>> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { error: "Sessão expirada, faça login novamente" };
-
-  const tenantId = await requireTenantId(supabase, user.id);
+  const { supabase, tenantId } = await currentTenantContext();
   if (!tenantId) return { error: "Tenant não encontrado" };
 
   const { data: target } = await supabase
@@ -168,18 +163,12 @@ export async function toggleAgentStatus(
   if (error) return { error: friendlyError(`Não foi possível atualizar o status: ${error.message}`, error.code) };
   if (!data) return { error: "Agente não encontrado ou você não tem permissão" };
 
-  revalidatePath("/agents");
+  await revalidateTenantPaths(supabase, tenantId, ["/settings/agentes"]);
   return { data };
 }
 
 export async function deleteAgent(agentId: string): Promise<Result<{ name: string }>> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { error: "Sessão expirada, faça login novamente" };
-
-  const tenantId = await requireTenantId(supabase, user.id);
+  const { supabase, tenantId } = await currentTenantContext();
   if (!tenantId) return { error: "Tenant não encontrado" };
 
   const { data: target } = await supabase
@@ -194,6 +183,6 @@ export async function deleteAgent(agentId: string): Promise<Result<{ name: strin
   const { error } = await supabase.from("ai_agents").delete().eq("id", agentId).eq("tenant_id", tenantId);
   if (error) return { error: friendlyError(`Não foi possível excluir: ${error.message}`, error.code) };
 
-  revalidatePath("/agents");
+  await revalidateTenantPaths(supabase, tenantId, ["/settings/agentes"]);
   return { data: { name: target.name } };
 }
