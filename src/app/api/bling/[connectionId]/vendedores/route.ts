@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { requireTenantId } from "@/lib/auth/current-user";
 import { blingFetch } from "@/lib/bling/client";
 
 type BlingVendedoresResponse = { data?: { id: number | string; nome?: string; contato?: { nome?: string } }[] };
@@ -18,10 +19,14 @@ export async function GET(_request: Request, { params }: { params: Promise<{ con
     return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
   }
 
+  const tenantId = await requireTenantId(supabase, user.id);
+  if (!tenantId) return NextResponse.json({ error: "Tenant não encontrado" }, { status: 403 });
+
   const { data: connection } = await supabase
     .from("bling_connections")
     .select("id")
     .eq("id", connectionId)
+    .eq("tenant_id", tenantId)
     .maybeSingle();
   if (!connection) return NextResponse.json({ error: "Conexão não encontrada" }, { status: 404 });
 

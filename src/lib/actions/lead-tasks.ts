@@ -15,10 +15,14 @@ export async function getLeadTasks(contactId: string): Promise<LeadTask[]> {
   } = await supabase.auth.getUser();
   if (!user) return [];
 
+  const tenantId = await requireTenantId(supabase, user.id);
+  if (!tenantId) return [];
+
   const { data } = await supabase
     .from("lead_tasks")
     .select("*")
     .eq("contact_id", contactId)
+    .eq("tenant_id", tenantId)
     .order("done", { ascending: true })
     .order("due_at", { ascending: true, nullsFirst: false })
     .order("created_at", { ascending: false });
@@ -57,17 +61,34 @@ export async function createLeadTask(input: {
 
 export async function toggleLeadTask(id: string, done: boolean): Promise<ActionState> {
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Sessão expirada, faça login novamente" };
+
+  const tenantId = await requireTenantId(supabase, user.id);
+  if (!tenantId) return { error: "Tenant não encontrado" };
+
   const { error } = await supabase
     .from("lead_tasks")
     .update({ done, updated_at: new Date().toISOString() })
-    .eq("id", id);
+    .eq("id", id)
+    .eq("tenant_id", tenantId);
   if (error) return { error: mapDbError(error.message) };
   return null;
 }
 
 export async function deleteLeadTask(id: string): Promise<ActionState> {
   const supabase = await createClient();
-  const { error } = await supabase.from("lead_tasks").delete().eq("id", id);
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Sessão expirada, faça login novamente" };
+
+  const tenantId = await requireTenantId(supabase, user.id);
+  if (!tenantId) return { error: "Tenant não encontrado" };
+
+  const { error } = await supabase.from("lead_tasks").delete().eq("id", id).eq("tenant_id", tenantId);
   if (error) return { error: mapDbError(error.message) };
   return null;
 }

@@ -14,7 +14,12 @@ async function revalidateDealContact(
   tenantId: string,
   dealId: string,
 ) {
-  const { data: deal } = await supabase.from("deals").select("contact_id").eq("id", dealId).maybeSingle();
+  const { data: deal } = await supabase
+    .from("deals")
+    .select("contact_id")
+    .eq("id", dealId)
+    .eq("tenant_id", tenantId)
+    .maybeSingle();
   const slug = await getTenantSlug(supabase, tenantId);
   if (slug && deal) revalidatePath(`/${slug}/contacts/${deal.contact_id}`, "page");
 }
@@ -23,10 +28,16 @@ async function revalidateDealContact(
 export async function getDealProdutosForDeals(dealIds: string[]): Promise<Record<string, DealProdutoWithItem[]>> {
   if (dealIds.length === 0) return {};
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const tenantId = user ? await requireTenantId(supabase, user.id) : null;
+  if (!tenantId) return {};
 
   const { data } = await supabase
     .from("deal_produtos")
     .select("*, estoque_item:estoque_itens(*)")
+    .eq("tenant_id", tenantId)
     .in("deal_id", dealIds);
 
   return ((data ?? []) as DealProdutoWithItem[]).reduce<Record<string, DealProdutoWithItem[]>>((acc, item) => {
@@ -37,10 +48,17 @@ export async function getDealProdutosForDeals(dealIds: string[]): Promise<Record
 
 export async function getDealProdutosForDeal(dealId: string): Promise<DealProdutoWithItem[]> {
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const tenantId = user ? await requireTenantId(supabase, user.id) : null;
+  if (!tenantId) return [];
+
   const { data } = await supabase
     .from("deal_produtos")
     .select("*, estoque_item:estoque_itens(*)")
-    .eq("deal_id", dealId);
+    .eq("deal_id", dealId)
+    .eq("tenant_id", tenantId);
   return (data ?? []) as DealProdutoWithItem[];
 }
 
@@ -81,9 +99,17 @@ export async function removeDealProduto(id: string) {
   if (!user) return;
 
   const tenantId = await requireTenantId(supabase, user.id);
-  const { data: dealProduto } = await supabase.from("deal_produtos").select("deal_id").eq("id", id).maybeSingle();
+  if (!tenantId) return;
 
-  await supabase.from("deal_produtos").delete().eq("id", id);
+  const { data: dealProduto } = await supabase
+    .from("deal_produtos")
+    .select("deal_id")
+    .eq("id", id)
+    .eq("tenant_id", tenantId)
+    .maybeSingle();
+  if (!dealProduto) return;
 
-  if (tenantId && dealProduto) await revalidateDealContact(supabase, tenantId, dealProduto.deal_id);
+  await supabase.from("deal_produtos").delete().eq("id", id).eq("tenant_id", tenantId);
+
+  await revalidateDealContact(supabase, tenantId, dealProduto.deal_id);
 }

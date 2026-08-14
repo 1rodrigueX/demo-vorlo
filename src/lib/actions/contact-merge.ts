@@ -108,6 +108,17 @@ export async function mergeContacts(
   const tenantId = await requireTenantId(supabase, user.id);
   if (!tenantId) return { error: "Tenant não encontrado" };
 
+  // merge_contacts (RPC) só confere tenant igual entre vencedor/perdedor —
+  // desde a migração pro Auth.js, o auth.uid() dentro da função nunca
+  // resolve, então a checagem de permissão de lá é código morto. Confere
+  // aqui, antes de chamar, que todo mundo envolvido é mesmo deste tenant.
+  const allIds = [winnerId, ...loserIds];
+  const { data: ownedContacts } = await supabase.from("contacts").select("id").eq("tenant_id", tenantId).in("id", allIds);
+  const ownedIds = new Set((ownedContacts ?? []).map((c) => c.id));
+  if (allIds.some((id) => !ownedIds.has(id))) {
+    return { error: "Um ou mais contatos não pertencem à sua conta" };
+  }
+
   for (const loserId of loserIds) {
     const { error } = await supabase.rpc("merge_contacts", {
       winner_id: winnerId,

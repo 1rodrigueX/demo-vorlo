@@ -48,38 +48,38 @@ function emptyMetrics(): ConversationMetrics {
 
 export async function getConversationMetrics(
   supabase: DbClient,
-  filters: { from: Date; to: Date; ownerId: string | null },
+  filters: { from: Date; to: Date; ownerId: string | null; tenantId: string },
 ): Promise<ConversationMetrics> {
-  const { from, to, ownerId } = filters;
+  const { from, to, ownerId, tenantId } = filters;
 
-  // Filtro de vendedor = contatos criados por ele (mensagens não têm dono).
-  let contactIds: string[] | null = null;
-  if (ownerId) {
-    const { data } = await supabase.from("contacts").select("id").eq("created_by", ownerId);
-    contactIds = (data ?? []).map((c) => c.id);
-    if (contactIds.length === 0) return emptyMetrics();
-  }
+  // Todo contato deste tenant — sempre precisamos disso pra filtrar
+  // whatsapp_messages (que não tem tenant_id próprio), com ou sem filtro de vendedor.
+  let tenantContactsQuery = supabase.from("contacts").select("id").eq("tenant_id", tenantId);
+  if (ownerId) tenantContactsQuery = tenantContactsQuery.eq("created_by", ownerId);
+  const { data: tenantContactRows } = await tenantContactsQuery;
+  const contactIds = (tenantContactRows ?? []).map((c) => c.id);
+  if (contactIds.length === 0) return emptyMetrics();
 
   // Contagem exata de recebidas (query separada — não sofre com o teto de linhas).
-  let receivedQuery = supabase
+  const receivedQuery = supabase
     .from("whatsapp_messages")
     .select("id", { count: "exact", head: true })
     .eq("direction", "inbound")
+    .in("contact_id", contactIds)
     .gte("created_at", from.toISOString())
     .lte("created_at", to.toISOString());
-  if (contactIds) receivedQuery = receivedQuery.in("contact_id", contactIds);
   const { count: receivedCount } = await receivedQuery;
   const messagesReceived = receivedCount ?? 0;
 
   // Linhas pra análise de estado (mais recentes primeiro, com teto).
-  let rowsQuery = supabase
+  const rowsQuery = supabase
     .from("whatsapp_messages")
     .select("contact_id, direction, created_at")
+    .in("contact_id", contactIds)
     .gte("created_at", from.toISOString())
     .lte("created_at", to.toISOString())
     .order("created_at", { ascending: false })
     .limit(ANALYSIS_ROW_CAP);
-  if (contactIds) rowsQuery = rowsQuery.in("contact_id", contactIds);
   const { data: rows } = await rowsQuery;
 
   const byContact = new Map<string, { direction: string; created_at: string }[]>();
@@ -127,6 +127,7 @@ export async function getConversationMetrics(
   let sourcesQuery = supabase
     .from("contacts")
     .select("lead_source")
+    .eq("tenant_id", tenantId)
     .gte("created_at", from.toISOString())
     .lte("created_at", to.toISOString());
   if (ownerId) sourcesQuery = sourcesQuery.eq("created_by", ownerId);

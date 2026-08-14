@@ -50,11 +50,17 @@ export async function toggleLeadWebhook(webhookId: string, isActive: boolean) {
   } = await supabase.auth.getUser();
   if (!user) return { error: "Sessão expirada" };
 
-  const { error } = await supabase.from("lead_webhooks").update({ is_active: isActive }).eq("id", webhookId);
+  const tenantId = await requireTenantId(supabase, user.id);
+  if (!tenantId) return { error: "Tenant não encontrado" };
+
+  const { error } = await supabase
+    .from("lead_webhooks")
+    .update({ is_active: isActive })
+    .eq("id", webhookId)
+    .eq("tenant_id", tenantId);
   if (error) return { error: "Não foi possível atualizar" };
 
-  const tenantId = await requireTenantId(supabase, user.id);
-  const slug = tenantId ? await getTenantSlug(supabase, tenantId) : null;
+  const slug = await getTenantSlug(supabase, tenantId);
   if (slug) revalidatePath(`/${slug}/settings/webhooks`);
   return { error: undefined };
 }
@@ -67,8 +73,10 @@ export async function deleteLeadWebhook(webhookId: string) {
   if (!user) return;
 
   const tenantId = await requireTenantId(supabase, user.id);
-  await supabase.from("lead_webhooks").delete().eq("id", webhookId);
+  if (!tenantId) return;
 
-  const slug = tenantId ? await getTenantSlug(supabase, tenantId) : null;
+  await supabase.from("lead_webhooks").delete().eq("id", webhookId).eq("tenant_id", tenantId);
+
+  const slug = await getTenantSlug(supabase, tenantId);
   if (slug) revalidatePath(`/${slug}/settings/webhooks`);
 }

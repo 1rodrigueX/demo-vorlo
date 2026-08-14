@@ -56,7 +56,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Escreva algo ou anexe um arquivo" }, { status: 400, headers: CORS });
   }
 
-  const { data: contact } = await sb.from("contacts").select("id, phone").eq("id", contactId).maybeSingle();
+  const { data: contact } = await sb
+    .from("contacts")
+    .select("id, phone")
+    .eq("id", contactId)
+    .eq("tenant_id", tenantId)
+    .maybeSingle();
   if (!contact?.phone) {
     return NextResponse.json({ error: "Contato sem telefone" }, { status: 400, headers: CORS });
   }

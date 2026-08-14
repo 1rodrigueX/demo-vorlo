@@ -16,6 +16,8 @@ export type DashboardFilters = {
   to: Date;
   /** Filtra por vendedor (deals.owner_id / contacts.created_by) — null = todos. */
   ownerId: string | null;
+  /** Tenant do usuário logado — toda query aqui é presa a ele. */
+  tenantId: string;
 };
 
 /**
@@ -26,7 +28,7 @@ export type DashboardFilters = {
  * respeitam vendedor + período.
  */
 export async function getDashboardData(supabase: DbClient, filters: DashboardFilters) {
-  const { from, to, ownerId } = filters;
+  const { from, to, ownerId, tenantId } = filters;
 
   let dealsQuery = supabase
     .from("deals")
@@ -43,15 +45,19 @@ export async function getDashboardData(supabase: DbClient, filters: DashboardFil
       owner: { full_name: string | null } | null;
     }>(
       "id, title, stage_id, value, status, closed_at, proposal_sent_at, owner_id, contact:contacts(id, name), owner:profiles(full_name)",
-    );
+    )
+    .eq("tenant_id", tenantId);
   if (ownerId) dealsQuery = dealsQuery.eq("owner_id", ownerId);
 
-  let contactsQuery = supabase.from("contacts").select("id", { count: "exact", head: true });
+  let contactsQuery = supabase
+    .from("contacts")
+    .select("id", { count: "exact", head: true })
+    .eq("tenant_id", tenantId);
   if (ownerId) contactsQuery = contactsQuery.eq("created_by", ownerId);
   contactsQuery = contactsQuery.gte("created_at", from.toISOString()).lte("created_at", to.toISOString());
 
   const [{ data: stages }, { data: deals }, { count: contactsCount }] = await Promise.all([
-    supabase.from("pipeline_stages").select("*").order("position"),
+    supabase.from("pipeline_stages").select("*").eq("tenant_id", tenantId).order("position"),
     dealsQuery,
     contactsQuery,
   ]);

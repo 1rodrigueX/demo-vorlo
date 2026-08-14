@@ -119,6 +119,11 @@ export async function toggleProductAccess(
   const owner = await requireOwner(supabase);
   if ("error" in owner) return { error: owner.error };
 
+  // profileId precisa ser alguém do mesmo tenant do dono chamando, senão dava
+  // pra conceder/revogar acesso a produto do perfil de outra empresa.
+  const { data: target } = await supabase.from("profiles").select("tenant_id").eq("id", profileId).maybeSingle();
+  if (!target || target.tenant_id !== owner.tenantId) return { error: "Usuário não encontrado" };
+
   if (granted) {
     const { error } = await supabase.from("profile_product_access").insert({ profile_id: profileId, product });
     if (error && error.code !== "23505") return { error: error.message };

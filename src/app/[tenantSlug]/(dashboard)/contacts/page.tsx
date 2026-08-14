@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { User, Tag as TagIcon, X, Copy } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { Card } from "@/components/ui/Card";
@@ -16,25 +17,32 @@ export default async function ContactsPage({
   const { tenantSlug } = await params;
   const { q, tag: tagId, vendedor } = await searchParams;
   const supabase = await createClient();
-
-  const [{ data: companies }, { data: tags }, currentUser] = await Promise.all([
-    supabase.from("companies").select("id, name").order("name"),
-    supabase.from("tags").select("*").order("name"),
-    getCurrentUser(),
-  ]);
+  const currentUser = await getCurrentUser();
 
   // Vendedor comum já só enxerga os próprios contatos via RLS
   // (contacts_select_own_or_admin) — o filtro só faz sentido pra quem vê a
   // base inteira. Mesmo critério do filtro do Pipeline.
   const profile = currentUser?.profile ?? null;
-  const isAdmin = profile?.role === "owner" || profile?.role === "manager";
+  if (!profile) redirect("/login");
+  const tenantId = profile.tenant_id;
+  const isAdmin = profile.role === "owner" || profile.role === "manager";
+
+  const [{ data: companies }, { data: tags }] = await Promise.all([
+    supabase.from("companies").select("id, name").eq("tenant_id", tenantId).order("name"),
+    supabase.from("tags").select("*").eq("tenant_id", tenantId).order("name"),
+  ]);
+
   const { data: sellers } = isAdmin
-    ? await supabase.from("profiles").select("id, full_name").eq("tenant_id", profile.tenant_id).order("full_name")
+    ? await supabase.from("profiles").select("id, full_name").eq("tenant_id", tenantId).order("full_name")
     : { data: [] as { id: string; full_name: string | null }[] };
 
   let contactIdsWithTag: string[] | null = null;
   if (tagId) {
-    const { data: taggedRows } = await supabase.from("contact_tags").select("contact_id").eq("tag_id", tagId);
+    const { data: taggedRows } = await supabase
+      .from("contact_tags")
+      .select("contact_id")
+      .eq("tag_id", tagId)
+      .eq("tenant_id", tenantId);
     contactIdsWithTag = (taggedRows ?? []).map((r) => r.contact_id);
   }
 
@@ -49,6 +57,7 @@ export default async function ContactsPage({
       company: { id: string; name: string } | null;
       contact_tags: { tag: { id: string; name: string; color: string } | null }[];
     }>("id, name, email, phone, lead_source, company:companies(id, name), contact_tags(tag:tags(id, name, color))")
+    .eq("tenant_id", tenantId)
     .order("created_at", { ascending: false });
   if (q) contactsQuery = contactsQuery.ilike("name", `%${q}%`);
   if (contactIdsWithTag) contactsQuery = contactsQuery.in("id", contactIdsWithTag.length ? contactIdsWithTag : ["-"]);

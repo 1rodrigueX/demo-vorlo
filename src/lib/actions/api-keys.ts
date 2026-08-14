@@ -46,6 +46,14 @@ export async function createApiKey(
 
 export async function revokeApiKey(keyId: string) {
   const supabase = await createClient();
-  await supabase.from("tenant_api_keys").delete().eq("id", keyId);
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return;
+
+  const tenantId = await requireTenantId(supabase, user.id);
+  if (!tenantId) return;
+
+  await supabase.from("tenant_api_keys").delete().eq("id", keyId).eq("tenant_id", tenantId);
   revalidatePath("/[tenantSlug]/dashboard", "page");
 }

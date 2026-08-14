@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { ArrowLeft, User } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { requireTenantId } from "@/lib/auth/current-user";
 import { Card } from "@/components/ui/Card";
 import { CompanyForm } from "@/components/companies/CompanyForm";
 import { ConfirmDeleteButton } from "@/components/ui/ConfirmDeleteButton";
@@ -14,13 +15,19 @@ export default async function CompanyDetailPage({
 }) {
   const { tenantSlug, id } = await params;
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const tenantId = user ? await requireTenantId(supabase, user.id) : null;
+  if (!tenantId) redirect("/login");
 
   const [{ data: company }, { data: contacts }] = await Promise.all([
-    supabase.from("companies").select("*").eq("id", id).single(),
+    supabase.from("companies").select("*").eq("id", id).eq("tenant_id", tenantId).maybeSingle(),
     supabase
       .from("contacts")
       .select("id, name, email, phone")
       .eq("company_id", id)
+      .eq("tenant_id", tenantId)
       .order("name"),
   ]);
 

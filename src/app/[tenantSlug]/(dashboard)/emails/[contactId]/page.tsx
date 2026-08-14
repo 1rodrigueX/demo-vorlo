@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { ExternalLink } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { requireTenantId } from "@/lib/auth/current-user";
 import { EmailChatPanel } from "@/components/contacts/EmailChatPanel";
 import type { EmailMessage } from "@/types/domain";
 
@@ -12,13 +13,19 @@ export default async function EmailConversationPage({
 }) {
   const { tenantSlug, contactId } = await params;
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const tenantId = user ? await requireTenantId(supabase, user.id) : null;
+  if (!tenantId) redirect("/login");
 
   const [{ data: contact }, { data: messages }] = await Promise.all([
-    supabase.from("contacts").select("id, name, email").eq("id", contactId).single(),
+    supabase.from("contacts").select("id, name, email").eq("id", contactId).eq("tenant_id", tenantId).maybeSingle(),
     supabase
       .from("email_messages")
       .select("*")
       .eq("contact_id", contactId)
+      .eq("tenant_id", tenantId)
       .order("created_at", { ascending: true }),
   ]);
 

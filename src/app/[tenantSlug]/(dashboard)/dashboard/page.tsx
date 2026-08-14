@@ -1,6 +1,8 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { DollarSign, TrendingUp, Briefcase } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { requireTenantId } from "@/lib/auth/current-user";
 import { cn } from "@/lib/utils/cn";
 import { formatCurrency } from "@/lib/utils/currency";
 import { formatMinutes } from "@/lib/utils/duration";
@@ -63,17 +65,20 @@ export default async function DashboardPage({
     ? await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle()
     : { data: null };
   const isAdmin = currentProfile?.role === "owner" || currentProfile?.role === "manager";
+  const tenantId = user ? await requireTenantId(supabase, user.id) : null;
+  if (!tenantId) redirect("/login");
 
   const [{ data: apiKeys }, { data: sellerProfiles }, data, conversation] = await Promise.all([
     isAdmin
       ? supabase
           .from("tenant_api_keys")
           .select("id, name, key_prefix, created_at, last_used_at")
+          .eq("tenant_id", tenantId)
           .order("created_at", { ascending: false })
       : Promise.resolve({ data: null }),
-    supabase.from("profiles").select("id, full_name").order("full_name"),
-    getDashboardData(supabase, { from, to, ownerId }),
-    getConversationMetrics(supabase, { from, to, ownerId }),
+    supabase.from("profiles").select("id, full_name").eq("tenant_id", tenantId).order("full_name"),
+    getDashboardData(supabase, { from, to, ownerId, tenantId }),
+    getConversationMetrics(supabase, { from, to, ownerId, tenantId }),
   ]);
 
   const {

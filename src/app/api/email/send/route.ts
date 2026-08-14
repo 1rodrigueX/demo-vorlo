@@ -61,7 +61,12 @@ export async function POST(request: Request) {
   let contact: { id: string; email: string } | null = null;
 
   if (parsed.data.contactId) {
-    const { data } = await supabase.from("contacts").select("id, email").eq("id", parsed.data.contactId).single();
+    const { data } = await supabase
+      .from("contacts")
+      .select("id, email")
+      .eq("id", parsed.data.contactId)
+      .eq("tenant_id", tenantId)
+      .single();
     if (!data?.email) {
       return NextResponse.json({ error: "Este contato não tem e-mail cadastrado" }, { status: 400 });
     }

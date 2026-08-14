@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { ArrowLeft, Briefcase } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -36,6 +36,10 @@ export default async function ContactDetailPage({
   const { tenantSlug, id } = await params;
   const supabase = await createClient();
 
+  const currentUser = await getCurrentUser();
+  const tenantId = currentUser?.profile?.tenant_id ?? null;
+  if (!tenantId) redirect("/login");
+
   const [
     { data: contact },
     { data: companies },
@@ -46,37 +50,39 @@ export default async function ContactDetailPage({
     { data: attachmentRows },
     { data: allTags },
     { data: contactTagRows },
-    currentUser,
   ] = await Promise.all([
-    supabase.from("contacts").select("*").eq("id", id).single(),
-    supabase.from("companies").select("id, name").order("name"),
+    supabase.from("contacts").select("*").eq("id", id).eq("tenant_id", tenantId).maybeSingle(),
+    supabase.from("companies").select("id, name").eq("tenant_id", tenantId).order("name"),
     supabase
       .from("deals")
       .select("id, title, value, status, stage_id, owner_id")
       .eq("contact_id", id)
+      .eq("tenant_id", tenantId)
       .order("created_at", { ascending: false }),
-    supabase.from("pipeline_stages").select("*").order("position"),
+    supabase.from("pipeline_stages").select("*").eq("tenant_id", tenantId).order("position"),
     supabase
       .from("activities")
       .select(
         "id, type, body, direction, created_at, profile:profiles(full_name), whatsapp_message:whatsapp_messages(status)",
       )
       .eq("contact_id", id)
+      .eq("tenant_id", tenantId)
       .neq("type", "whatsapp")
       .order("created_at", { ascending: false }),
     supabase
       .from("whatsapp_messages")
       .select("*")
       .eq("contact_id", id)
+      .eq("tenant_id", tenantId)
       .order("created_at", { ascending: true }),
     supabase
       .from("contact_attachments")
       .select("id, file_name, storage_path, size_bytes, created_at")
       .eq("contact_id", id)
+      .eq("tenant_id", tenantId)
       .order("created_at", { ascending: false }),
-    supabase.from("tags").select("*").order("name"),
-    supabase.from("contact_tags").select("tag_id").eq("contact_id", id),
-    getCurrentUser(),
+    supabase.from("tags").select("*").eq("tenant_id", tenantId).order("name"),
+    supabase.from("contact_tags").select("tag_id").eq("contact_id", id).eq("tenant_id", tenantId),
   ]);
 
   if (!contact) notFound();
@@ -95,7 +101,11 @@ export default async function ContactDetailPage({
   // consegue usá-la — mas a lista é buscada sempre, pra dar pra mostrar o
   // nome de quem já é responsável pra qualquer um que veja a página.
   const isAdmin = currentUser?.profile?.role === "owner" || currentUser?.profile?.role === "manager";
-  const { data: sellers } = await supabase.from("profiles").select("id, full_name").order("full_name");
+  const { data: sellers } = await supabase
+    .from("profiles")
+    .select("id, full_name")
+    .eq("tenant_id", tenantId)
+    .order("full_name");
 
   // Negócio "principal" pro seletor rápido de estágio nos Dados do contato:
   // o mais recente ainda aberto, ou o mais recente de todos se não tiver

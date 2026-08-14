@@ -14,6 +14,7 @@ export default async function SettingsWebhooksPage() {
       ? supabase
           .from("lead_webhooks")
           .select("id, name, token, target_stage_id, welcome_message, is_active, leads_received, created_at")
+          .eq("tenant_id", tenantId)
           .order("created_at", { ascending: false })
       : Promise.resolve({ data: [] }),
     tenantId

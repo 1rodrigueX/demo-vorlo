@@ -1,15 +1,24 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { Building2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { requireTenantId } from "@/lib/auth/current-user";
 import { Card } from "@/components/ui/Card";
 import { NewCompanyButton } from "@/components/companies/NewCompanyButton";
 
 export default async function CompaniesPage({ params }: { params: Promise<{ tenantSlug: string }> }) {
   const { tenantSlug } = await params;
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const tenantId = user ? await requireTenantId(supabase, user.id) : null;
+  if (!tenantId) redirect("/login");
+
   const { data: companies } = await supabase
     .from("companies")
     .select("id, name, website, created_at")
+    .eq("tenant_id", tenantId)
     .order("created_at", { ascending: false });
 
   return (

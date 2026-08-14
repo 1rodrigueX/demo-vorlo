@@ -38,7 +38,12 @@ export async function uploadContactAttachment(
 
   // Confere, com o client comum (RLS), que o usuário enxerga esse contato
   // antes de usar o client de service role pro upload em si.
-  const { data: contact } = await supabase.from("contacts").select("id").eq("id", contactId).maybeSingle();
+  const { data: contact } = await supabase
+    .from("contacts")
+    .select("id")
+    .eq("id", contactId)
+    .eq("tenant_id", tenantId)
+    .maybeSingle();
   if (!contact) return { error: "Contato não encontrado" };
 
   const admin = createAdminClient();
@@ -82,18 +87,22 @@ export async function deleteContactAttachment(attachmentId: string) {
   } = await supabase.auth.getUser();
   if (!user) return;
 
+  const tenantId = await requireTenantId(supabase, user.id);
+  if (!tenantId) return;
+
   // A leitura passa pelo client comum (RLS) pra confirmar que o usuário pode
   // mesmo apagar esse anexo antes de usar o client de service role.
   const { data: attachment } = await supabase
     .from("contact_attachments")
     .select("id, contact_id, storage_path")
     .eq("id", attachmentId)
+    .eq("tenant_id", tenantId)
     .maybeSingle();
   if (!attachment) return;
 
   const admin = createAdminClient();
   await deleteObject(ATTACHMENTS_BUCKET, attachment.storage_path);
-  await admin.from("contact_attachments").delete().eq("id", attachmentId);
+  await admin.from("contact_attachments").delete().eq("id", attachmentId).eq("tenant_id", tenantId);
 
   revalidatePath(`/[tenantSlug]/contacts/${attachment.contact_id}`, "page");
 }
