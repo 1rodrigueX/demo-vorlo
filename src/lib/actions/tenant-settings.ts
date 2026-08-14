@@ -249,7 +249,7 @@ export async function createTeamMember(
   }
 
   const admin = createAdminClient();
-  const { error } = await admin.auth.admin.createUser({
+  const { data: created, error } = await admin.auth.admin.createUser({
     email: parsed.data.email,
     password: parsed.data.password,
     email_confirm: true,
@@ -260,8 +260,22 @@ export async function createTeamMember(
     },
   });
 
-  if (error) {
-    return { error: `Não foi possível criar o acesso: ${error.message}` };
+  if (error || !created.user) {
+    return { error: `Não foi possível criar o acesso: ${error?.message ?? "erro desconhecido"}` };
+  }
+
+  // handle_new_user() (trigger em auth.users) é código morto desde a migração
+  // pro Auth.js — createUser() do shim só grava em app_users, nunca em
+  // auth.users, então o trigger nunca dispara. Sem isso, o convidado não
+  // ganhava profile nenhum e não conseguia nem logar.
+  const { error: profileError } = await admin.from("profiles").insert({
+    id: created.user.id,
+    full_name: parsed.data.fullName,
+    tenant_id: profile.tenant_id,
+    role: parsed.data.role,
+  });
+  if (profileError) {
+    return { error: `Não foi possível criar o acesso: ${profileError.message}` };
   }
 
   revalidatePath("/[tenantSlug]/settings", "page");

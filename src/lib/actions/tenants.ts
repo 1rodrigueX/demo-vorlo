@@ -81,6 +81,20 @@ export async function createTenant(_prevState: ActionState, formData: FormData):
     return { error: `Não foi possível criar o dono do CRM: ${userError?.message ?? "erro desconhecido"}` };
   }
 
+  // handle_new_user() (trigger em auth.users) é código morto desde a migração
+  // pro Auth.js — admin.auth.admin.createUser() do shim só grava em app_users,
+  // nunca em auth.users, então o trigger nunca dispara. Sem isso, o dono não
+  // ganhava profile nenhum e não conseguia nem logar.
+  const { error: profileError } = await admin.from("profiles").insert({
+    id: created.user.id,
+    full_name: parsed.data.ownerFullName,
+    tenant_id: tenant.id,
+    role: "owner",
+  });
+  if (profileError) {
+    return { error: `Empresa criada, mas o profile do dono falhou: ${profileError.message}` };
+  }
+
   await admin
     .from("pipeline_stages")
     .insert(DEFAULT_STAGES.map((stage) => ({ ...stage, tenant_id: tenant.id })));
