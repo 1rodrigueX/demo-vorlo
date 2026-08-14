@@ -31,6 +31,7 @@ export interface Database {
           monthly_amount_cents: number | null;
           next_billing_at: string | null;
           pending_payment_url: string | null;
+          linked_tenant_id: string | null;
           created_at: string;
         };
         Insert: {
@@ -50,6 +51,7 @@ export interface Database {
           monthly_amount_cents?: number | null;
           next_billing_at?: string | null;
           pending_payment_url?: string | null;
+          linked_tenant_id?: string | null;
           created_at?: string;
         };
         Update: {
@@ -69,6 +71,7 @@ export interface Database {
           monthly_amount_cents?: number | null;
           next_billing_at?: string | null;
           pending_payment_url?: string | null;
+          linked_tenant_id?: string | null;
           created_at?: string;
         };
         Relationships: [
@@ -77,6 +80,13 @@ export interface Database {
             columns: ["billing_plan_id"];
             isOneToOne: false;
             referencedRelation: "billing_plans";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "tenants_linked_tenant_id_fkey";
+            columns: ["linked_tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
             referencedColumns: ["id"];
           },
         ];
@@ -2866,8 +2876,9 @@ export interface Database {
         Row: {
           id: string;
           user_id: string;
-          tenant_id: string;
-          module: "financas" | "estoque" | "producao";
+          tenant_id: string | null;
+          company_name: string | null;
+          module: "financas" | "estoque" | "producao" | "erp";
           status: "pending" | "completed";
           monthly_amount_cents: number;
           mp_preference_id: string | null;
@@ -2876,8 +2887,9 @@ export interface Database {
         Insert: {
           id?: string;
           user_id: string;
-          tenant_id: string;
-          module: "financas" | "estoque" | "producao";
+          tenant_id?: string | null;
+          company_name?: string | null;
+          module: "financas" | "estoque" | "producao" | "erp";
           status?: "pending" | "completed";
           monthly_amount_cents: number;
           mp_preference_id?: string | null;
@@ -2886,8 +2898,9 @@ export interface Database {
         Update: {
           id?: string;
           user_id?: string;
-          tenant_id?: string;
-          module?: "financas" | "estoque" | "producao";
+          tenant_id?: string | null;
+          company_name?: string | null;
+          module?: "financas" | "estoque" | "producao" | "erp";
           status?: "pending" | "completed";
           monthly_amount_cents?: number;
           mp_preference_id?: string | null;

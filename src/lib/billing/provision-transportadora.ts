@@ -1,24 +1,9 @@
 import "server-only";
-import { randomBytes } from "crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendBillingEmail } from "@/lib/email/resend";
 import { addOneMonth } from "@/lib/billing/cycle";
-import { isReservedSlug } from "@/lib/tenant/reserved-slugs";
 import { notifyNewTransportadoraTenant } from "@/lib/discord/notify";
-
-const DIACRITIC_MARKS_REGEX = new RegExp("[\\u0300-\\u036f]", "g");
-
-function slugify(name: string): string {
-  return (
-    name
-      .normalize("NFD")
-      .replace(DIACRITIC_MARKS_REGEX, "")
-      .toLowerCase()
-      .trim()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "") || "empresa"
-  );
-}
+import { createStandaloneTenant } from "@/lib/billing/createStandaloneTenant";
 
 export type ProvisionTransportadoraParams = {
   pendingCheckoutId: string;
@@ -63,58 +48,11 @@ export async function provisionTransportadoraFromCheckout(
   const monthlyAmountCents = plan?.monthly_price_cents ?? 0;
 
   let tenantId = pending.tenant_id;
-  let ownerFullName: string | null = null;
 
   if (!tenantId) {
-    const { data: userResult, error: userLookupError } = await admin.auth.admin.getUserById(pending.user_id);
-    if (userLookupError || !userResult.user) {
-      return { error: `Usuário do checkout não encontrado: ${userLookupError?.message ?? pending.user_id}` };
-    }
-    const user = userResult.user;
-    ownerFullName = (user.user_metadata?.full_name as string | undefined) || pending.company_name || "Dono";
-
-    const baseSlug = slugify(pending.company_name ?? "empresa");
-    let lastError: string | undefined;
-
-    for (let attempt = 0; attempt < 5 && !tenantId; attempt++) {
-      const slug =
-        attempt === 0 && !isReservedSlug(baseSlug) ? baseSlug : `${baseSlug}-${randomBytes(2).toString("hex")}`;
-      const { data: tenant, error } = await admin
-        .from("tenants")
-        .insert({ name: pending.company_name ?? "Empresa", slug })
-        .select("id")
-        .single();
-
-      if (tenant) {
-        tenantId = tenant.id;
-      } else if (error?.code === "23505") {
-        lastError = error.message;
-        continue;
-      } else {
-        return { error: `Não foi possível criar a empresa: ${error?.message ?? "erro desconhecido"}` };
-      }
-    }
-
-    if (!tenantId) {
-      return { error: `Não foi possível gerar um slug único: ${lastError ?? "erro desconhecido"}` };
-    }
-
-    const { error: updateUserError } = await admin.auth.admin.updateUserById(user.id, {
-      user_metadata: { tenant_id: tenantId, role: "owner" },
-    });
-    if (updateUserError) {
-      return { error: `Não foi possível vincular o usuário ao tenant: ${updateUserError.message}` };
-    }
-
-    const { error: profileError } = await admin.from("profiles").insert({
-      id: user.id,
-      full_name: ownerFullName,
-      tenant_id: tenantId,
-      role: "owner",
-    });
-    if (profileError) {
-      return { error: `Empresa criada, mas o profile falhou: ${profileError.message}` };
-    }
+    const created = await createStandaloneTenant(admin, pending.user_id, pending.company_name ?? "Empresa");
+    if ("error" in created) return created;
+    tenantId = created.tenantId;
   }
 
   const { error: productError } = await admin.from("tenant_products").upsert(

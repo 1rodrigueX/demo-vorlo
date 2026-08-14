@@ -6,9 +6,11 @@ import { NewTransportadoraTenantButton } from "@/components/dev/NewTransportador
 import { NewFinancasTenantButton } from "@/components/dev/NewFinancasTenantButton";
 import { NewEstoqueTenantButton } from "@/components/dev/NewEstoqueTenantButton";
 import { NewProducaoTenantButton } from "@/components/dev/NewProducaoTenantButton";
+import { NewErpTenantButton } from "@/components/dev/NewErpTenantButton";
 import { TenantStatusToggle } from "@/components/dev/TenantStatusToggle";
 import { AccessTenantButton } from "@/components/dev/AccessTenantButton";
 import { DeleteTenantButton } from "@/components/dev/DeleteTenantButton";
+import { LinkErpTenantButton } from "@/components/dev/LinkErpTenantButton";
 
 export default async function DevTenantsPage() {
   const admin = createAdminClient();
@@ -45,6 +47,13 @@ export default async function DevTenantsPage() {
     .eq("status", "active");
   const producaoTenantIds = new Set((producaoProducts ?? []).map((p) => p.tenant_id));
 
+  const { data: erpProducts } = await admin
+    .from("tenant_products")
+    .select("tenant_id")
+    .eq("product", "erp")
+    .eq("status", "active");
+  const erpTenantIds = new Set((erpProducts ?? []).map((p) => p.tenant_id));
+
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
@@ -57,6 +66,7 @@ export default async function DevTenantsPage() {
           <NewFinancasTenantButton />
           <NewEstoqueTenantButton />
           <NewProducaoTenantButton />
+          <NewErpTenantButton />
           <NewTenantButton />
         </div>
       </div>
@@ -71,6 +81,7 @@ export default async function DevTenantsPage() {
             const hasFinancas = financasTenantIds.has(tenant.id);
             const hasEstoque = estoqueTenantIds.has(tenant.id);
             const hasProducao = producaoTenantIds.has(tenant.id);
+            const hasErp = erpTenantIds.has(tenant.id);
             return (
               <div key={tenant.id} className="flex items-center justify-between gap-4 px-4 py-3.5">
                 <div className="min-w-0">
@@ -101,6 +112,11 @@ export default async function DevTenantsPage() {
                         Produção
                       </span>
                     )}
+                    {hasErp && (
+                      <span className="rounded-full bg-teal-50 px-2 py-0.5 text-[11px] font-medium text-teal-700">
+                        ERP
+                      </span>
+                    )}
                   </div>
                   <p className="truncate text-xs text-gray-500">
                     /{tenant.slug}
@@ -118,6 +134,9 @@ export default async function DevTenantsPage() {
                   >
                     {tenant.status === "active" ? "Ativo" : "Suspenso"}
                   </span>
+                  {hasCrm && !hasErp && (
+                    <LinkErpTenantButton crmTenantId={tenant.id} crmTenantName={tenant.name} />
+                  )}
                   {hasCrm && (
                     <>
                       <AccessTenantButton tenantId={tenant.id} />

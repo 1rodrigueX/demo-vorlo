@@ -4,6 +4,8 @@ import { useActionState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Label } from "@/components/ui/Label";
 import { startModuleCheckout, cancelPendingModuleCheckout, type ActionState } from "@/lib/actions/module-checkout";
 import { formatCentsBrl } from "@/lib/billing/pricing";
 import type { ModuleKey } from "@/lib/billing/modules";
@@ -39,12 +41,14 @@ export function ModuleCheckoutForm({
   priceCents,
   laterHref,
   ownerName,
+  hasExistingTenant,
 }: {
   module: ModuleKey;
   label: string;
   priceCents: number;
   laterHref: string;
   ownerName: string | null;
+  hasExistingTenant: boolean;
 }) {
   const [state, formAction, isPending] = useActionState<ActionState, FormData>(startModuleCheckout, null);
 
@@ -54,7 +58,9 @@ export function ModuleCheckoutForm({
         <h1 className="text-2xl font-bold text-gray-900">
           {ownerName ? `Falta pouco, ${ownerName.split(" ")[0]}!` : "Falta pouco!"}
         </h1>
-        <p className="mt-2 text-sm text-gray-500">Libere o módulo {label} na sua conta Vorlo.</p>
+        <p className="mt-2 text-sm text-gray-500">
+          {hasExistingTenant ? `Libere o módulo ${label} na sua conta Vorlo.` : `Assine o ${label} da Vorlo, sem precisar de CRM.`}
+        </p>
       </div>
 
       <div className="mt-8 rounded-2xl border border-gray-200 bg-panel p-6 shadow-sm">
@@ -68,6 +74,14 @@ export function ModuleCheckoutForm({
 
         <form action={formAction} className="mt-6 space-y-4">
           <input type="hidden" name="module" value={module} />
+
+          {!hasExistingTenant && (
+            <div>
+              <Label htmlFor="companyName">Nome da sua empresa</Label>
+              <Input id="companyName" name="companyName" placeholder="Ex: Minha Empresa LTDA" required />
+            </div>
+          )}
+
           {state?.error && <p className="text-sm text-red-600">{state.error}</p>}
           <Button type="submit" className="w-full" isLoading={isPending}>
             Assinar por {formatCentsBrl(priceCents)}/mês
