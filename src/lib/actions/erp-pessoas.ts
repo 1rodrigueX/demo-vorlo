@@ -1,5 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
-import { requireTenantId } from "@/lib/auth/current-user";
+import { currentTenantContext } from "@/lib/auth/current-user";
 import type { Profile } from "@/types/domain";
 
 /**
@@ -9,13 +8,7 @@ import type { Profile } from "@/types/domain";
  * no CRM, não duplicar aqui.
  */
 export async function getErpProfiles(): Promise<Profile[]> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return [];
-
-  const tenantId = await requireTenantId(supabase, user.id);
+  const { supabase, tenantId } = await currentTenantContext();
   if (!tenantId) return [];
 
   const { data } = await supabase.from("profiles").select("*").eq("tenant_id", tenantId).order("full_name");

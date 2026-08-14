@@ -1,8 +1,7 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { requireTenantId, getTenantSlug } from "@/lib/auth/current-user";
+import { currentTenantContext, revalidateTenantPaths } from "@/lib/auth/current-user";
 import { erpEmpresaSchema } from "@/lib/validation/erp-cadastros";
 import type { ErpEmpresa } from "@/types/domain";
 
@@ -10,23 +9,12 @@ export type ActionState = { error?: string } | null;
 
 type DbClient = Awaited<ReturnType<typeof createClient>>;
 
-async function currentTenant() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { supabase, user: null, tenantId: null };
-  const tenantId = await requireTenantId(supabase, user.id);
-  return { supabase, user, tenantId };
-}
-
 async function revalidateEmpresas(supabase: DbClient, tenantId: string) {
-  const slug = await getTenantSlug(supabase, tenantId);
-  if (slug) revalidatePath(`/${slug}/erp/cadastros/empresas`);
+  await revalidateTenantPaths(supabase, tenantId, ["/erp/cadastros/empresas"]);
 }
 
 export async function getErpEmpresas(): Promise<ErpEmpresa[]> {
-  const { supabase, tenantId } = await currentTenant();
+  const { supabase, tenantId } = await currentTenantContext();
   if (!tenantId) return [];
   const { data } = await supabase
     .from("erp_empresas")
@@ -43,7 +31,7 @@ export async function getErpEmpresas(): Promise<ErpEmpresa[]> {
  * (ver solicitar_empresa_extra em execute-tool.ts) ou manualmente pelo dev.
  */
 export async function getErpEmpresaLimit(): Promise<{ used: number; allowed: number } | null> {
-  const { supabase, tenantId } = await currentTenant();
+  const { supabase, tenantId } = await currentTenantContext();
   if (!tenantId) return null;
 
   const [{ count }, { data: tenant }] = await Promise.all([
@@ -65,7 +53,7 @@ export async function createErpEmpresa(_prevState: ActionState, formData: FormDa
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
 
-  const { supabase, user, tenantId } = await currentTenant();
+  const { supabase, user, tenantId } = await currentTenantContext();
   if (!user) return { error: "Sessão expirada, faça login novamente" };
   if (!tenantId) return { error: "Tenant não encontrado" };
 
@@ -119,7 +107,7 @@ export async function updateErpEmpresa(
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
 
-  const { supabase, user, tenantId } = await currentTenant();
+  const { supabase, user, tenantId } = await currentTenantContext();
   if (!user) return { error: "Sessão expirada, faça login novamente" };
   if (!tenantId) return { error: "Tenant não encontrado" };
 
@@ -154,7 +142,7 @@ export async function updateErpEmpresa(
 }
 
 export async function deleteErpEmpresa(id: string): Promise<{ error?: string }> {
-  const { supabase, user, tenantId } = await currentTenant();
+  const { supabase, user, tenantId } = await currentTenantContext();
   if (!user) return { error: "Sessão expirada, faça login novamente" };
   if (!tenantId) return { error: "Tenant não encontrado" };
 

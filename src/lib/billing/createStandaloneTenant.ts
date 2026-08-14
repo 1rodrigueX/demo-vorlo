@@ -2,22 +2,9 @@ import "server-only";
 import { randomBytes } from "crypto";
 import type { createAdminClient } from "@/lib/supabase/admin";
 import { isReservedSlug } from "@/lib/tenant/reserved-slugs";
+import { slugify } from "@/lib/tenant/slugify";
 
 type Admin = ReturnType<typeof createAdminClient>;
-
-const DIACRITIC_MARKS_REGEX = new RegExp("[\\u0300-\\u036f]", "g");
-
-function slugify(name: string): string {
-  return (
-    name
-      .normalize("NFD")
-      .replace(DIACRITIC_MARKS_REGEX, "")
-      .toLowerCase()
-      .trim()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "") || "empresa"
-  );
-}
 
 /**
  * Cria um tenant do zero, SEM billing_plan_id (sem CRM) — pro dono de um

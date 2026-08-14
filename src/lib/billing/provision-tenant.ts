@@ -6,6 +6,7 @@ import { testAnthropicApiKey } from "@/lib/anthropic/client";
 import { calculateTotalCents } from "@/lib/billing/pricing";
 import { addOneMonth } from "@/lib/billing/cycle";
 import { isReservedSlug } from "@/lib/tenant/reserved-slugs";
+import { slugify } from "@/lib/tenant/slugify";
 import { notifyNewCrmTenant } from "@/lib/discord/notify";
 import { grantFreeFinancasEmpresarial } from "@/lib/billing/grant-financas";
 import { CRM_MODULE_COUPLING } from "@/lib/crm/isolation";
@@ -27,20 +28,6 @@ const DEFAULT_STAGES = [
   { name: "Fechado", position: 6, color: "#22c55e", is_won: true, is_lost: false },
   { name: "Inativo", position: 7, color: "#64748b", is_won: false, is_lost: false },
 ] as const;
-
-const DIACRITIC_MARKS_REGEX = new RegExp("[\\u0300-\\u036f]", "g");
-
-function slugify(name: string): string {
-  return (
-    name
-      .normalize("NFD")
-      .replace(DIACRITIC_MARKS_REGEX, "")
-      .toLowerCase()
-      .trim()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "") || "empresa"
-  );
-}
 
 export type ProvisionTenantParams = {
   pendingCheckoutId: string;

@@ -1,26 +1,14 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { requireTenantId, getTenantSlug } from "@/lib/auth/current-user";
+import { currentTenantContext, revalidateTenantPaths } from "@/lib/auth/current-user";
 import { erpProdutoSchema } from "@/lib/validation/erp-cadastros";
 import type { ErpProduto, ErpCategoria } from "@/types/domain";
 
 export type ActionState = { error?: string } | null;
 
-async function currentTenant() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { supabase, user: null, tenantId: null };
-  const tenantId = await requireTenantId(supabase, user.id);
-  return { supabase, user, tenantId };
-}
-
 async function revalidateErpCadastros(supabase: Awaited<ReturnType<typeof createClient>>, tenantId: string) {
-  const slug = await getTenantSlug(supabase, tenantId);
-  if (slug) revalidatePath(`/${slug}/erp/cadastros/produtos`);
+  await revalidateTenantPaths(supabase, tenantId, ["/erp/cadastros/produtos"]);
 }
 
 /** Confere que a categoria informada é do próprio tenant antes de linkar — sem isso um POST
@@ -37,7 +25,7 @@ async function validateOwnCategory(
 }
 
 export async function getErpProdutos(): Promise<(ErpProduto & { category: ErpCategoria | null })[]> {
-  const { supabase, tenantId } = await currentTenant();
+  const { supabase, tenantId } = await currentTenantContext();
   if (!tenantId) return [];
   const { data } = await supabase
     .from("erp_produtos")
@@ -60,7 +48,7 @@ export async function createErpProduto(_prevState: ActionState, formData: FormDa
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
 
-  const { supabase, user, tenantId } = await currentTenant();
+  const { supabase, user, tenantId } = await currentTenantContext();
   if (!user) return { error: "Sessão expirada, faça login novamente" };
   if (!tenantId) return { error: "Tenant não encontrado" };
 
@@ -102,7 +90,7 @@ export async function updateErpProduto(id: string, _prevState: ActionState, form
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
 
-  const { supabase, user, tenantId } = await currentTenant();
+  const { supabase, user, tenantId } = await currentTenantContext();
   if (!user) return { error: "Sessão expirada, faça login novamente" };
   if (!tenantId) return { error: "Tenant não encontrado" };
 
@@ -135,7 +123,7 @@ export async function updateErpProduto(id: string, _prevState: ActionState, form
 }
 
 export async function deleteErpProduto(id: string): Promise<{ error?: string }> {
-  const { supabase, user, tenantId } = await currentTenant();
+  const { supabase, user, tenantId } = await currentTenantContext();
   if (!user) return { error: "Sessão expirada, faça login novamente" };
   if (!tenantId) return { error: "Tenant não encontrado" };
 

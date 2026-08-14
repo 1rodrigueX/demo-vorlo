@@ -296,24 +296,6 @@ export async function updateDealOwner(input: { dealId: string; ownerId: string }
   return { error: undefined };
 }
 
-export async function deleteDeal(dealId: string) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return;
-
-  const tenantId = await requireTenantId(supabase, user.id);
-  if (!tenantId) return;
-
-  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
-  if (profile && !["owner", "manager"].includes(profile.role)) return;
-
-  await supabase.from("deals").delete().eq("id", dealId).eq("tenant_id", tenantId);
-  revalidatePath("/[tenantSlug]/pipeline", "page");
-  revalidatePath("/[tenantSlug]/dashboard", "page");
-}
-
 /**
  * Cria ou atualiza o valor do negócio "ativo" (mais recente) de um contato —
  * usado pelo painel rápido de orçamento na tela de conversa do WhatsApp, onde

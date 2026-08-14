@@ -3,7 +3,6 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import type { Database } from "@/types/database.types";
 import { requireTenantId, isCurrentUserDev } from "@/lib/auth/current-user";
 import { notifyNewSuggestion } from "@/lib/discord/notify";
 
@@ -58,19 +57,6 @@ export async function listOwnSuggestions() {
     .from("suggestions")
     .select("*")
     .eq("tenant_id", tenantId)
-    .order("created_at", { ascending: false });
-
-  return data ?? [];
-}
-
-/** Todas as sugestões de todos os tenants — só pro painel /dev. */
-export async function listAllSuggestions() {
-  if (!(await isCurrentUserDev())) return [];
-
-  const admin = createAdminClient();
-  const { data } = await admin
-    .from("suggestions")
-    .select<Database["public"]["Tables"]["suggestions"]["Row"] & { tenant: { name: string } | null }>("*, tenant:tenants(name)")
     .order("created_at", { ascending: false });
 
   return data ?? [];

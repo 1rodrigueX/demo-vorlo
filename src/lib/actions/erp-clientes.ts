@@ -1,5 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
-import { requireTenantId } from "@/lib/auth/current-user";
+import { currentTenantContext } from "@/lib/auth/current-user";
 import type { Contact } from "@/types/domain";
 
 /**
@@ -13,13 +12,7 @@ import type { Contact } from "@/types/domain";
 export type ErpCliente = Contact & { status: "ativo" | "inativo" };
 
 export async function getErpClientes(): Promise<ErpCliente[]> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return [];
-
-  const tenantId = await requireTenantId(supabase, user.id);
+  const { supabase, tenantId } = await currentTenantContext();
   if (!tenantId) return [];
 
   const { data } = await supabase.from("contacts").select("*").eq("tenant_id", tenantId).order("name");

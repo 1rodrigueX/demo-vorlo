@@ -1,9 +1,8 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { requireTenantId, getTenantSlug } from "@/lib/auth/current-user";
+import { currentTenantContext, getTenantSlug, revalidateTenantPaths } from "@/lib/auth/current-user";
 import { sendWhatsAppMessage } from "@/lib/whatsapp/send";
 import { erpPropostaSchema } from "@/lib/validation/erp-propostas";
 import { createErpPropostaCore } from "@/lib/erp/propostaCore";
@@ -14,21 +13,10 @@ export type ActionState = { error?: string } | null;
 
 type DbClient = Awaited<ReturnType<typeof createClient>>;
 
-async function currentTenant() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { supabase, user: null, tenantId: null };
-  const tenantId = await requireTenantId(supabase, user.id);
-  return { supabase, user, tenantId };
-}
-
 async function revalidateErpPropostas(supabase: DbClient, tenantId: string, propostaId?: string) {
-  const slug = await getTenantSlug(supabase, tenantId);
-  if (!slug) return;
-  revalidatePath(`/${slug}/erp/vendas/propostas`);
-  if (propostaId) revalidatePath(`/${slug}/erp/vendas/propostas/${propostaId}`);
+  const paths = ["/erp/vendas/propostas"];
+  if (propostaId) paths.push(`/erp/vendas/propostas/${propostaId}`);
+  await revalidateTenantPaths(supabase, tenantId, paths);
 }
 
 export type ErpPropostaWithRelations = ErpProposta & {
@@ -42,7 +30,7 @@ const SELECT_WITH_RELATIONS =
   "*, contact:contacts(id,name,phone), seller:profiles(id,full_name), empresa:erp_empresas(id,name,cnpj,regime_tributario), itens:erp_proposta_itens(*)";
 
 export async function getErpPropostas(): Promise<ErpPropostaWithRelations[]> {
-  const { supabase, tenantId } = await currentTenant();
+  const { supabase, tenantId } = await currentTenantContext();
   if (!tenantId) return [];
   const { data } = await supabase
     .from("erp_propostas")
@@ -53,7 +41,7 @@ export async function getErpPropostas(): Promise<ErpPropostaWithRelations[]> {
 }
 
 export async function getErpPropostaById(id: string): Promise<ErpPropostaWithRelations | null> {
-  const { supabase, tenantId } = await currentTenant();
+  const { supabase, tenantId } = await currentTenantContext();
   if (!tenantId) return null;
   const { data } = await supabase
     .from("erp_propostas")
@@ -89,7 +77,7 @@ export async function createErpProposta(_prevState: ActionState, formData: FormD
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
 
-  const { supabase, user, tenantId } = await currentTenant();
+  const { supabase, user, tenantId } = await currentTenantContext();
   if (!user) return { error: "Sessão expirada, faça login novamente" };
   if (!tenantId) return { error: "Tenant não encontrado" };
 
@@ -128,7 +116,7 @@ export async function createErpProposta(_prevState: ActionState, formData: FormD
 }
 
 export async function updateErpPropostaStatus(id: string, status: string): Promise<{ error?: string }> {
-  const { supabase, user, tenantId } = await currentTenant();
+  const { supabase, user, tenantId } = await currentTenantContext();
   if (!user) return { error: "Sessão expirada, faça login novamente" };
   if (!tenantId) return { error: "Tenant não encontrado" };
 
@@ -186,20 +174,5 @@ export async function updateErpPropostaStatus(id: string, status: string): Promi
   if (error) return { error: `Não foi possível atualizar o status: ${error.message}` };
 
   await revalidateErpPropostas(supabase, tenantId, id);
-  return {};
-}
-
-export async function deleteErpProposta(id: string): Promise<{ error?: string }> {
-  const { supabase, user, tenantId } = await currentTenant();
-  if (!user) return { error: "Sessão expirada, faça login novamente" };
-  if (!tenantId) return { error: "Tenant não encontrado" };
-
-  const { data: hasErp } = await supabase.rpc("current_tenant_has_erp", { p_user_id: user.id });
-  if (!hasErp) return { error: "ERP não está ativo pra este tenant" };
-
-  const { error } = await supabase.from("erp_propostas").delete().eq("id", id).eq("tenant_id", tenantId);
-  if (error) return { error: `Não foi possível excluir: ${error.message}` };
-
-  await revalidateErpPropostas(supabase, tenantId);
   return {};
 }

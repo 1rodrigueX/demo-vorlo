@@ -3,16 +3,9 @@
 import { TrendingUp } from "lucide-react";
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
 import { Card } from "@/components/ui/Card";
-import { formatCurrency } from "@/lib/utils/currency";
+import { formatCurrency, formatCurrencyCompact } from "@/lib/utils/currency";
 
 export type MonthlyRevenuePoint = { month: string; label: string; value: number };
-
-const compactCurrency = new Intl.NumberFormat("pt-BR", {
-  style: "currency",
-  currency: "BRL",
-  notation: "compact",
-  maximumFractionDigits: 1,
-});
 
 export function RevenueTrendChart({ data }: { data: MonthlyRevenuePoint[] }) {
   return (
@@ -34,7 +27,7 @@ export function RevenueTrendChart({ data }: { data: MonthlyRevenuePoint[] }) {
               tickLine={false}
               axisLine={false}
               width={64}
-              tickFormatter={(v: number) => compactCurrency.format(v)}
+              tickFormatter={(v: number) => formatCurrencyCompact(v)}
             />
             <Tooltip
               cursor={{ stroke: "var(--color-gray-300)" }}

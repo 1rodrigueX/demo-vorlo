@@ -22,10 +22,10 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-erp-sans" });
  * Estoque/Produção reais) — mesmo padrão deles: current_tenant_has_erp()
  * decide o acesso, sem depender de assinatura de CRM.
  *
- * Grande parte das telas ainda é mock (ver plano aprovado) — Cadastros e
- * Propostas já são reais. Notificações do sino agora buscam de verdade
- * (só o evento "SDR montou proposta" tem dado real; empresa/filial no
- * seletor do Topbar continua mock em src/mocks/erp/session.ts).
+ * Grande parte das telas ainda é mock (ver plano aprovado) — Cadastros,
+ * Propostas e o seletor de empresa/filial do Topbar já são reais.
+ * Notificações do sino também: só o evento "SDR montou proposta" tem dado
+ * real, o resto do sino segue sem fonte própria ainda.
  */
 export default async function ErpLayout({
   children,

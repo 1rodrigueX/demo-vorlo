@@ -1,4 +1,5 @@
 import { cache } from "react";
+import { revalidatePath } from "next/cache";
 import type { SessionClient } from "@/lib/supabase/server";
 import type { DbClient } from "@/lib/db/queryClient";
 import { createClient } from "@/lib/supabase/server";
@@ -254,6 +255,44 @@ export async function getAccountServices(): Promise<{
       },
     ],
   };
+}
+
+/**
+ * Client de sessão + usuário logado + tenant_id, resolvidos de uma vez —
+ * evita repetir createClient() + auth.getUser() + requireTenantId() no topo
+ * de cada Server Action (era um `currentTenant()` idêntico copiado em 6+
+ * arquivos de ações do ERP/Produção). Sem usuário logado, tenantId vem null
+ * — quem chama decide o que fazer (retornar lista vazia, erro etc.).
+ */
+export async function currentTenantContext(): Promise<{
+  supabase: SessionClient;
+  user: Awaited<ReturnType<SessionClient["auth"]["getUser"]>>["data"]["user"];
+  tenantId: string | null;
+}> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { supabase, user: null, tenantId: null };
+  const tenantId = await requireTenantId(supabase, user.id);
+  return { supabase, user, tenantId };
+}
+
+/**
+ * Revalida um ou mais paths do tenant (prefixados pelo slug) de uma vez —
+ * evita repetir getTenantSlug() + revalidatePath() em cada arquivo de ações
+ * (era um revalidateXxx() quase idêntico copiado em 6+ arquivos do ERP/
+ * Produção). Paths são relativos, sem o slug (ex: "/erp/cadastros/produtos").
+ * Sem slug resolvido (tenant não encontrado), não revalida nada.
+ */
+export async function revalidateTenantPaths(
+  supabase: SessionClient,
+  tenantId: string,
+  paths: string[],
+): Promise<void> {
+  const slug = await getTenantSlug(supabase, tenantId);
+  if (!slug) return;
+  for (const path of paths) revalidatePath(`/${slug}${path}`);
 }
 
 /** Busca o tenant_id do usuário logado — usado pelas server actions antes de inserir dados. */
