@@ -323,11 +323,18 @@ export function AiAgentsManager({ initialAgents }: { initialAgents: AiAgent[] })
         </Button>
       </div>
 
-      <Card className="divide-y divide-gray-100 overflow-hidden">
-        {initialAgents.map((agent) => (
-          <AgentRow key={agent.id} agent={agent} />
-        ))}
-      </Card>
+      {!initialAgents.length ? (
+        <Card className="flex flex-col items-center gap-2 p-8 text-center text-sm text-gray-500">
+          <Bot size={24} className="text-gray-300" />
+          Nenhum agente criado ainda.
+        </Card>
+      ) : (
+        <Card className="divide-y divide-gray-100 overflow-hidden">
+          {initialAgents.map((agent) => (
+            <AgentRow key={agent.id} agent={agent} />
+          ))}
+        </Card>
+      )}
 
       {createOpen && (
         <AgentFormModal open={createOpen} onClose={() => setCreateOpen(false)} editing={null} onSaved={() => setCreateOpen(false)} />
