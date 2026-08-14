@@ -33,7 +33,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils/cn";
-import { formatCurrency } from "@/lib/utils/currency";
+import { formatCurrency, formatCurrencyCompact } from "@/lib/utils/currency";
 import { getLancamentos } from "@/lib/actions/financas";
 import { getBankConnection } from "@/lib/actions/financas-bank";
 import { getInboxItems } from "@/lib/actions/financas-inbox";
@@ -49,13 +49,6 @@ import type {
   FinancasBankConnection,
   FinancasInboxItem,
 } from "@/types/domain";
-
-const compactCurrency = new Intl.NumberFormat("pt-BR", {
-  style: "currency",
-  currency: "BRL",
-  notation: "compact",
-  maximumFractionDigits: 1,
-});
 
 const YEARS = [2024, 2025, 2026];
 
@@ -453,7 +446,7 @@ export function FinanceiroDashboard({
                       tickLine={false}
                       axisLine={false}
                       width={48}
-                      tickFormatter={(v: number) => compactCurrency.format(v)}
+                      tickFormatter={(v: number) => formatCurrencyCompact(v)}
                     />
                     <Tooltip
                       {...tooltipStyle()}
@@ -527,7 +520,7 @@ export function FinanceiroDashboard({
                     tickLine={false}
                     axisLine={false}
                     width={48}
-                    tickFormatter={(v: number) => compactCurrency.format(v)}
+                    tickFormatter={(v: number) => formatCurrencyCompact(v)}
                   />
                   <Tooltip {...tooltipStyle()} formatter={(value) => formatCurrency(Number(value))} />
                   <Legend wrapperStyle={{ fontSize: 12, color: "#c3c7d4" }} />

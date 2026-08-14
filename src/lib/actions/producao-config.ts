@@ -1,44 +1,21 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { requireTenantId, getTenantSlug } from "@/lib/auth/current-user";
-import { requireProducaoActorTenantId } from "@/lib/producao/actor";
+import { currentTenantContext, revalidateTenantPaths } from "@/lib/auth/current-user";
+import { currentActorTenantContext } from "@/lib/producao/actor";
 import { turnoSchema, maquinaSchema, estiloSchema } from "@/lib/validation/producao";
 import type { ProducaoTurno, ProducaoMaquina, ProducaoEstilo } from "@/types/domain";
 
 export type ActionState = { error?: string } | null;
 
-async function currentTenant() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { supabase, user: null, tenantId: null };
-  const tenantId = await requireTenantId(supabase, user.id);
-  return { supabase, user, tenantId };
-}
-
-/** Como currentTenant(), mas também resolve funcionário de Produção — só pra leituras. */
-async function currentActorTenant() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { supabase, user: null, tenantId: null };
-  const tenantId = await requireProducaoActorTenantId(supabase, user.id);
-  return { supabase, user, tenantId };
-}
-
 async function revalidateProducao(supabase: Awaited<ReturnType<typeof createClient>>, tenantId: string) {
-  const slug = await getTenantSlug(supabase, tenantId);
-  if (slug) revalidatePath(`/${slug}/producao/configuracoes`);
+  await revalidateTenantPaths(supabase, tenantId, ["/producao/configuracoes"]);
 }
 
 // ── Turnos ──────────────────────────────────────────────────────────────
 
 export async function getTurnos(): Promise<ProducaoTurno[]> {
-  const { supabase, tenantId } = await currentActorTenant();
+  const { supabase, tenantId } = await currentActorTenantContext();
   if (!tenantId) return [];
   const { data } = await supabase.from("producao_turnos").select("*").eq("tenant_id", tenantId).order("name");
   return data ?? [];
@@ -52,7 +29,7 @@ export async function createTurno(_prevState: ActionState, formData: FormData): 
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
 
-  const { supabase, user, tenantId } = await currentTenant();
+  const { supabase, user, tenantId } = await currentTenantContext();
   if (!user) return { error: "Sessão expirada, faça login novamente" };
   if (!tenantId) return { error: "Tenant não encontrado" };
 
@@ -72,7 +49,7 @@ export async function createTurno(_prevState: ActionState, formData: FormData): 
 }
 
 export async function deleteTurno(id: string) {
-  const { supabase, tenantId } = await currentTenant();
+  const { supabase, tenantId } = await currentTenantContext();
   if (!tenantId) return;
   await supabase.from("producao_turnos").delete().eq("id", id).eq("tenant_id", tenantId);
   await revalidateProducao(supabase, tenantId);
@@ -81,7 +58,7 @@ export async function deleteTurno(id: string) {
 // ── Máquinas ────────────────────────────────────────────────────────────
 
 export async function getMaquinas(): Promise<ProducaoMaquina[]> {
-  const { supabase, tenantId } = await currentActorTenant();
+  const { supabase, tenantId } = await currentActorTenantContext();
   if (!tenantId) return [];
   const { data } = await supabase.from("producao_maquinas").select("*").eq("tenant_id", tenantId).order("name");
   return data ?? [];
@@ -91,7 +68,7 @@ export async function createMaquina(_prevState: ActionState, formData: FormData)
   const parsed = maquinaSchema.safeParse({ name: formData.get("name") });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
 
-  const { supabase, user, tenantId } = await currentTenant();
+  const { supabase, user, tenantId } = await currentTenantContext();
   if (!user) return { error: "Sessão expirada, faça login novamente" };
   if (!tenantId) return { error: "Tenant não encontrado" };
 
@@ -106,14 +83,14 @@ export async function createMaquina(_prevState: ActionState, formData: FormData)
 }
 
 export async function updateMaquinaStatus(id: string, status: "ativa" | "manutencao" | "parada") {
-  const { supabase, tenantId } = await currentTenant();
+  const { supabase, tenantId } = await currentTenantContext();
   if (!tenantId) return;
   await supabase.from("producao_maquinas").update({ status }).eq("id", id).eq("tenant_id", tenantId);
   await revalidateProducao(supabase, tenantId);
 }
 
 export async function deleteMaquina(id: string) {
-  const { supabase, tenantId } = await currentTenant();
+  const { supabase, tenantId } = await currentTenantContext();
   if (!tenantId) return;
   await supabase.from("producao_maquinas").delete().eq("id", id).eq("tenant_id", tenantId);
   await revalidateProducao(supabase, tenantId);
@@ -122,7 +99,7 @@ export async function deleteMaquina(id: string) {
 // ── Estilos de produção ─────────────────────────────────────────────────
 
 export async function getEstilos(): Promise<ProducaoEstilo[]> {
-  const { supabase, tenantId } = await currentActorTenant();
+  const { supabase, tenantId } = await currentActorTenantContext();
   if (!tenantId) return [];
   const { data } = await supabase.from("producao_estilos").select("*").eq("tenant_id", tenantId).order("name");
   return data ?? [];
@@ -135,7 +112,7 @@ export async function createEstilo(_prevState: ActionState, formData: FormData):
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
 
-  const { supabase, user, tenantId } = await currentTenant();
+  const { supabase, user, tenantId } = await currentTenantContext();
   if (!user) return { error: "Sessão expirada, faça login novamente" };
   if (!tenantId) return { error: "Tenant não encontrado" };
 
@@ -154,7 +131,7 @@ export async function createEstilo(_prevState: ActionState, formData: FormData):
 }
 
 export async function deleteEstilo(id: string) {
-  const { supabase, tenantId } = await currentTenant();
+  const { supabase, tenantId } = await currentTenantContext();
   if (!tenantId) return;
   await supabase.from("producao_estilos").delete().eq("id", id).eq("tenant_id", tenantId);
   await revalidateProducao(supabase, tenantId);

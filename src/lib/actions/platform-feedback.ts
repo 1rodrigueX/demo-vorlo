@@ -31,15 +31,6 @@ export async function submitPlatformFeedback(_prevState: ActionState, formData: 
   return { message: "Recebemos sua mensagem! Vamos responder por e-mail em breve." };
 }
 
-/** Todo o feedback de visitantes (pré-cadastro) — só pro painel /dev. */
-export async function listPlatformFeedback() {
-  if (!(await isCurrentUserDev())) return [];
-
-  const admin = createAdminClient();
-  const { data } = await admin.from("platform_feedback").select("*").order("created_at", { ascending: false });
-  return data ?? [];
-}
-
 export async function respondToPlatformFeedback(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   if (!(await isCurrentUserDev())) {
     return { error: "Acesso restrito a devs da plataforma" };

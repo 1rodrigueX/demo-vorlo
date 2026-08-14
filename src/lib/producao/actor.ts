@@ -1,5 +1,6 @@
 import "server-only";
 import type { DbClient } from "@/lib/db/queryClient";
+import { createClient, type SessionClient } from "@/lib/supabase/server";
 import { requireTenantId } from "@/lib/auth/current-user";
 
 /**
@@ -23,4 +24,23 @@ export async function requireProducaoActorTenantId(
     .eq("id", userId)
     .maybeSingle();
   return data?.tenant_id ?? null;
+}
+
+/**
+ * Como currentTenantContext() (ver src/lib/auth/current-user.ts), mas também
+ * resolve funcionário de Produção — só pra leituras (mutações continuam
+ * exigindo requireTenantId/currentTenantContext direto, dono apenas).
+ */
+export async function currentActorTenantContext(): Promise<{
+  supabase: SessionClient;
+  user: Awaited<ReturnType<SessionClient["auth"]["getUser"]>>["data"]["user"];
+  tenantId: string | null;
+}> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { supabase, user: null, tenantId: null };
+  const tenantId = await requireProducaoActorTenantId(supabase, user.id);
+  return { supabase, user, tenantId };
 }

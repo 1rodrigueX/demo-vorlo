@@ -1,15 +1,9 @@
 import { TrendingUp, TrendingDown } from "lucide-react";
-import { formatCurrency } from "@/lib/utils/currency";
+import { formatCurrency, formatCurrencyCompact } from "@/lib/utils/currency";
 import { CHART_COLORS } from "@/lib/financas/categories";
 import type { Quote } from "@/lib/market/brapi";
 
 const compactNumber = new Intl.NumberFormat("pt-BR", { notation: "compact", maximumFractionDigits: 1 });
-const compactCurrency = new Intl.NumberFormat("pt-BR", {
-  style: "currency",
-  currency: "BRL",
-  notation: "compact",
-  maximumFractionDigits: 1,
-});
 
 export function QuoteTable({ quotes }: { quotes: Quote[] }) {
   if (quotes.length === 0) return <p className="text-sm text-[#898781]">Sem dados no momento.</p>;
@@ -57,7 +51,7 @@ export function QuoteTable({ quotes }: { quotes: Quote[] }) {
                   {q.volume !== null ? compactNumber.format(q.volume) : "—"}
                 </td>
                 <td className="py-2 text-right text-xs text-[#c3c2b7]">
-                  {q.marketCap !== null ? compactCurrency.format(q.marketCap) : "—"}
+                  {q.marketCap !== null ? formatCurrencyCompact(q.marketCap) : "—"}
                 </td>
               </tr>
             );

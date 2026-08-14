@@ -1,26 +1,14 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { requireTenantId, getTenantSlug } from "@/lib/auth/current-user";
+import { currentTenantContext, revalidateTenantPaths } from "@/lib/auth/current-user";
 import { erpCategoriaSchema } from "@/lib/validation/erp-cadastros";
 import type { ErpCategoria } from "@/types/domain";
 
 export type ActionState = { error?: string } | null;
 
-async function currentTenant() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { supabase, user: null, tenantId: null };
-  const tenantId = await requireTenantId(supabase, user.id);
-  return { supabase, user, tenantId };
-}
-
 async function revalidateErpCadastros(supabase: Awaited<ReturnType<typeof createClient>>, tenantId: string) {
-  const slug = await getTenantSlug(supabase, tenantId);
-  if (slug) revalidatePath(`/${slug}/erp/cadastros/categorias`);
+  await revalidateTenantPaths(supabase, tenantId, ["/erp/cadastros/categorias"]);
 }
 
 /** Confere que a categoria pai é do próprio tenant e que não forma ciclo (pai não pode ser
@@ -49,7 +37,7 @@ async function validateOwnParent(
 }
 
 export async function getErpCategorias(): Promise<ErpCategoria[]> {
-  const { supabase, tenantId } = await currentTenant();
+  const { supabase, tenantId } = await currentTenantContext();
   if (!tenantId) return [];
   const { data } = await supabase.from("erp_categorias").select("*").eq("tenant_id", tenantId).order("name");
   return data ?? [];
@@ -62,7 +50,7 @@ export async function createErpCategoria(_prevState: ActionState, formData: Form
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
 
-  const { supabase, user, tenantId } = await currentTenant();
+  const { supabase, user, tenantId } = await currentTenantContext();
   if (!user) return { error: "Sessão expirada, faça login novamente" };
   if (!tenantId) return { error: "Tenant não encontrado" };
 
@@ -93,7 +81,7 @@ export async function updateErpCategoria(id: string, _prevState: ActionState, fo
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
 
-  const { supabase, user, tenantId } = await currentTenant();
+  const { supabase, user, tenantId } = await currentTenantContext();
   if (!user) return { error: "Sessão expirada, faça login novamente" };
   if (!tenantId) return { error: "Tenant não encontrado" };
 
@@ -118,7 +106,7 @@ export async function updateErpCategoria(id: string, _prevState: ActionState, fo
 }
 
 export async function deleteErpCategoria(id: string): Promise<{ error?: string }> {
-  const { supabase, user, tenantId } = await currentTenant();
+  const { supabase, user, tenantId } = await currentTenantContext();
   if (!user) return { error: "Sessão expirada, faça login novamente" };
   if (!tenantId) return { error: "Tenant não encontrado" };
 

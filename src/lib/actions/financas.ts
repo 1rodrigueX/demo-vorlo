@@ -70,18 +70,3 @@ export async function createLancamento(_prevState: ActionState, formData: FormDa
   if (slug) revalidatePath(`/${slug}/financeiro`);
   return null;
 }
-
-export async function deleteLancamento(id: string) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return;
-
-  const tenantId = await requireTenantId(supabase, user.id);
-  if (!tenantId) return;
-  await supabase.from("financas_lancamentos").delete().eq("id", id).eq("tenant_id", tenantId);
-
-  const slug = await getTenantSlug(supabase, tenantId);
-  if (slug) revalidatePath(`/${slug}/financeiro`);
-}
