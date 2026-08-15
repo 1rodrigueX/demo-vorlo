@@ -250,7 +250,8 @@ export async function generateFlowGraph(
   try {
     const resp = await client.chat.completions.create({
       model: ASSISTANT_MODEL,
-      max_completion_tokens: 3000,
+      max_completion_tokens: 8000,
+      reasoning_effort: "medium",
       tools: [BUILD_FLOW_TOOL],
       // Força a chamada da ferramenta (na Anthropic era {type:"tool", name}).
       tool_choice: { type: "function", function: { name: "build_flow" } },
