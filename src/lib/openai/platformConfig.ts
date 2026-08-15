@@ -12,7 +12,7 @@ export type PlatformAiConfig = {
 
 function maskApiKey(apiKey: string): string {
   const tail = apiKey.slice(-4);
-  return `sk-ant-...${tail}`;
+  return `sk-...${tail}`;
 }
 
 /** Config completa (mascarada) pra tela /dev/ia. */
@@ -21,9 +21,9 @@ export async function getPlatformAiConfig(): Promise<PlatformAiConfig> {
   const { data } = await admin.from("platform_ai_config").select("*").eq("id", true).maybeSingle();
 
   let apiKeyPreview: string | null = null;
-  if (data?.anthropic_api_key) {
+  if (data?.openai_api_key) {
     try {
-      const decrypted = decryptSecret(data.anthropic_api_key);
+      const decrypted = decryptSecret(data.openai_api_key);
       if (decrypted) apiKeyPreview = maskApiKey(decrypted);
     } catch {
       apiKeyPreview = null;
@@ -40,27 +40,26 @@ export async function getPlatformAiConfig(): Promise<PlatformAiConfig> {
 }
 
 /**
- * Chave que banca o Vorlo (aba Suporte) em todo tenant — a mesma que testAnthropicApiKey
- * confere antes de salvar em /dev/ia. Prioriza o banco (editável sem redeploy);
- * PLATFORM_ANTHROPIC_API_KEY (env var) continua funcionando como fallback pra
- * quem já tinha configurado assim antes dessa tela existir.
+ * Chave que banca o Vorlo (aba Suporte) em todo tenant. Prioriza o banco
+ * (editável em /dev/ia sem redeploy); PLATFORM_OPENAI_API_KEY (env var)
+ * continua funcionando como fallback.
  */
-export async function getPlatformAnthropicApiKey(): Promise<string | null> {
+export async function getPlatformOpenAIApiKey(): Promise<string | null> {
   const admin = createAdminClient();
   const { data } = await admin
     .from("platform_ai_config")
-    .select("anthropic_api_key, status")
+    .select("openai_api_key, status")
     .eq("id", true)
     .maybeSingle();
 
-  if (data?.status === "connected" && data.anthropic_api_key) {
+  if (data?.status === "connected" && data.openai_api_key) {
     try {
-      const decrypted = decryptSecret(data.anthropic_api_key);
+      const decrypted = decryptSecret(data.openai_api_key);
       if (decrypted) return decrypted;
     } catch (err) {
-      console.error("getPlatformAnthropicApiKey: falha ao descriptografar a chave", err);
+      console.error("getPlatformOpenAIApiKey: falha ao descriptografar a chave", err);
     }
   }
 
-  return process.env.PLATFORM_ANTHROPIC_API_KEY || null;
+  return process.env.PLATFORM_OPENAI_API_KEY || null;
 }

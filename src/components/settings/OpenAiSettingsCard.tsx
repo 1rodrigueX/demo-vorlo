@@ -9,13 +9,13 @@ import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
 import { Badge } from "@/components/ui/Badge";
 import {
-  saveAnthropicKey,
-  testAnthropicConnection,
-  disconnectAnthropicKey,
+  saveOpenAiKey,
+  testOpenAiConnection,
+  disconnectOpenAiKey,
   type ActionState,
 } from "@/lib/actions/tenant-integrations";
 
-export function AnthropicSettingsCard({
+export function OpenAiSettingsCard({
   status,
   keyPreview,
   lastError,
@@ -27,7 +27,7 @@ export function AnthropicSettingsCard({
   lastTestedAt: string | null;
 }) {
   const [state, formAction, isPending] = useActionState<ActionState, FormData>(
-    saveAnthropicKey,
+    saveOpenAiKey,
     null,
   );
   const [isTesting, startTest] = useTransition();
@@ -37,14 +37,14 @@ export function AnthropicSettingsCard({
 
   useEffect(() => {
     if (wasPending.current && !isPending && !state?.error) {
-      toast.success("Chave da Anthropic conectada");
+      toast.success("Chave da OpenAI conectada");
     }
     wasPending.current = isPending;
   }, [isPending, state]);
 
   function handleTest() {
     startTest(async () => {
-      const result = await testAnthropicConnection();
+      const result = await testOpenAiConnection();
       if (result?.error) {
         toast.error(result.error);
       } else {
@@ -56,7 +56,7 @@ export function AnthropicSettingsCard({
 
   function handleDisconnect() {
     startDisconnect(async () => {
-      const result = await disconnectAnthropicKey();
+      const result = await disconnectOpenAiKey();
       if (result?.error) {
         toast.error(result.error);
         return;
@@ -68,19 +68,44 @@ export function AnthropicSettingsCard({
   return (
     <div className="space-y-4">
       <p className="text-sm text-gray-500">
-        O Vorlo (aba Suporte) já funciona automaticamente neste CRM. Conecte sua própria chave
-        da API da Anthropic se quiser usar outros agentes de IA (SDR, atendente, etc). Gere uma
-        em{" "}
-        <a
-          href="https://console.anthropic.com/settings/keys"
-          target="_blank"
-          rel="noreferrer"
-          className="font-medium text-indigo-600 hover:underline"
-        >
-          console.anthropic.com/settings/keys
-        </a>
-        .
+        O Vorlo (aba Suporte) já funciona automaticamente neste CRM. Conecte sua própria chave da
+        API da OpenAI pra usar os seus agentes de IA (SDR, atendente, etc) — são eles que atendem
+        os seus clientes, e o consumo é cobrado na sua conta da OpenAI.
       </p>
+
+      <details className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+        <summary className="cursor-pointer text-sm font-medium text-gray-700">
+          Como pegar minha chave da OpenAI (passo a passo)
+        </summary>
+        <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm text-gray-600">
+          <li>
+            Acesse{" "}
+            <a
+              href="https://platform.openai.com/api-keys"
+              target="_blank"
+              rel="noreferrer"
+              className="font-medium text-indigo-600 hover:underline"
+            >
+              platform.openai.com/api-keys
+            </a>{" "}
+            e entre com sua conta (criar é grátis).
+          </li>
+          <li>
+            <strong>Antes de gerar a chave</strong>, adicione crédito em{" "}
+            <span className="font-medium">Settings → Billing → Add to credit balance</span>. Sem
+            crédito a chave até é criada, mas toda chamada falha e os agentes ficam mudos.
+          </li>
+          <li>
+            Clique em <span className="font-medium">Create new secret key</span>, dê um nome que
+            você reconheça depois (ex: &quot;CRM Vorlo&quot;) e confirme.
+          </li>
+          <li>
+            <strong>Copie a chave na hora</strong> — ela começa com <code>sk-</code> e só aparece
+            uma vez. Se fechar a janela sem copiar, não dá pra ver de novo: só criar outra.
+          </li>
+          <li>Cole no campo abaixo e clique em Salvar. O CRM testa a chave na hora.</li>
+        </ol>
+      </details>
 
       {keyPreview && (
         <div className="flex items-center justify-between rounded-lg bg-gray-50 px-3 py-2">
@@ -112,12 +137,12 @@ export function AnthropicSettingsCard({
 
       <form action={formAction} className="space-y-4">
         <div>
-          <Label htmlFor="apiKey">Chave da API (Anthropic)</Label>
+          <Label htmlFor="apiKey">Chave da API (OpenAI)</Label>
           <Input
             id="apiKey"
             name="apiKey"
             type="password"
-            placeholder="sk-ant-..."
+            placeholder="sk-..."
             required
             autoComplete="off"
           />

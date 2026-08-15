@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { requireTenantId } from "@/lib/auth/current-user";
-import { getAnthropicClientForAgent, ASSISTANT_MODEL, AnthropicNotConfiguredError } from "@/lib/anthropic/client";
+import { getOpenAIClientForAgent, ASSISTANT_MODEL, OpenAINotConfiguredError } from "@/lib/openai/client";
 
 export type LeadResumo = {
   resumo: string;
@@ -74,22 +74,19 @@ ${transcript}`;
 
   let client;
   try {
-    client = await getAnthropicClientForAgent(tenantId, { is_fala_ai: true });
+    client = await getOpenAIClientForAgent(tenantId, { is_fala_ai: true });
   } catch (err) {
-    if (err instanceof AnthropicNotConfiguredError) return { ok: false, error: err.message };
+    if (err instanceof OpenAINotConfiguredError) return { ok: false, error: err.message };
     return { ok: false, error: "Falha ao acessar a IA" };
   }
 
   try {
-    const response = await client.messages.create({
+    const response = await client.chat.completions.create({
       model: ASSISTANT_MODEL,
-      max_tokens: 400,
+      max_completion_tokens: 400,
       messages: [{ role: "user", content: prompt }],
     });
-    const text = response.content
-      .map((b) => (b.type === "text" ? b.text : ""))
-      .join("")
-      .trim();
+    const text = (response.choices[0]?.message?.content ?? "").trim();
 
     const parsed = parseResumo(text);
     if (!parsed) return { ok: false, error: "A IA não retornou um resumo válido. Tente de novo." };

@@ -1,16 +1,19 @@
 import "server-only";
-import type Anthropic from "@anthropic-ai/sdk";
+import type OpenAI from "openai";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendWhatsAppMessage, type OutgoingMedia } from "@/lib/whatsapp/send";
 import { downloadCompanyAsset, getCompanyAssetSignedUrl } from "@/lib/storage/companyAssets";
 
-export const SEND_PRODUCT_PHOTOS_TOOL: Anthropic.Tool = {
-  name: "send_product_photos",
-  description:
-    "Envia as fotos dos modelos de produtos da empresa pro lead, como imagens direto no WhatsApp. Use assim " +
-    "que a pessoa pedir foto/imagem do produto (ou algo tipo 'tem foto?', 'como que é?') — não precisa " +
-    "esperar confirmação, é só mandar.",
-  input_schema: { type: "object", properties: {} },
+export const SEND_PRODUCT_PHOTOS_TOOL: OpenAI.Chat.Completions.ChatCompletionTool = {
+  type: "function",
+  function: {
+    name: "send_product_photos",
+    description:
+      "Envia as fotos dos modelos de produtos da empresa pro lead, como imagens direto no WhatsApp. Use assim " +
+      "que a pessoa pedir foto/imagem do produto (ou algo tipo 'tem foto?', 'como que é?') — não precisa " +
+      "esperar confirmação, é só mandar.",
+    parameters: { type: "object", properties: {} },
+  },
 };
 
 const MIME_BY_EXTENSION: Record<string, string> = {

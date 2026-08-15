@@ -34,7 +34,7 @@ export async function POST(request: Request) {
   for (const row of rows ?? []) {
     const update: IntegrationUpdate = {};
 
-    // credenciais em JSONB (ex: chave Anthropic em credentials.apiKey)
+    // credenciais em JSONB (ex: chave da OpenAI em credentials.apiKey)
     const creds = (row.credentials as { apiKey?: string } | null) ?? null;
     if (creds?.apiKey && !isEncrypted(creds.apiKey)) {
       update.credentials = { ...creds, apiKey: encryptSecret(creds.apiKey) };

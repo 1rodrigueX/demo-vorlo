@@ -15,7 +15,7 @@ import {
   disconnectPlatformAiConfig,
   type ActionState,
 } from "@/lib/actions/platform-ai-config";
-import type { PlatformAiConfig } from "@/lib/anthropic/platformConfig";
+import type { PlatformAiConfig } from "@/lib/openai/platformConfig";
 
 export function PlatformAiConfigForm({ config }: { config: PlatformAiConfig }) {
   const [state, formAction, isPending] = useActionState<ActionState, FormData>(savePlatformAiConfig, null);
@@ -55,17 +55,17 @@ export function PlatformAiConfigForm({ config }: { config: PlatformAiConfig }) {
         <p className="text-sm text-gray-500">
           Banca o Vorlo (aba Suporte) em todo tenant, sempre — mesmo quando o tenant conecta a
           própria chave pra usar outros agentes (SDR, atendente etc). Antes só dava pra trocar via
-          SSH (env var <code className="rounded bg-gray-100 px-1 py-0.5 text-xs">PLATFORM_ANTHROPIC_API_KEY</code>);
+          SSH (env var <code className="rounded bg-gray-100 px-1 py-0.5 text-xs">PLATFORM_OPENAI_API_KEY</code>);
           agora é aqui. Gere uma chave em{" "}
           <a
-            href="https://console.anthropic.com/settings/keys"
+            href="https://platform.openai.com/api-keys"
             target="_blank"
             rel="noreferrer"
             className="font-medium text-indigo-600 hover:underline"
           >
-            console.anthropic.com/settings/keys
+            platform.openai.com/api-keys
           </a>
-          .
+          {" "}— lembrando que a conta precisa ter crédito, senão toda chamada falha com 401/429.
         </p>
 
         {config.apiKeyPreview && (
@@ -98,8 +98,8 @@ export function PlatformAiConfigForm({ config }: { config: PlatformAiConfig }) {
 
         <form action={formAction} className="space-y-4">
           <div>
-            <Label htmlFor="apiKey">Chave da API (Anthropic)</Label>
-            <Input id="apiKey" name="apiKey" type="password" placeholder="sk-ant-..." required autoComplete="off" />
+            <Label htmlFor="apiKey">Chave da API (OpenAI)</Label>
+            <Input id="apiKey" name="apiKey" type="password" placeholder="sk-..." required autoComplete="off" />
           </div>
 
           {state?.error && <p className="text-sm text-red-600">{state.error}</p>}

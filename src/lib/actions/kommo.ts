@@ -55,7 +55,7 @@ async function requireAdminTenant(): Promise<AdminContext> {
 /**
  * Salva subdomínio + token e já testa. O token é de longa duração e vale por
  * toda a conta do Kommo, então vai cifrado (AES-256-GCM) igual à chave da
- * Anthropic — ver crypto/secrets.
+ * OpenAI — ver crypto/secrets.
  */
 export async function saveKommoConnection(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   const parsed = connectSchema.safeParse({

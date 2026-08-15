@@ -4,7 +4,7 @@ import { getCurrentUser } from "@/lib/auth/current-user";
 import { Card } from "@/components/ui/Card";
 import { WhatsAppSettingsForm } from "@/components/settings/WhatsAppSettingsForm";
 import { BlingConnectionsCard } from "@/components/settings/BlingConnectionsCard";
-import { AnthropicSettingsCard } from "@/components/settings/AnthropicSettingsCard";
+import { OpenAiSettingsCard } from "@/components/settings/OpenAiSettingsCard";
 // Música desativada temporariamente (volta como atualização beta mais pra frente).
 // import { YoutubeSettingsCard } from "@/components/settings/YoutubeSettingsCard";
 import { EmailIntegrationsCard } from "@/components/settings/EmailIntegrationsCard";
@@ -13,7 +13,7 @@ import { PowerBiExportButton } from "@/components/dashboard/PowerBiExportButton"
 
 function maskApiKey(apiKey: string): string {
   const tail = apiKey.slice(-4);
-  return `sk-ant-...${tail}`;
+  return `sk-...${tail}`;
 }
 
 const BLING_STATUS_MESSAGE: Record<string, { text: string; tone: "error" | "success" }> = {
@@ -64,7 +64,7 @@ export default async function SettingsIntegracoesPage({
     { data: members },
     { data: whatsappConnection },
     { data: blingConnections },
-    { data: anthropicIntegration },
+    { data: openaiIntegration },
     { data: emailIntegrations },
     { data: kommoIntegration },
     { data: tags },
@@ -90,7 +90,7 @@ export default async function SettingsIntegracoesPage({
       .from("tenant_integrations")
       .select("status, credentials, last_error, last_tested_at")
       .eq("tenant_id", current.profile.tenant_id)
-      .eq("provider", "anthropic")
+      .eq("provider", "openai")
       .maybeSingle(),
     supabase
       .from("tenant_integrations")
@@ -131,7 +131,7 @@ export default async function SettingsIntegracoesPage({
 
   if (!tenant) redirect(`/${tenantSlug}/dashboard`);
 
-  const anthropicApiKey = (anthropicIntegration?.credentials as { apiKey?: string } | null)?.apiKey;
+  const openaiApiKey = (openaiIntegration?.credentials as { apiKey?: string } | null)?.apiKey;
   const gmailIntegration = emailIntegrations?.find((i) => i.provider === "gmail");
   const outlookIntegration = emailIntegrations?.find((i) => i.provider === "outlook");
 
@@ -203,11 +203,11 @@ export default async function SettingsIntegracoesPage({
 
       <Card className="p-6">
         <h2 className="mb-4 text-sm font-semibold text-gray-900">Inteligência Artificial</h2>
-        <AnthropicSettingsCard
-          status={anthropicIntegration?.status ?? "disconnected"}
-          keyPreview={anthropicApiKey ? maskApiKey(anthropicApiKey) : null}
-          lastError={anthropicIntegration?.last_error ?? null}
-          lastTestedAt={anthropicIntegration?.last_tested_at ?? null}
+        <OpenAiSettingsCard
+          status={openaiIntegration?.status ?? "disconnected"}
+          keyPreview={openaiApiKey ? maskApiKey(openaiApiKey) : null}
+          lastError={openaiIntegration?.last_error ?? null}
+          lastTestedAt={openaiIntegration?.last_tested_at ?? null}
         />
       </Card>
 

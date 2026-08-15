@@ -1,17 +1,20 @@
 import "server-only";
-import type Anthropic from "@anthropic-ai/sdk";
+import type OpenAI from "openai";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { fetchWebsiteText } from "@/lib/ai-agents/websiteFetch";
 
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 
-export const SEARCH_COMPANY_WEBSITE_TOOL: Anthropic.Tool = {
-  name: "search_company_website",
-  description:
-    "Consulta o site oficial da empresa pra pegar informações reais de produtos, serviços ou preços antes de " +
-    "responder o lead. Use sempre que a pessoa perguntar algo específico sobre o que a empresa vende e você não " +
-    "tiver certeza — nunca invente detalhes de produto sem checar aqui primeiro.",
-  input_schema: { type: "object", properties: {} },
+export const SEARCH_COMPANY_WEBSITE_TOOL: OpenAI.Chat.Completions.ChatCompletionTool = {
+  type: "function",
+  function: {
+    name: "search_company_website",
+    description:
+      "Consulta o site oficial da empresa pra pegar informações reais de produtos, serviços ou preços antes de " +
+      "responder o lead. Use sempre que a pessoa perguntar algo específico sobre o que a empresa vende e você não " +
+      "tiver certeza — nunca invente detalhes de produto sem checar aqui primeiro.",
+    parameters: { type: "object", properties: {} },
+  },
 };
 
 type Admin = ReturnType<typeof createAdminClient>;

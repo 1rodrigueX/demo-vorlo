@@ -14,7 +14,7 @@ export type ActionState = { error?: string } | null;
  * Cria a intenção de compra (pending_checkouts) e a Preference do Mercado
  * Pago (Checkout Pro). Roda só depois do usuário já estar autenticado (via
  * /choose-plan — cadastro agora vem antes do pagamento). Segredos como a
- * chave da Anthropic ficam só nessa tabela de staging (service-role), nunca
+ * chave da OpenAI ficam só nessa tabela de staging (service-role), nunca
  * no metadata do Mercado Pago nem no user_metadata do Supabase (esse último
  * vira claim do JWT do próprio usuário, legível no navegador).
  */
@@ -26,7 +26,7 @@ export async function startCheckout(_prevState: ActionState, formData: FormData)
     extraManagers: formData.get("extraManagers"),
     extraAgents: formData.get("extraAgents"),
     extraIntegrations: formData.get("extraIntegrations"),
-    anthropicApiKey: formData.get("anthropicApiKey"),
+    openaiApiKey: formData.get("openaiApiKey"),
   });
 
   if (!parsed.success) {
@@ -60,7 +60,7 @@ export async function startCheckout(_prevState: ActionState, formData: FormData)
       extra_managers: parsed.data.extraManagers,
       extra_agents: parsed.data.extraAgents,
       extra_integrations: parsed.data.extraIntegrations,
-      anthropic_api_key: parsed.data.anthropicApiKey ?? null,
+      openai_api_key: parsed.data.openaiApiKey ?? null,
     })
     .select("id")
     .single();

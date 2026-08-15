@@ -8,7 +8,7 @@ import {
   type UpdateAgentInput,
 } from "@/lib/validation/ai-agent";
 import { AGENT_TEMPLATES } from "@/lib/ai-agents/templates";
-import { ASSISTANT_MODEL } from "@/lib/anthropic/client";
+import { ASSISTANT_MODEL } from "@/lib/openai/client";
 import type { Database } from "@/types/database.types";
 import type { AiAgent } from "@/types/domain";
 

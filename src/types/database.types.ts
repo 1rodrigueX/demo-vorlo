@@ -1833,7 +1833,7 @@ export interface Database {
         Row: {
           id: string;
           tenant_id: string;
-          provider: "anthropic" | "gmail" | "outlook" | "google_calendar" | "microsoft365" | "kommo" | "custom";
+          provider: "openai" | "gmail" | "outlook" | "google_calendar" | "microsoft365" | "kommo" | "custom";
           name: string;
           status: "disconnected" | "connected" | "error";
           credentials: Json;
@@ -1849,7 +1849,7 @@ export interface Database {
         Insert: {
           id?: string;
           tenant_id: string;
-          provider: "anthropic" | "gmail" | "outlook" | "google_calendar" | "microsoft365" | "kommo" | "custom";
+          provider: "openai" | "gmail" | "outlook" | "google_calendar" | "microsoft365" | "kommo" | "custom";
           name?: string;
           status?: "disconnected" | "connected" | "error";
           credentials?: Json;
@@ -1865,7 +1865,7 @@ export interface Database {
         Update: {
           id?: string;
           tenant_id?: string;
-          provider?: "anthropic" | "gmail" | "outlook" | "google_calendar" | "microsoft365" | "kommo" | "custom";
+          provider?: "openai" | "gmail" | "outlook" | "google_calendar" | "microsoft365" | "kommo" | "custom";
           name?: string;
           status?: "disconnected" | "connected" | "error";
           credentials?: Json;
@@ -2100,7 +2100,7 @@ export interface Database {
           extra_managers: number;
           extra_agents: number;
           extra_integrations: number;
-          anthropic_api_key: string | null;
+          openai_api_key: string | null;
           mp_preference_id: string | null;
           created_at: string;
         };
@@ -2114,7 +2114,7 @@ export interface Database {
           extra_managers?: number;
           extra_agents?: number;
           extra_integrations?: number;
-          anthropic_api_key?: string | null;
+          openai_api_key?: string | null;
           mp_preference_id?: string | null;
           created_at?: string;
         };
@@ -2128,7 +2128,7 @@ export interface Database {
           extra_managers?: number;
           extra_agents?: number;
           extra_integrations?: number;
-          anthropic_api_key?: string | null;
+          openai_api_key?: string | null;
           mp_preference_id?: string | null;
           created_at?: string;
         };
@@ -3426,7 +3426,7 @@ export interface Database {
       platform_ai_config: {
         Row: {
           id: boolean;
-          anthropic_api_key: string | null;
+          openai_api_key: string | null;
           status: "disconnected" | "connected" | "error";
           connected_at: string | null;
           last_tested_at: string | null;
@@ -3435,7 +3435,7 @@ export interface Database {
         };
         Insert: {
           id?: boolean;
-          anthropic_api_key?: string | null;
+          openai_api_key?: string | null;
           status?: "disconnected" | "connected" | "error";
           connected_at?: string | null;
           last_tested_at?: string | null;
@@ -3444,7 +3444,7 @@ export interface Database {
         };
         Update: {
           id?: boolean;
-          anthropic_api_key?: string | null;
+          openai_api_key?: string | null;
           status?: "disconnected" | "connected" | "error";
           connected_at?: string | null;
           last_tested_at?: string | null;

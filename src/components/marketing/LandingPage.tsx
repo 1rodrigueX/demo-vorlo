@@ -287,7 +287,7 @@ export function LandingPage({
             <div>
               <h3 className="text-sm font-semibold text-gray-900">Traga sua própria chave de IA</h3>
               <p className="mt-1 text-sm text-gray-600">
-                Já tem uma conta na Anthropic? Cole sua chave já no cadastro (ou depois, em Configurações) e use ela
+                Já tem uma conta na OpenAI? Cole sua chave já no cadastro (ou depois, em Configurações) e use ela
                 nos agentes de IA — sem depender de créditos compartilhados.
               </p>
             </div>

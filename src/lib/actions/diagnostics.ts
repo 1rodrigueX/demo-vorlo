@@ -92,23 +92,23 @@ export async function runDiagnostics(): Promise<DiagnosticsResult> {
   }
 
   // ── Inteligência artificial ─────────────────────────────────────────────
-  const { data: anthropic } = await admin
+  const { data: openaiIntegration } = await admin
     .from("tenant_integrations")
     .select("status, last_error")
     .eq("tenant_id", tenantId)
-    .eq("provider", "anthropic")
+    .eq("provider", "openai")
     .maybeSingle();
 
   checks.push({
     id: "ia",
     label: "Inteligência artificial",
-    status: !anthropic ? "off" : anthropic.status === "connected" ? "ok" : "error",
-    detail: !anthropic
-      ? "Sem chave da Anthropic. O SDR e o 'criar trajetória com IA' ficam indisponíveis."
-      : anthropic.status === "connected"
+    status: !openaiIntegration ? "off" : openaiIntegration.status === "connected" ? "ok" : "error",
+    detail: !openaiIntegration
+      ? "Sem chave da OpenAI. O SDR e o 'criar trajetória com IA' ficam indisponíveis."
+      : openaiIntegration.status === "connected"
         ? "Chave válida."
-        : (anthropic.last_error ?? "A última verificação da chave falhou."),
-    action: anthropic?.status === "connected" ? undefined : "Configurações › Integrações › Inteligência Artificial.",
+        : (openaiIntegration.last_error ?? "A última verificação da chave falhou."),
+    action: openaiIntegration?.status === "connected" ? undefined : "Configurações › Integrações › Inteligência Artificial.",
   });
 
   // ── Automações (o cron) ─────────────────────────────────────────────────
@@ -350,13 +350,13 @@ export async function getPlatformStatus(): Promise<PlatformStatus | { error: str
   });
 
   // ── APIs externas (em paralelo, com timeout curto) ───────────────────────
-  const [anthropic, google, microsoft] = await Promise.all([
-    pingHost("https://api.anthropic.com/"),
+  const [openaiPing, google, microsoft] = await Promise.all([
+    pingHost("https://api.openai.com/"),
     pingHost("https://gmail.googleapis.com/"),
     pingHost("https://graph.microsoft.com/"),
   ]);
 
-  checks.push(pingCheck("api-ia", "API de Inteligência Artificial", "Anthropic respondendo.", anthropic));
+  checks.push(pingCheck("api-ia", "API de Inteligência Artificial", "OpenAI respondendo.", openaiPing));
 
   // E-mail (Gmail/Outlook) e OAuth do Google dependem desses dois hosts. Se os
   // dois caírem juntos, é o link do servidor — não a API do provedor.

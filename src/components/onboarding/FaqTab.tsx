@@ -36,9 +36,9 @@ const FAQ_ITEMS = [
       "Não. WhatsApp, Bling, Gmail, Outlook e os agentes de IA são conectados direto na tela de Configurações, sem precisar mexer em código.",
   },
   {
-    question: "Posso usar minha própria chave da Anthropic (IA)?",
+    question: "Posso usar minha própria chave da OpenAI (IA)?",
     answer:
-      "Sim, é opcional. Se você já tem uma conta na Anthropic, cola sua chave no cadastro (ou depois em Configurações) e os agentes de IA passam a usar ela.",
+      "Sim, é opcional. Se você já tem uma conta na OpenAI, cola sua chave no cadastro (ou depois em Configurações) e os agentes de IA passam a usar ela.",
   },
   {
     question: "E se eu tiver uma dúvida depois de assinar?",
