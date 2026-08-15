@@ -21,6 +21,7 @@ export function ListPageTemplate<T>({
   title,
   description,
   primaryAction,
+  headerActions,
   statCards,
   data,
   columns,
@@ -41,6 +42,8 @@ export function ListPageTemplate<T>({
   title: string;
   description?: string;
   primaryAction?: PrimaryAction;
+  /** Ações extras ao lado do botão principal (ex.: "Importar com IA"). */
+  headerActions?: ReactNode;
   statCards?: StatCardDef[];
   data: T[];
   columns: DataTableColumn<T>[];
@@ -65,7 +68,9 @@ export function ListPageTemplate<T>({
           <h1 className="text-xl font-semibold tracking-tight text-gray-900">{title}</h1>
           {description && <p className="mt-1 text-sm text-gray-500">{description}</p>}
         </div>
-        {primaryAction &&
+        <div className="flex flex-wrap items-center gap-2">
+          {headerActions}
+          {primaryAction &&
           (primaryAction.href ? (
             <Link href={primaryAction.href}>
               <Button type="button">
@@ -79,6 +84,7 @@ export function ListPageTemplate<T>({
               {primaryAction.label}
             </Button>
           ))}
+        </div>
       </div>
 
       {statCards && statCards.length > 0 && (

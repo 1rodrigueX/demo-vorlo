@@ -4,6 +4,7 @@ import { useActionState, useEffect, useRef, useState, useTransition } from "reac
 import { toast } from "sonner";
 import { Pencil, Trash2 } from "lucide-react";
 import { ListPageTemplate } from "@/components/erp/templates/ListPageTemplate";
+import { ImportarProdutosButton } from "@/components/erp/cadastros/ImportarProdutosButton";
 import { Modal } from "@/components/ui/Modal";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
@@ -104,6 +105,7 @@ export function ProdutosManager({
         title="Produtos"
         description="Cadastro de produtos, preços e controle de estoque mínimo."
         primaryAction={{ label: "Novo produto", onClick: openCreate }}
+        headerActions={<ImportarProdutosButton />}
         data={initialProdutos}
         columns={columns}
         getRowId={(r) => r.id}
