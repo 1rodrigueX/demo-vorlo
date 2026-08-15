@@ -22,7 +22,13 @@ export class OpenAINotConfiguredError extends Error {
   }
 }
 
-async function getTenantOpenAIApiKey(tenantId: string): Promise<string | null> {
+/**
+ * Chave da OpenAI do tenant, em texto puro. Exportada porque a camada de fala
+ * (Whisper/TTS, ver src/lib/speech) fala com a API de áudio por HTTP direto,
+ * fora do SDK — e usa a MESMA chave do tenant, pra ouvir/falar funcionarem
+ * sem nenhuma configuração além da que o dono já fez em Configurações.
+ */
+export async function getTenantOpenAIApiKey(tenantId: string): Promise<string | null> {
   const admin = createAdminClient();
   const { data } = await admin
     .from("tenant_integrations")

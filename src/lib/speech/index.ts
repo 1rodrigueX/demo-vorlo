@@ -13,8 +13,18 @@ import "server-only";
  * de Whisper, etc.), sem prender ninguém a um fornecedor.
  */
 
-function speechApiKey(): string | null {
-  return process.env.SPEECH_API_KEY || process.env.OPENAI_API_KEY || null;
+/**
+ * Chave usada pra falar com a API de áudio.
+ *
+ * Prioridade: a chave passada pelo chamador (a do PRÓPRIO tenant, vinda de
+ * tenant_integrations) e só depois as env vars. Isso importa: antes só existia
+ * o caminho da env var, que o deploy nunca gravou — na prática ouvir/falar
+ * ficava desligado em produção sem ninguém perceber. Com a chave do tenant, o
+ * áudio passa a funcionar com a MESMA chave da OpenAI que o dono já colou em
+ * Configurações, sem configuração extra nenhuma.
+ */
+function speechApiKey(explicitKey?: string | null): string | null {
+  return explicitKey || process.env.SPEECH_API_KEY || process.env.OPENAI_API_KEY || null;
 }
 
 function speechApiBase(): string {
@@ -22,16 +32,20 @@ function speechApiBase(): string {
 }
 
 /** true quando há chave configurada — pra decidir se vale tentar. */
-export function isSpeechEnabled(): boolean {
-  return speechApiKey() !== null;
+export function isSpeechEnabled(explicitKey?: string | null): boolean {
+  return speechApiKey(explicitKey) !== null;
 }
 
 /**
  * Transcreve um áudio (voz do lead) em texto. Devolve null se não houver chave
  * ou se a transcrição falhar — o chamador trata a ausência com elegância.
  */
-export async function transcribeAudio(audio: Buffer, mimetype = "audio/ogg"): Promise<string | null> {
-  const key = speechApiKey();
+export async function transcribeAudio(
+  audio: Buffer,
+  mimetype = "audio/ogg",
+  explicitKey?: string | null,
+): Promise<string | null> {
+  const key = speechApiKey(explicitKey);
   if (!key) return null;
 
   const model = process.env.SPEECH_TRANSCRIBE_MODEL || "whisper-1";
@@ -65,8 +79,8 @@ export async function transcribeAudio(audio: Buffer, mimetype = "audio/ogg"): Pr
  * Gera um áudio de voz (Ogg/Opus, pronto pra nota de voz do WhatsApp) a partir
  * de um texto. Devolve null se não houver chave ou se falhar.
  */
-export async function synthesizeSpeech(text: string): Promise<Buffer | null> {
-  const key = speechApiKey();
+export async function synthesizeSpeech(text: string, explicitKey?: string | null): Promise<Buffer | null> {
+  const key = speechApiKey(explicitKey);
   if (!key) return null;
 
   const clean = text.trim();
