@@ -45,7 +45,7 @@ export async function startModuleCheckout(_prevState: ActionState, formData: For
     return { error: catalog.standalone ? "Informe o nome da sua empresa" : "Crie sua conta primeiro para assinar este módulo." };
   }
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://45.149.153.20";
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
   const admin = createAdminClient();
 
   const { data: pending, error: pendingError } = await admin

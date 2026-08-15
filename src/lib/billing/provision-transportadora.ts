@@ -87,7 +87,7 @@ export async function provisionTransportadoraFromCheckout(
 
   const { data: userResult } = await admin.auth.admin.getUserById(pending.user_id);
   const email = userResult.user?.email;
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://45.149.153.20";
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
   if (email) {
     try {
       await sendBillingEmail({

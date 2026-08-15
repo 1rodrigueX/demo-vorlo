@@ -164,7 +164,7 @@ export async function provisionTenantFromCheckout(
 
   void notifyNewCrmTenant(pending.company_name, tenantSlug ?? baseSlug);
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://45.149.153.20";
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
   try {
     await sendWelcomeEmail({
       to: user.email!,

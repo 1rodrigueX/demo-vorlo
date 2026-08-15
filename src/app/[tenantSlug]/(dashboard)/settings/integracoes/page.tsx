@@ -143,7 +143,7 @@ export default async function SettingsIntegracoesPage({
           <WhatsAppSettingsForm
             connection={whatsappConnection}
             tenantId={tenant.id}
-            siteUrl={process.env.NEXT_PUBLIC_SITE_URL ?? "http://45.149.153.20"}
+            siteUrl={process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}
           />
         </Card>
       )}
@@ -166,7 +166,7 @@ export default async function SettingsIntegracoesPage({
           tags={tags ?? []}
           members={members ?? []}
           sellerMappings={sellerMappings ?? []}
-          siteUrl={process.env.NEXT_PUBLIC_SITE_URL ?? "http://45.149.153.20"}
+          siteUrl={process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}
         />
       </Card>
 
@@ -229,7 +229,7 @@ export default async function SettingsIntegracoesPage({
         </p>
         <PowerBiExportButton
           apiKeys={apiKeys ?? []}
-          siteUrl={process.env.NEXT_PUBLIC_SITE_URL ?? "http://45.149.153.20"}
+          siteUrl={process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}
         />
       </Card>
     </>

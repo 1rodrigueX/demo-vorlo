@@ -22,7 +22,7 @@ function getResendClient(): Resend {
 }
 
 function siteUrl(): string {
-  return process.env.NEXT_PUBLIC_SITE_URL || "http://45.149.153.20";
+  return process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 }
 
 /**

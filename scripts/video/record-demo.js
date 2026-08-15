@@ -20,9 +20,9 @@ const { chromium } = require("playwright");
 const path = require("path");
 const fs = require("fs");
 
-const BASE = (process.env.DEMO_URL || "https://vorlo.com.br").replace(/\/$/, "");
-const EMAIL = process.env.DEMO_EMAIL || "demo@vorlo.com.br";
-const PASSWORD = process.env.DEMO_PASSWORD || "DemoVorlo2026!";
+const BASE = (process.env.DEMO_URL || "http://localhost:3000").replace(/\/$/, "");
+const EMAIL = process.env.DEMO_EMAIL || "demo@exemplo.local";
+const PASSWORD = process.env.DEMO_PASSWORD; // obrigatória — nunca no código
 const SLUG = "demo-plasticos";
 const PACE = Number(process.env.PACE || 1);
 const OUT_DIR = path.join(__dirname, "out");

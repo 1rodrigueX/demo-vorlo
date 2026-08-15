@@ -15,8 +15,14 @@ require("dotenv").config({ path: ".env.local" });
 
 const SLUG = "demo-plasticos";
 const TENANT_NAME = "Plásticos Demonstração";
-const OWNER_EMAIL = "demo@vorlo.com.br";
-const OWNER_PASSWORD = "DemoVorlo2026!";
+// Credenciais NUNCA ficam no código: este repositório é público, e o tenant
+// de demo é uma conta real na instância onde o script rodar.
+const OWNER_EMAIL = process.env.DEMO_EMAIL || "demo@exemplo.local";
+const OWNER_PASSWORD = process.env.DEMO_PASSWORD;
+if (!OWNER_PASSWORD) {
+  console.error("Defina DEMO_PASSWORD. Ex: DEMO_PASSWORD='umaSenhaForte' node scripts/seed-demo-tenant.js");
+  process.exit(1);
+}
 const OWNER_NAME = "Marina Duarte";
 
 const uuid = () => crypto.randomUUID();
@@ -189,7 +195,7 @@ const CONVERSA = [
     console.log("\n=== TENANT DE DEMONSTRAÇÃO PRONTO ===");
     console.log("URL    : https://vorlo.com.br/" + SLUG + "/dashboard");
     console.log("Login  : " + OWNER_EMAIL);
-    console.log("Senha  : " + OWNER_PASSWORD);
+    console.log("Senha  : (a que você definiu em DEMO_PASSWORD)");
     console.log(`Dados  : ${LEADS.length} leads, ${PRODUTOS.length} produtos, ${CONVERSA.length} mensagens (tudo fictício)`);
   } catch (err) {
     await client.query("ROLLBACK");

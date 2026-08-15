@@ -66,7 +66,7 @@ export async function provisionModuleFromCheckout(
   await admin.from("module_pending_checkouts").update({ status: "completed" }).eq("id", pending.id);
 
   const label = MODULE_CATALOG[pending.module].label;
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://45.149.153.20";
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
   const { data: userResult } = await admin.auth.admin.getUserById(pending.user_id);
   const email = userResult.user?.email;
   if (email) {

@@ -54,7 +54,7 @@ export async function startTransportadoraCheckout(
     return { error: "Informe o nome da sua empresa" };
   }
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://45.149.153.20";
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
   const admin = createAdminClient();
 
   const { data: pendingCheckout, error: pendingError } = await admin

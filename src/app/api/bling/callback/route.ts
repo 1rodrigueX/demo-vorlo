@@ -11,7 +11,7 @@ export async function GET(request: Request) {
   const code = searchParams.get("code");
   const state = searchParams.get("state");
   // Sempre usa NEXT_PUBLIC_SITE_URL, nunca o origin da requisição — atrás do
-  // Nginx, request.url reflete o bind interno (45.149.153.20), não o host
+  // Nginx, request.url reflete o bind interno (o bind interno do servidor), não o host
   // público, e isso quebrava o redirect de volta pro usuário.
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
 
