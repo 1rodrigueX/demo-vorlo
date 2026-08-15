@@ -2,6 +2,8 @@ import { Card } from "@/components/ui/Card";
 import { Label } from "@/components/ui/Label";
 import { Select } from "@/components/ui/Select";
 import { Input } from "@/components/ui/Input";
+import { SearchableSelect, type SearchableOption } from "@/components/ui/SearchableSelect";
+import { formatDocument } from "@/components/erp/lib/format";
 import type { ErpCliente } from "@/lib/actions/erp-clientes";
 import type { Profile, ErpEmpresa } from "@/types/domain";
 
@@ -23,24 +25,30 @@ export function ProposalCustomerSection({
   vendedores: Profile[];
   empresas: ErpEmpresa[];
 }) {
+  // searchText junta nome + documento + telefone + e-mail: a busca aceita
+  // qualquer um deles, com ou sem pontuação (ver SearchableSelect).
+  const clienteOptions: SearchableOption[] = clientes.map((c) => ({
+    value: c.id,
+    label: c.name,
+    sublabel: [c.cpf_cnpj ? formatDocument(c.cpf_cnpj) : null, c.phone, c.email].filter(Boolean).join(" · ") || undefined,
+    searchText: [c.name, c.cpf_cnpj, c.phone, c.email].filter(Boolean).join(" "),
+  }));
+
   return (
     <Card className="p-5">
       <h2 className="mb-4 text-sm font-semibold text-gray-900">Cliente</h2>
       <div className="grid gap-4 sm:grid-cols-3">
         <div>
           <Label htmlFor="proposal-customer">Cliente</Label>
-          <Select
+          <SearchableSelect
             id="proposal-customer"
             value={value.contactId}
-            onChange={(e) => onChange({ ...value, contactId: e.target.value })}
-          >
-            <option value="">Selecione um cliente</option>
-            {clientes.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </Select>
+            onChange={(contactId) => onChange({ ...value, contactId })}
+            options={clienteOptions}
+            placeholder="Selecione um cliente"
+            searchPlaceholder="Buscar por nome, CPF/CNPJ ou telefone..."
+            emptyMessage="Nenhum cliente encontrado."
+          />
         </div>
         <div>
           <Label htmlFor="proposal-seller">Vendedor</Label>
