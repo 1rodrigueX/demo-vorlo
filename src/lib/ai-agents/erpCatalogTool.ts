@@ -1,5 +1,5 @@
 import "server-only";
-import type Anthropic from "@anthropic-ai/sdk";
+import type OpenAI from "openai";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 type Admin = ReturnType<typeof createAdminClient>;
@@ -7,17 +7,20 @@ type Admin = ReturnType<typeof createAdminClient>;
 /** Busca real no catálogo (erp_produtos) — só leitura. Existe pra ancorar o
  * SDR em nome/preço reais antes de montar uma proposta; ele nunca deve
  * inventar nome ou preço de produto. */
-export const BUSCAR_PRODUTOS_ERP_TOOL: Anthropic.Tool = {
-  name: "buscar_produtos_erp",
-  description:
-    "Busca produtos reais no catálogo da empresa (ERP) pelo nome, pra saber o id, o preço e a unidade certos antes " +
-    "de montar uma proposta. Use sempre que o lead mencionar um produto — nunca invente nome, preço ou id.",
-  input_schema: {
-    type: "object",
-    properties: {
-      query: { type: "string", description: "Termo de busca — parte do nome do produto mencionado pelo lead" },
+export const BUSCAR_PRODUTOS_ERP_TOOL: OpenAI.Chat.Completions.ChatCompletionTool = {
+  type: "function",
+  function: {
+    name: "buscar_produtos_erp",
+    description:
+      "Busca produtos reais no catálogo da empresa (ERP) pelo nome, pra saber o id, o preço e a unidade certos antes " +
+      "de montar uma proposta. Use sempre que o lead mencionar um produto — nunca invente nome, preço ou id.",
+    parameters: {
+      type: "object",
+      properties: {
+        query: { type: "string", description: "Termo de busca — parte do nome do produto mencionado pelo lead" },
+      },
+      required: ["query"],
     },
-    required: ["query"],
   },
 };
 

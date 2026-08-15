@@ -2,12 +2,12 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import type Anthropic from "@anthropic-ai/sdk";
+import type OpenAI from "openai";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isCurrentUserDev } from "@/lib/auth/current-user";
 import { sendPlatformUpdateBatch, type PlatformUpdateEmail } from "@/lib/email/platformUpdate";
-import { getPlatformAnthropicClient, ASSISTANT_MODEL, AnthropicNotConfiguredError } from "@/lib/anthropic/client";
+import { getPlatformOpenAIClient, ASSISTANT_MODEL, OpenAINotConfiguredError } from "@/lib/openai/client";
 
 export type UpdateActionState = { error?: string } | null;
 
@@ -69,23 +69,26 @@ export type GeneratedUpdate = {
   ctaUrl: string | null;
 };
 
-const WRITE_UPDATE_TOOL: Anthropic.Tool = {
-  name: "escrever_comunicado",
-  description: "Escreve o comunicado de atualização da Vorlo pronto para enviar por e-mail.",
-  input_schema: {
-    type: "object",
-    properties: {
-      title: { type: "string", description: "Título curto e concreto (até ~8 palavras), sem 'novidade'/'atualização' genéricos." },
-      version: { type: "string", description: "Versão curta se fizer sentido (ex: v2.4). Vazio se não souber." },
-      body: {
-        type: "string",
-        description:
-          "Corpo do e-mail em português do Brasil, em PRIMEIRA PESSOA (eu), voz calorosa e direta do fundador da Vorlo. Parágrafos separados por linha em branco. Conta o que mudou e o que a pessoa ganha com isso. Sem jargão corporativo, sem 'estamos felizes em anunciar'.",
+const WRITE_UPDATE_TOOL: OpenAI.Chat.Completions.ChatCompletionTool = {
+  type: "function",
+  function: {
+    name: "escrever_comunicado",
+    description: "Escreve o comunicado de atualização da Vorlo pronto para enviar por e-mail.",
+    parameters: {
+      type: "object",
+      properties: {
+        title: { type: "string", description: "Título curto e concreto (até ~8 palavras), sem 'novidade'/'atualização' genéricos." },
+        version: { type: "string", description: "Versão curta se fizer sentido (ex: v2.4). Vazio se não souber." },
+        body: {
+          type: "string",
+          description:
+            "Corpo do e-mail em português do Brasil, em PRIMEIRA PESSOA (eu), voz calorosa e direta do fundador da Vorlo. Parágrafos separados por linha em branco. Conta o que mudou e o que a pessoa ganha com isso. Sem jargão corporativo, sem 'estamos felizes em anunciar'.",
+        },
+        ctaLabel: { type: "string", description: "Texto curto do botão, se houver ação (ex: 'Ver no CRM'). Vazio se não precisar." },
+        ctaUrl: { type: "string", description: "Link do botão, se houver. Vazio se não souber a URL." },
       },
-      ctaLabel: { type: "string", description: "Texto curto do botão, se houver ação (ex: 'Ver no CRM'). Vazio se não precisar." },
-      ctaUrl: { type: "string", description: "Link do botão, se houver. Vazio se não souber a URL." },
+      required: ["title", "body"],
     },
-    required: ["title", "body"],
   },
 };
 
@@ -111,11 +114,11 @@ export async function generatePlatformUpdate(
   if (clean.length < 3) return { error: "Descreva em uma frase o que foi lançado." };
   if (clean.length > 2000) return { error: "Instrução muito longa (máx. 2000 caracteres)." };
 
-  let client: Anthropic;
+  let client: OpenAI;
   try {
-    client = await getPlatformAnthropicClient();
+    client = await getPlatformOpenAIClient();
   } catch (err) {
-    if (err instanceof AnthropicNotConfiguredError) {
+    if (err instanceof OpenAINotConfiguredError) {
       return { error: "IA da plataforma indisponível: configure a chave em /dev/ia." };
     }
     return { error: "IA indisponível no momento." };
@@ -131,19 +134,23 @@ export async function generatePlatformUpdate(
 
   let toolInput: unknown;
   try {
-    const resp = await client.messages.create({
+    const resp = await client.chat.completions.create({
       model: ASSISTANT_MODEL,
-      max_tokens: 1500,
-      system,
+      max_completion_tokens: 1500,
       tools: [WRITE_UPDATE_TOOL],
-      tool_choice: { type: "tool", name: "escrever_comunicado" },
-      messages: [{ role: "user", content: `Lancei isto: ${clean}\n\nEscreva o comunicado.` }],
+      tool_choice: { type: "function", function: { name: "escrever_comunicado" } },
+      messages: [
+        { role: "system", content: system },
+        { role: "user", content: `Lancei isto: ${clean}\n\nEscreva o comunicado.` },
+      ],
     });
-    const block = resp.content.find((b) => b.type === "tool_use");
-    if (!block || block.type !== "tool_use") {
+    const call = resp.choices[0]?.message?.tool_calls?.find(
+      (c) => c.type === "function" && c.function.name === "escrever_comunicado",
+    );
+    if (!call || call.type !== "function") {
       return { error: "A IA não conseguiu escrever. Tente reescrever a instrução." };
     }
-    toolInput = block.input;
+    toolInput = call.function.arguments ? JSON.parse(call.function.arguments) : {};
   } catch (err) {
     const msg = err instanceof Error ? err.message : "erro desconhecido";
     return { error: `Falha ao escrever com IA: ${msg}` };

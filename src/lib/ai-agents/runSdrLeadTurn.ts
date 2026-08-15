@@ -1,7 +1,7 @@
 import "server-only";
-import type Anthropic from "@anthropic-ai/sdk";
+import type OpenAI from "openai";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getAnthropicClientForTenant } from "@/lib/anthropic/client";
+import { getOpenAIClientForTenant } from "@/lib/openai/client";
 import { buildSdrLeadPrompt, type CompanyProfileContext } from "@/lib/ai-agents/sdrLeadPrompt";
 import { COMPLETE_LEAD_REGISTRATION_TOOL, executeCompleteLeadRegistration } from "@/lib/ai-agents/sdrLeadTool";
 import { ensureLeadInSdrStage } from "@/lib/ai-agents/sdrPipelineStage";
@@ -42,11 +42,17 @@ type HistoryRow = {
  * mídia de fato; mais antigas viram um rótulo curto ("[imagem]"/"[áudio]").
  * Funde turnos consecutivos do mesmo papel (o lead pode mandar 3 seguidas).
  */
+type ContentPart = OpenAI.Chat.Completions.ChatCompletionContentPart;
+type Draft = { role: "user" | "assistant"; parts: ContentPart[] };
+
 async function buildSdrMessages(
   history: HistoryRow[],
-): Promise<{ messages: Anthropic.MessageParam[]; lastInboundWasAudio: boolean }> {
+): Promise<{
+  messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[];
+  lastInboundWasAudio: boolean;
+}> {
   const ordered = [...history].reverse(); // do mais antigo pro mais novo
-  const messages: Anthropic.MessageParam[] = [];
+  const drafts: Draft[] = [];
   let imagesUsed = 0;
   let lastInboundWasAudio = false;
 
@@ -54,7 +60,7 @@ async function buildSdrMessages(
     const row = ordered[idx];
     const role: "user" | "assistant" = row.direction === "inbound" ? "user" : "assistant";
     const isRecent = idx >= ordered.length - MEDIA_WINDOW;
-    const blocks: Anthropic.ContentBlockParam[] = [];
+    const parts: ContentPart[] = [];
 
     const text = row.body?.trim() ?? "";
     const mime = row.media_content_type ?? "";
@@ -70,23 +76,18 @@ async function buildSdrMessages(
       if (isRecent && imagesUsed < MAX_VISION_IMAGES) {
         const bytes = await getMessageAttachmentBytes(row.media_storage_path!);
         if (bytes) {
-          blocks.push({
-            type: "image",
-            source: {
-              type: "base64",
-              media_type: (VISION_MEDIA_TYPES.has(mime) ? mime : "image/jpeg") as
-                | "image/jpeg"
-                | "image/png"
-                | "image/gif"
-                | "image/webp",
-              data: bytes.toString("base64"),
-            },
+          // OpenAI recebe imagem como data URL (na Anthropic era um bloco
+          // base64 com media_type separado).
+          const mediaType = VISION_MEDIA_TYPES.has(mime) ? mime : "image/jpeg";
+          parts.push({
+            type: "image_url",
+            image_url: { url: `data:${mediaType};base64,${bytes.toString("base64")}` },
           });
           imagesUsed++;
         }
       }
-      if (text) blocks.push({ type: "text", text });
-      else if (!blocks.length) blocks.push({ type: "text", text: "[o lead enviou uma imagem]" });
+      if (text) parts.push({ type: "text", text });
+      else if (!parts.length) parts.push({ type: "text", text: "[o lead enviou uma imagem]" });
     } else if (inboundMedia && isAudio) {
       lastInboundWasAudio = true;
       let transcript: string | null = null;
@@ -95,33 +96,40 @@ async function buildSdrMessages(
         if (bytes) transcript = await transcribeAudio(bytes, mime || "audio/ogg");
       }
       const spoken = transcript || text;
-      blocks.push({
+      parts.push({
         type: "text",
         text: spoken ? `[áudio do lead] ${spoken}` : "[o lead enviou um áudio que não pôde ser transcrito]",
       });
     } else if (inboundMedia) {
-      blocks.push({ type: "text", text: text ? `[arquivo] ${text}` : "[o lead enviou um arquivo]" });
+      parts.push({ type: "text", text: text ? `[arquivo] ${text}` : "[o lead enviou um arquivo]" });
     } else if (text) {
-      blocks.push({ type: "text", text });
+      parts.push({ type: "text", text });
     }
 
-    if (!blocks.length) continue;
+    if (!parts.length) continue;
 
-    // Funde com a mensagem anterior se for o mesmo papel (a API não aceita dois
-    // turnos seguidos do mesmo role).
-    const prev = messages[messages.length - 1];
-    if (prev && prev.role === role) {
-      const prevContent = Array.isArray(prev.content)
-        ? prev.content
-        : [{ type: "text", text: prev.content } as Anthropic.ContentBlockParam];
-      prev.content = [...prevContent, ...blocks];
-    } else {
-      messages.push({ role, content: blocks });
-    }
+    // Funde turnos consecutivos do mesmo papel (o lead pode mandar 3 seguidas).
+    const prev = drafts[drafts.length - 1];
+    if (prev && prev.role === role) prev.parts.push(...parts);
+    else drafts.push({ role, parts });
   }
 
-  // A API exige que a conversa comece por "user" — descarta assistants iniciais.
-  while (messages.length && messages[0].role !== "user") messages.shift();
+  // Começa por "user" — assistants iniciais sem pergunta antes não ajudam o modelo.
+  while (drafts.length && drafts[0].role !== "user") drafts.shift();
+
+  // Mensagem de assistant na OpenAI não aceita partes de imagem, só texto —
+  // por isso o achatamento (na prática o SDR só manda texto mesmo).
+  const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = drafts.map((d) =>
+    d.role === "assistant"
+      ? {
+          role: "assistant" as const,
+          content: d.parts
+            .map((p) => (p.type === "text" ? p.text : ""))
+            .filter(Boolean)
+            .join("\n"),
+        }
+      : { role: "user" as const, content: d.parts },
+  );
 
   return { messages, lastInboundWasAudio };
 }
@@ -157,11 +165,11 @@ export async function runSdrLeadTurn(tenantId: string, contactId: string): Promi
   // começa a conversar, mesmo antes do cadastro/qualificação terminar.
   await ensureLeadInSdrStage(admin, tenantId, contactId, contact.created_by, contact.name);
 
-  let client: Anthropic;
+  let client: OpenAI;
   try {
-    client = await getAnthropicClientForTenant(tenantId);
+    client = await getOpenAIClientForTenant(tenantId);
   } catch (err) {
-    console.error("runSdrLeadTurn: Anthropic não configurado pro tenant", tenantId, err);
+    console.error("runSdrLeadTurn: OpenAI não configurada pro tenant", tenantId, err);
     return;
   }
 
@@ -206,68 +214,80 @@ export async function runSdrLeadTurn(tenantId: string, contactId: string): Promi
   // não são condicionadas a needs_registration: essa função inteira já só roda
   // enquanto o cadastro não terminou (guard lá em cima), então gatear por
   // "cadastro completo" faria a tool nunca ficar disponível na prática.
-  const tools: Anthropic.Tool[] = [COMPLETE_LEAD_REGISTRATION_TOOL, BUSCAR_PRODUTOS_ERP_TOOL, MONTAR_PROPOSTA_ERP_TOOL];
+  const tools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
+    COMPLETE_LEAD_REGISTRATION_TOOL,
+    BUSCAR_PRODUTOS_ERP_TOOL,
+    MONTAR_PROPOSTA_ERP_TOOL,
+  ];
   if (company?.website) tools.push(SEARCH_COMPANY_WEBSITE_TOOL);
   if (company?.catalogNames.length) tools.push(SEND_CATALOG_TOOL);
   if (company?.hasProductPhotos) tools.push(SEND_PRODUCT_PHOTOS_TOOL);
 
+  // System prompt vai como 1ª mensagem (na Anthropic era parâmetro separado).
+  messages.unshift({ role: "system", content: system });
+
   let finalText = "";
   try {
     for (let i = 0; i < MAX_TOOL_ITERATIONS; i++) {
-      const response = await client.messages.create({
+      const response = await client.chat.completions.create({
         model: agent.model,
-        max_tokens: 800,
-        system,
+        max_completion_tokens: 800,
         tools,
         messages,
       });
 
-      const toolUses = response.content.filter((b): b is Anthropic.ToolUseBlock => b.type === "tool_use");
-      const textBlocks = response.content.filter((b): b is Anthropic.TextBlock => b.type === "text");
-      finalText = textBlocks.map((b) => b.text).join("\n").trim();
+      const choice = response.choices[0];
+      const assistantMessage = choice?.message;
+      if (!assistantMessage) break;
 
-      messages.push({ role: "assistant", content: response.content });
-      if (response.stop_reason !== "tool_use" || !toolUses.length) break;
+      finalText = (assistantMessage.content ?? "").trim();
+      messages.push(assistantMessage);
 
-      const toolResults: Anthropic.ToolResultBlockParam[] = [];
-      for (const toolUse of toolUses) {
+      const toolCalls = assistantMessage.tool_calls ?? [];
+      if (choice.finish_reason !== "tool_calls" || !toolCalls.length) break;
+
+      for (const toolCall of toolCalls) {
+        if (toolCall.type !== "function") continue;
+
+        // Argumentos vêm como string JSON na OpenAI (na Anthropic já vinham
+        // como objeto) — parse protegido contra JSON malformado do modelo.
+        let args: Record<string, unknown> = {};
+        try {
+          args = toolCall.function.arguments ? JSON.parse(toolCall.function.arguments) : {};
+        } catch {
+          messages.push({
+            role: "tool",
+            tool_call_id: toolCall.id,
+            content: "ERRO: argumentos inválidos (JSON malformado). Tente de novo com um JSON válido.",
+          });
+          continue;
+        }
+
+        const name = toolCall.function.name;
         let result: { content: string; isError: boolean };
-        if (toolUse.name === "search_company_website" && company?.website) {
+        if (name === "search_company_website" && company?.website) {
           result = await executeSearchCompanyWebsite(admin, tenantId, company.website);
-        } else if (toolUse.name === "send_catalog") {
-          const fileName = String((toolUse.input as { file_name?: string } | undefined)?.file_name ?? "").trim();
+        } else if (name === "send_catalog") {
+          const fileName = String((args as { file_name?: string }).file_name ?? "").trim();
           result = fileName
             ? await executeSendCatalog(admin, tenantId, contactId, contact.phone, fileName)
             : { content: "Informe o file_name exato do catálogo escolhido pelo lead.", isError: true };
-        } else if (toolUse.name === "send_product_photos") {
+        } else if (name === "send_product_photos") {
           result = await executeSendProductPhotos(admin, tenantId, contactId, contact.phone);
-        } else if (toolUse.name === "buscar_produtos_erp") {
-          result = await executeBuscarProdutosErp(admin, tenantId, (toolUse.input ?? {}) as Record<string, unknown>);
-        } else if (toolUse.name === "montar_proposta_erp") {
-          result = await executeMontarPropostaErp(
-            admin,
-            tenantId,
-            contactId,
-            contact.created_by,
-            (toolUse.input ?? {}) as Record<string, unknown>,
-          );
+        } else if (name === "buscar_produtos_erp") {
+          result = await executeBuscarProdutosErp(admin, tenantId, args);
+        } else if (name === "montar_proposta_erp") {
+          result = await executeMontarPropostaErp(admin, tenantId, contactId, contact.created_by, args);
         } else {
-          result = await executeCompleteLeadRegistration(
-            admin,
-            tenantId,
-            contactId,
-            contact.created_by,
-            (toolUse.input ?? {}) as Record<string, unknown>,
-          );
+          result = await executeCompleteLeadRegistration(admin, tenantId, contactId, contact.created_by, args);
         }
-        toolResults.push({
-          type: "tool_result",
-          tool_use_id: toolUse.id,
-          content: result.content,
-          is_error: result.isError,
+
+        messages.push({
+          role: "tool",
+          tool_call_id: toolCall.id,
+          content: result.isError ? `ERRO: ${result.content}` : result.content,
         });
       }
-      messages.push({ role: "user", content: toolResults });
     }
   } catch (err) {
     console.error("runSdrLeadTurn: falha no loop do agente", err);

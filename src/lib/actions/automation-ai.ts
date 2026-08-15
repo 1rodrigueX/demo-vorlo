@@ -2,55 +2,58 @@
 
 import { randomUUID } from "crypto";
 import { z } from "zod";
-import type Anthropic from "@anthropic-ai/sdk";
+import type OpenAI from "openai";
 import { createClient } from "@/lib/supabase/server";
 import { requireTenantId } from "@/lib/auth/current-user";
-import { getAnthropicClientForTenant, ASSISTANT_MODEL, AnthropicNotConfiguredError } from "@/lib/anthropic/client";
+import { getOpenAIClientForTenant, ASSISTANT_MODEL, OpenAINotConfiguredError } from "@/lib/openai/client";
 import { FLOW_CATALOG, getNodeDef, defaultConfigFor } from "@/lib/automations/flow-catalog";
 import type { FlowGraph, FlowNode, FlowEdge, FlowNodeConfig } from "@/lib/automations/flow-types";
 
 const KINDS = FLOW_CATALOG.map((d) => d.kind);
 
-const BUILD_FLOW_TOOL: Anthropic.Tool = {
-  name: "build_flow",
-  description: "Monta a trajetória (automação) pedida pelo usuário, com nós e ligações.",
-  input_schema: {
-    type: "object",
-    properties: {
-      name: { type: "string", description: "Nome curto e claro da trajetória (até ~6 palavras)." },
-      nodes: {
-        type: "array",
-        items: {
-          type: "object",
-          properties: {
-            id: { type: "string", description: "Id temporário do nó (ex: 'n1'), usado nas ligações." },
-            type: { type: "string", enum: ["trigger", "action"] },
-            kind: { type: "string", enum: KINDS },
-            config: { type: "object", description: "Campos de configuração do nó (ver instruções)." },
+const BUILD_FLOW_TOOL: OpenAI.Chat.Completions.ChatCompletionTool = {
+  type: "function",
+  function: {
+    name: "build_flow",
+    description: "Monta a trajetória (automação) pedida pelo usuário, com nós e ligações.",
+    parameters: {
+      type: "object",
+      properties: {
+        name: { type: "string", description: "Nome curto e claro da trajetória (até ~6 palavras)." },
+        nodes: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              id: { type: "string", description: "Id temporário do nó (ex: 'n1'), usado nas ligações." },
+              type: { type: "string", enum: ["trigger", "action"] },
+              kind: { type: "string", enum: KINDS },
+              config: { type: "object", description: "Campos de configuração do nó (ver instruções)." },
+            },
+            required: ["id", "type", "kind"],
           },
-          required: ["id", "type", "kind"],
+        },
+        edges: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: { source: { type: "string" }, target: { type: "string" } },
+            required: ["source", "target"],
+          },
+        },
+        newStages: {
+          type: "array",
+          items: { type: "string" },
+          description: "Nomes de novas etapas do funil a criar, se o pedido precisar de uma que não existe.",
+        },
+        newTags: {
+          type: "array",
+          items: { type: "string" },
+          description: "Nomes de novas tags a criar, se necessário.",
         },
       },
-      edges: {
-        type: "array",
-        items: {
-          type: "object",
-          properties: { source: { type: "string" }, target: { type: "string" } },
-          required: ["source", "target"],
-        },
-      },
-      newStages: {
-        type: "array",
-        items: { type: "string" },
-        description: "Nomes de novas etapas do funil a criar, se o pedido precisar de uma que não existe.",
-      },
-      newTags: {
-        type: "array",
-        items: { type: "string" },
-        description: "Nomes de novas tags a criar, se necessário.",
-      },
+      required: ["name", "nodes", "edges"],
     },
-    required: ["name", "nodes", "edges"],
   },
 };
 
@@ -226,16 +229,16 @@ export async function generateFlowGraph(
     supabase.from("tags").select("name").eq("tenant_id", tenantId),
   ]);
 
-  // Usa a chave Anthropic do PRÓPRIO cliente (a mesma da SDR) — a chave da
+  // Usa a chave OpenAI do PRÓPRIO cliente (a mesma da SDR) — a chave da
   // Vorlo/plataforma é só pro suporte, não pra rodar a trajetória do tenant.
-  let client: Anthropic;
+  let client: OpenAI;
   try {
-    client = await getAnthropicClientForTenant(tenantId);
+    client = await getOpenAIClientForTenant(tenantId);
   } catch (err) {
-    if (err instanceof AnthropicNotConfiguredError) {
+    if (err instanceof OpenAINotConfiguredError) {
       return {
         error:
-          "Para criar com IA, conecte a chave da API Anthropic do seu CRM em Configurações › Inteligência Artificial (a mesma usada pela SDR).",
+          "Para criar com IA, conecte a chave da API da OpenAI do seu CRM em Configurações › Inteligência Artificial (a mesma usada pela SDR).",
       };
     }
     return { error: "IA indisponível no momento." };
@@ -245,19 +248,25 @@ export async function generateFlowGraph(
 
   let toolInput: unknown;
   try {
-    const resp = await client.messages.create({
+    const resp = await client.chat.completions.create({
       model: ASSISTANT_MODEL,
-      max_tokens: 3000,
-      system,
+      max_completion_tokens: 3000,
       tools: [BUILD_FLOW_TOOL],
-      tool_choice: { type: "tool", name: "build_flow" },
-      messages: [{ role: "user", content: clean }],
+      // Força a chamada da ferramenta (na Anthropic era {type:"tool", name}).
+      tool_choice: { type: "function", function: { name: "build_flow" } },
+      messages: [
+        { role: "system", content: system },
+        { role: "user", content: clean },
+      ],
     });
-    const block = resp.content.find((b) => b.type === "tool_use");
-    if (!block || block.type !== "tool_use") {
+    const call = resp.choices[0]?.message?.tool_calls?.find(
+      (c) => c.type === "function" && c.function.name === "build_flow",
+    );
+    if (!call || call.type !== "function") {
       return { error: "A IA não conseguiu montar a trajetória. Tente reescrever o pedido." };
     }
-    toolInput = block.input;
+    // Argumentos vêm como string JSON na OpenAI (na Anthropic já vinham como objeto).
+    toolInput = call.function.arguments ? JSON.parse(call.function.arguments) : {};
   } catch (err) {
     const msg = err instanceof Error ? err.message : "erro desconhecido";
     return { error: `Falha ao gerar com IA: ${msg}` };

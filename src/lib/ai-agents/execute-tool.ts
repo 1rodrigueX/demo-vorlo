@@ -12,7 +12,7 @@ type Supabase = DbClient;
 type AgentContext = { id: string; is_fala_ai: boolean };
 
 const INTEGRATION_GUIDANCE: Record<string, string> = {
-  anthropic: "A chave da Anthropic já pode ser conectada em Configurações > Inteligência Artificial.",
+  openai: "A chave da OpenAI já pode ser conectada em Configurações > Inteligência Artificial.",
   bling: "O Bling já pode ser conectado em Configurações > Bling.",
   gmail: "O Gmail já pode ser conectado em Configurações > E-mail — é só clicar em Conectar e fazer login com a conta Google.",
   outlook: "O Outlook já pode ser conectado em Configurações > E-mail — é só clicar em Conectar e fazer login com a conta Microsoft.",
@@ -375,7 +375,7 @@ export async function executeAgentTool(
           return { content: `Bling: ${summary}`, isError: false };
         }
 
-        if (provider === "anthropic" || provider === "gmail" || provider === "outlook") {
+        if (provider === "openai" || provider === "gmail" || provider === "outlook") {
           const { data } = await supabase
             .from("tenant_integrations")
             .select("status, last_error, last_tested_at")

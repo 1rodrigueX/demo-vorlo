@@ -3,7 +3,7 @@ import "server-only";
 /**
  * Camada de fala (ouvir e falar) do SDR, separada do LLM.
  *
- * A Anthropic não faz transcrição nem síntese de voz, então isto fala com um
+ * A OpenAI Chat Completions não faz síntese de voz aqui, então isto fala com um
  * endpoint compatível com a API de áudio da OpenAI (Whisper pra transcrever,
  * TTS pra gerar voz). É BYO-key igual ao resto: se SPEECH_API_KEY (ou
  * OPENAI_API_KEY) não estiver configurada, tudo aqui vira no-op silencioso — o

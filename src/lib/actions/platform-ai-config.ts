@@ -3,9 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isCurrentUserDev } from "@/lib/auth/current-user";
-import { saveAnthropicKeySchema } from "@/lib/validation/tenant-integration";
-import { testAnthropicApiKey } from "@/lib/anthropic/client";
-import { getPlatformAiConfig, type PlatformAiConfig } from "@/lib/anthropic/platformConfig";
+import { saveOpenAiKeySchema } from "@/lib/validation/tenant-integration";
+import { testOpenAIApiKey } from "@/lib/openai/client";
+import { getPlatformAiConfig, type PlatformAiConfig } from "@/lib/openai/platformConfig";
 import { encryptSecret, decryptSecret } from "@/lib/crypto/secrets";
 
 export type ActionState = { error?: string } | null;
@@ -21,10 +21,10 @@ export async function savePlatformAiConfig(_prevState: ActionState, formData: Fo
     return { error: "Acesso restrito a devs da plataforma" };
   }
 
-  const parsed = saveAnthropicKeySchema.safeParse({ apiKey: formData.get("apiKey") });
+  const parsed = saveOpenAiKeySchema.safeParse({ apiKey: formData.get("apiKey") });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
 
-  const test = await testAnthropicApiKey(parsed.data.apiKey);
+  const test = await testOpenAIApiKey(parsed.data.apiKey);
   const now = new Date().toISOString();
   const admin = createAdminClient();
 
@@ -33,7 +33,7 @@ export async function savePlatformAiConfig(_prevState: ActionState, formData: Fo
       id: true,
       // Cifrada em repouso (AES-256-GCM) — no-op se SECRETS_ENC_KEY não
       // estiver configurada (texto puro nesse caso, ver src/lib/crypto/secrets.ts).
-      anthropic_api_key: encryptSecret(parsed.data.apiKey),
+      openai_api_key: encryptSecret(parsed.data.apiKey),
       status: test.ok ? ("connected" as const) : ("error" as const),
       connected_at: test.ok ? now : null,
       last_tested_at: now,
@@ -56,9 +56,9 @@ export async function testPlatformAiConnection(): Promise<ActionState> {
   }
 
   const admin = createAdminClient();
-  const { data } = await admin.from("platform_ai_config").select("anthropic_api_key").eq("id", true).maybeSingle();
+  const { data } = await admin.from("platform_ai_config").select("openai_api_key").eq("id", true).maybeSingle();
 
-  const stored = data?.anthropic_api_key;
+  const stored = data?.openai_api_key;
   if (!stored) return { error: "Nenhuma chave salva ainda" };
   let apiKey: string | null;
   try {
@@ -68,7 +68,7 @@ export async function testPlatformAiConnection(): Promise<ActionState> {
   }
   if (!apiKey) return { error: "Nenhuma chave salva ainda" };
 
-  const test = await testAnthropicApiKey(apiKey);
+  const test = await testOpenAIApiKey(apiKey);
   const now = new Date().toISOString();
 
   await admin

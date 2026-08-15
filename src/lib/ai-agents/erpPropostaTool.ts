@@ -1,5 +1,5 @@
 import "server-only";
-import type Anthropic from "@anthropic-ai/sdk";
+import type OpenAI from "openai";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createErpPropostaCore } from "@/lib/erp/propostaCore";
 
@@ -14,30 +14,33 @@ type Admin = ReturnType<typeof createAdminClient>;
  * createErpPropostaCore — a IA nunca tem como "informar" um preço, só
  * escolher produto e quantidade.
  */
-export const MONTAR_PROPOSTA_ERP_TOOL: Anthropic.Tool = {
-  name: "montar_proposta_erp",
-  description:
-    "Monta uma proposta comercial em RASCUNHO no ERP com os produtos que o lead quer — não envia nada pro cliente, " +
-    "só deixa pronta pra um vendedor revisar e enviar. Use buscar_produtos_erp antes pra confirmar o id exato de " +
-    "cada produto. Chame só depois de confirmar com o lead quais produtos e quantidades ele quer.",
-  input_schema: {
-    type: "object",
-    properties: {
-      items: {
-        type: "array",
-        description: "Produtos que o lead quer, com o id exato retornado por buscar_produtos_erp",
+export const MONTAR_PROPOSTA_ERP_TOOL: OpenAI.Chat.Completions.ChatCompletionTool = {
+  type: "function",
+  function: {
+    name: "montar_proposta_erp",
+    description:
+      "Monta uma proposta comercial em RASCUNHO no ERP com os produtos que o lead quer — não envia nada pro cliente, " +
+      "só deixa pronta pra um vendedor revisar e enviar. Use buscar_produtos_erp antes pra confirmar o id exato de " +
+      "cada produto. Chame só depois de confirmar com o lead quais produtos e quantidades ele quer.",
+    parameters: {
+      type: "object",
+      properties: {
         items: {
-          type: "object",
-          properties: {
-            produtoId: { type: "string", description: "id do produto (de buscar_produtos_erp)" },
-            quantity: { type: "number", description: "Quantidade desejada" },
+          type: "array",
+          description: "Produtos que o lead quer, com o id exato retornado por buscar_produtos_erp",
+          items: {
+            type: "object",
+            properties: {
+              produtoId: { type: "string", description: "id do produto (de buscar_produtos_erp)" },
+              quantity: { type: "number", description: "Quantidade desejada" },
+            },
+            required: ["produtoId", "quantity"],
           },
-          required: ["produtoId", "quantity"],
         },
+        notes: { type: "string", description: "Observações relevantes da conversa pro vendedor (opcional)" },
       },
-      notes: { type: "string", description: "Observações relevantes da conversa pro vendedor (opcional)" },
+      required: ["items"],
     },
-    required: ["items"],
   },
 };
 

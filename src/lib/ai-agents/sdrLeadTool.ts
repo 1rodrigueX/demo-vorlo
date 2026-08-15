@@ -1,5 +1,5 @@
 import "server-only";
-import type Anthropic from "@anthropic-ai/sdk";
+import type OpenAI from "openai";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { syncContactToBling, updateBlingContactVendedor } from "@/lib/bling/sync";
 import { resolveBlingConnectionId } from "@/lib/bling/resolveConnection";
@@ -7,40 +7,43 @@ import { ensureSellerTag } from "@/lib/tags/ensureTag";
 import { moveLeadToQualificationStage } from "@/lib/ai-agents/sdrPipelineStage";
 
 /** Única ferramenta exposta ao SDR na conversa automática com o lead pelo WhatsApp. */
-export const COMPLETE_LEAD_REGISTRATION_TOOL: Anthropic.Tool = {
-  name: "complete_lead_registration",
-  description:
-    "Conclui o cadastro do lead depois de coletar os dados necessários na conversa. Chame só quando já tiver " +
-    "confirmado o nome completo e o CPF/CNPJ com a pessoa — os outros campos são opcionais, colete o que " +
-    "conseguir naturalmente na conversa. Além do cadastro, essa chamada também move o lead no pipeline pra " +
-    "'Qualificado' ou 'Não Qualificado' — avalie com sinceridade se a pessoa tem interesse e perfil reais de " +
-    "compra (não force qualificação positiva só pra ser gentil).",
-  input_schema: {
-    type: "object",
-    properties: {
-      fullName: { type: "string", description: "Nome completo confirmado pelo lead" },
-      cpfCnpj: { type: "string", description: "CPF (11 dígitos) ou CNPJ (14 dígitos), só números" },
-      email: { type: "string", description: "E-mail do lead, se informado" },
-      addressZip: { type: "string", description: "CEP, se informado" },
-      addressStreet: { type: "string", description: "Rua/logradouro, se informado" },
-      addressNumber: { type: "string", description: "Número, se informado" },
-      addressComplement: { type: "string", description: "Complemento, se informado" },
-      addressNeighborhood: { type: "string", description: "Bairro, se informado" },
-      addressCity: { type: "string", description: "Cidade, se informada" },
-      addressState: { type: "string", description: "UF (2 letras), se informada" },
-      qualified: {
-        type: "boolean",
-        description:
-          "true se o lead tem interesse e perfil reais pra virar oportunidade de venda (sabe o que precisa, " +
-          "demanda plausível); false se claramente não é um lead viável agora (só curiosidade, fora da área de " +
-          "atuação, sem intenção real de compra).",
+export const COMPLETE_LEAD_REGISTRATION_TOOL: OpenAI.Chat.Completions.ChatCompletionTool = {
+  type: "function",
+  function: {
+    name: "complete_lead_registration",
+    description:
+      "Conclui o cadastro do lead depois de coletar os dados necessários na conversa. Chame só quando já tiver " +
+      "confirmado o nome completo e o CPF/CNPJ com a pessoa — os outros campos são opcionais, colete o que " +
+      "conseguir naturalmente na conversa. Além do cadastro, essa chamada também move o lead no pipeline pra " +
+      "'Qualificado' ou 'Não Qualificado' — avalie com sinceridade se a pessoa tem interesse e perfil reais de " +
+      "compra (não force qualificação positiva só pra ser gentil).",
+    parameters: {
+      type: "object",
+      properties: {
+        fullName: { type: "string", description: "Nome completo confirmado pelo lead" },
+        cpfCnpj: { type: "string", description: "CPF (11 dígitos) ou CNPJ (14 dígitos), só números" },
+        email: { type: "string", description: "E-mail do lead, se informado" },
+        addressZip: { type: "string", description: "CEP, se informado" },
+        addressStreet: { type: "string", description: "Rua/logradouro, se informado" },
+        addressNumber: { type: "string", description: "Número, se informado" },
+        addressComplement: { type: "string", description: "Complemento, se informado" },
+        addressNeighborhood: { type: "string", description: "Bairro, se informado" },
+        addressCity: { type: "string", description: "Cidade, se informada" },
+        addressState: { type: "string", description: "UF (2 letras), se informada" },
+        qualified: {
+          type: "boolean",
+          description:
+            "true se o lead tem interesse e perfil reais pra virar oportunidade de venda (sabe o que precisa, " +
+            "demanda plausível); false se claramente não é um lead viável agora (só curiosidade, fora da área de " +
+            "atuação, sem intenção real de compra).",
+        },
+        qualificationNote: {
+          type: "string",
+          description: "Resumo de 1 frase do motivo da avaliação, pro vendedor humano entender o contexto rápido.",
+        },
       },
-      qualificationNote: {
-        type: "string",
-        description: "Resumo de 1 frase do motivo da avaliação, pro vendedor humano entender o contexto rápido.",
-      },
+      required: ["fullName", "cpfCnpj", "qualified"],
     },
-    required: ["fullName", "cpfCnpj", "qualified"],
   },
 };
 

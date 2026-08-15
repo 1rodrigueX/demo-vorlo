@@ -2,7 +2,7 @@ import "server-only";
 import { randomBytes } from "crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendWelcomeEmail } from "@/lib/email/resend";
-import { testAnthropicApiKey } from "@/lib/anthropic/client";
+import { testOpenAIApiKey } from "@/lib/openai/client";
 import { calculateTotalCents } from "@/lib/billing/pricing";
 import { addOneMonth } from "@/lib/billing/cycle";
 import { isReservedSlug } from "@/lib/tenant/reserved-slugs";
@@ -40,7 +40,7 @@ export type ProvisionTenantParams = {
  * sem tenant ainda) num dono de CRM, a partir de um checkout já pago
  * (chamado só pelo webhook do Mercado Pago, depois do pagamento aprovado —
  * nunca exposto como Server Action pública). O usuário e a intenção de
- * compra (empresa, plano, extras, chave da Anthropic opcional) já existem
+ * compra (empresa, plano, extras, chave da OpenAI opcional) já existem
  * antes de chegar aqui — ver src/lib/actions/checkout.ts. Não faz rollback
  * se falhar depois de criar o tenant: o pagamento já aconteceu, então
  * preferimos deixar o tenant "órfão" pra reconciliação manual a perder o
@@ -143,13 +143,13 @@ export async function provisionTenantFromCheckout(
   // religado (ver src/lib/crm/isolation.ts).
   if (CRM_MODULE_COUPLING.financas) await grantFreeFinancasEmpresarial(admin, tenantId);
 
-  if (pending.anthropic_api_key) {
-    const test = await testAnthropicApiKey(pending.anthropic_api_key);
+  if (pending.openai_api_key) {
+    const test = await testOpenAIApiKey(pending.openai_api_key);
     const now = new Date().toISOString();
     await admin.from("tenant_integrations").insert({
       tenant_id: tenantId,
-      provider: "anthropic",
-      credentials: { apiKey: pending.anthropic_api_key },
+      provider: "openai",
+      credentials: { apiKey: pending.openai_api_key },
       status: test.ok ? "connected" : "error",
       connected_at: test.ok ? now : null,
       last_tested_at: now,
@@ -159,7 +159,7 @@ export async function provisionTenantFromCheckout(
 
   await admin
     .from("pending_checkouts")
-    .update({ status: "completed", anthropic_api_key: null })
+    .update({ status: "completed", openai_api_key: null })
     .eq("id", pending.id);
 
   void notifyNewCrmTenant(pending.company_name, tenantSlug ?? baseSlug);

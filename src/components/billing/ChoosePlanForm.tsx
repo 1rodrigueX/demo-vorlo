@@ -260,16 +260,16 @@ export function ChoosePlanForm({
                 </div>
 
                 <div>
-                  <Label htmlFor="anthropicApiKey">Chave da API Anthropic (opcional)</Label>
+                  <Label htmlFor="openaiApiKey">Chave da API OpenAI (opcional)</Label>
                   <Input
-                    id="anthropicApiKey"
-                    name="anthropicApiKey"
+                    id="openaiApiKey"
+                    name="openaiApiKey"
                     type="password"
-                    placeholder="sk-ant-..."
+                    placeholder="sk-..."
                     autoComplete="off"
                   />
                   <p className="mt-1 text-xs text-gray-500">
-                    Já tem uma chave da sua conta Anthropic? Cole aqui pra usar ela nos agentes de IA. Se deixar em
+                    Já tem uma chave da sua conta OpenAI? Cole aqui pra usar ela nos agentes de IA. Se deixar em
                     branco, você conecta depois em Configurações.
                   </p>
                 </div>

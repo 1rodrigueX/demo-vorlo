@@ -1,24 +1,27 @@
 import "server-only";
-import type Anthropic from "@anthropic-ai/sdk";
+import type OpenAI from "openai";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendWhatsAppMessage, type OutgoingMedia } from "@/lib/whatsapp/send";
 import { downloadCompanyAsset, getCompanyAssetSignedUrl } from "@/lib/storage/companyAssets";
 
-export const SEND_CATALOG_TOOL: Anthropic.Tool = {
-  name: "send_catalog",
-  description:
-    "Envia UM catálogo específico de produtos pro lead, como PDF direto no WhatsApp. Se a empresa tiver mais " +
-    "de um catálogo, use só depois que a pessoa tiver escolhido qual quer entre as opções que você listou — " +
-    "nunca chame sem saber qual catálogo a pessoa quer. Se a empresa tiver só um catálogo, pode chamar direto.",
-  input_schema: {
-    type: "object",
-    properties: {
-      file_name: {
-        type: "string",
-        description: "Nome exato do arquivo do catálogo a enviar, igual aparece na lista de catálogos disponíveis.",
+export const SEND_CATALOG_TOOL: OpenAI.Chat.Completions.ChatCompletionTool = {
+  type: "function",
+  function: {
+    name: "send_catalog",
+    description:
+      "Envia UM catálogo específico de produtos pro lead, como PDF direto no WhatsApp. Se a empresa tiver mais " +
+      "de um catálogo, use só depois que a pessoa tiver escolhido qual quer entre as opções que você listou — " +
+      "nunca chame sem saber qual catálogo a pessoa quer. Se a empresa tiver só um catálogo, pode chamar direto.",
+    parameters: {
+      type: "object",
+      properties: {
+        file_name: {
+          type: "string",
+          description: "Nome exato do arquivo do catálogo a enviar, igual aparece na lista de catálogos disponíveis.",
+        },
       },
+      required: ["file_name"],
     },
-    required: ["file_name"],
   },
 };
 

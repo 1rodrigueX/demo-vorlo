@@ -3,17 +3,17 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireTenantId } from "@/lib/auth/current-user";
-import { saveAnthropicKeySchema } from "@/lib/validation/tenant-integration";
-import { testAnthropicApiKey } from "@/lib/anthropic/client";
+import { saveOpenAiKeySchema } from "@/lib/validation/tenant-integration";
+import { testOpenAIApiKey } from "@/lib/openai/client";
 import { encryptSecret, decryptSecret } from "@/lib/crypto/secrets";
 
 export type ActionState = { error?: string } | null;
 
-export async function saveAnthropicKey(
+export async function saveOpenAiKey(
   _prevState: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  const parsed = saveAnthropicKeySchema.safeParse({
+  const parsed = saveOpenAiKeySchema.safeParse({
     apiKey: formData.get("apiKey"),
   });
 
@@ -30,19 +30,19 @@ export async function saveAnthropicKey(
   const tenantId = await requireTenantId(supabase, user.id);
   if (!tenantId) return { error: "Tenant não encontrado" };
 
-  const test = await testAnthropicApiKey(parsed.data.apiKey);
+  const test = await testOpenAIApiKey(parsed.data.apiKey);
   const now = new Date().toISOString();
 
   const { data: existing } = await supabase
     .from("tenant_integrations")
     .select("id")
     .eq("tenant_id", tenantId)
-    .eq("provider", "anthropic")
+    .eq("provider", "openai")
     .maybeSingle();
 
   const payload = {
     tenant_id: tenantId,
-    provider: "anthropic" as const,
+    provider: "openai" as const,
     // Chave cifrada em repouso (AES-256-GCM). No-op se SECRETS_ENC_KEY não
     // estiver configurada — nesse caso segue texto puro, sem quebrar nada.
     credentials: { apiKey: encryptSecret(parsed.data.apiKey) },
@@ -58,7 +58,7 @@ export async function saveAnthropicKey(
     : await supabase.from("tenant_integrations").insert(payload);
 
   if (error) {
-    console.error("saveAnthropicKey failed:", error);
+    console.error("saveOpenAiKey failed:", error);
     return { error: `Não foi possível salvar: ${error.message}` };
   }
 
@@ -71,7 +71,7 @@ export async function saveAnthropicKey(
   return null;
 }
 
-export async function testAnthropicConnection(): Promise<ActionState> {
+export async function testOpenAiConnection(): Promise<ActionState> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -85,7 +85,7 @@ export async function testAnthropicConnection(): Promise<ActionState> {
     .from("tenant_integrations")
     .select("credentials")
     .eq("tenant_id", tenantId)
-    .eq("provider", "anthropic")
+    .eq("provider", "openai")
     .maybeSingle();
 
   const stored = (integration?.credentials as { apiKey?: string } | null)?.apiKey;
@@ -98,7 +98,7 @@ export async function testAnthropicConnection(): Promise<ActionState> {
   }
   if (!apiKey) return { error: "Nenhuma chave salva ainda" };
 
-  const test = await testAnthropicApiKey(apiKey);
+  const test = await testOpenAIApiKey(apiKey);
   const now = new Date().toISOString();
 
   await supabase
@@ -110,7 +110,7 @@ export async function testAnthropicConnection(): Promise<ActionState> {
       last_error: test.ok ? null : test.error,
     })
     .eq("tenant_id", tenantId)
-    .eq("provider", "anthropic");
+    .eq("provider", "openai");
 
   revalidatePath("/[tenantSlug]/settings/integracoes", "page");
 
@@ -140,7 +140,7 @@ export async function disconnectOAuthIntegration(provider: "gmail" | "outlook"):
   return null;
 }
 
-export async function disconnectAnthropicKey(): Promise<ActionState> {
+export async function disconnectOpenAiKey(): Promise<ActionState> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -154,7 +154,7 @@ export async function disconnectAnthropicKey(): Promise<ActionState> {
     .from("tenant_integrations")
     .delete()
     .eq("tenant_id", tenantId)
-    .eq("provider", "anthropic");
+    .eq("provider", "openai");
 
   if (error) return { error: "Não foi possível desconectar" };
 

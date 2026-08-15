@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import type Anthropic from "@anthropic-ai/sdk";
+import type OpenAI from "openai";
 import { createClient } from "@/lib/supabase/server";
 import { requireTenantId } from "@/lib/auth/current-user";
-import { getAnthropicClientForAgent, AnthropicNotConfiguredError } from "@/lib/anthropic/client";
+import { getOpenAIClientForAgent, OpenAINotConfiguredError } from "@/lib/openai/client";
 import { getToolsForAgent } from "@/lib/ai-agents/tools";
 import { executeAgentTool } from "@/lib/ai-agents/execute-tool";
 import { buildSystemPrompt } from "@/lib/ai-agents/prompt";
@@ -88,9 +88,9 @@ export async function POST(request: Request, { params }: { params: Promise<{ age
 
   let client;
   try {
-    client = await getAnthropicClientForAgent(profile.tenant_id, agent);
+    client = await getOpenAIClientForAgent(profile.tenant_id, agent);
   } catch (err) {
-    if (err instanceof AnthropicNotConfiguredError) {
+    if (err instanceof OpenAINotConfiguredError) {
       return NextResponse.json({ error: err.message }, { status: 503 });
     }
     throw err;
@@ -113,17 +113,20 @@ export async function POST(request: Request, { params }: { params: Promise<{ age
       .limit(MAX_MEMORY_FACTS),
   ]);
 
-  const messages: Anthropic.MessageParam[] = (history ?? [])
-    .reverse()
-    .map((m) => ({ role: m.role, content: m.content }));
-  messages.push({ role: "user", content: userMessage });
-
   const system = buildSystemPrompt(
     agent,
     memoryFacts ?? [],
     profile.full_name ?? user.email ?? "vendedor",
     contextHint,
   );
+
+  // Na OpenAI o system prompt é a 1ª mensagem do array (na Anthropic era um
+  // parâmetro `system` separado).
+  const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
+    { role: "system", content: system },
+    ...(history ?? []).reverse().map((m) => ({ role: m.role, content: m.content })),
+    { role: "user", content: userMessage },
+  ];
   const tools = getToolsForAgent(agent.tools);
 
   let finalText = "";
@@ -134,44 +137,63 @@ export async function POST(request: Request, { params }: { params: Promise<{ age
 
   try {
     for (let i = 0; i < MAX_TOOL_ITERATIONS; i++) {
-      const response = await client.messages.create({
+      const response = await client.chat.completions.create({
         model: agent.model,
-        max_tokens: 1500,
-        system,
+        max_completion_tokens: 1500,
+        temperature: agent.temperature,
         ...(tools.length ? { tools } : {}),
         messages,
       });
 
-      totalInputTokens += response.usage?.input_tokens ?? 0;
-      totalOutputTokens += response.usage?.output_tokens ?? 0;
+      totalInputTokens += response.usage?.prompt_tokens ?? 0;
+      totalOutputTokens += response.usage?.completion_tokens ?? 0;
 
-      const toolUses = response.content.filter((b): b is Anthropic.ToolUseBlock => b.type === "tool_use");
-      const textBlocks = response.content.filter((b): b is Anthropic.TextBlock => b.type === "text");
-      finalText = textBlocks.map((b) => b.text).join("\n").trim();
+      const choice = response.choices[0];
+      const assistantMessage = choice?.message;
+      if (!assistantMessage) break;
 
-      messages.push({ role: "assistant", content: response.content });
+      finalText = (assistantMessage.content ?? "").trim();
+      // A mensagem do assistente volta pro histórico inteira (com os
+      // tool_calls), senão a API rejeita os resultados de ferramenta depois.
+      messages.push(assistantMessage);
 
-      if (response.stop_reason !== "tool_use" || toolUses.length === 0) break;
+      const toolCalls = assistantMessage.tool_calls ?? [];
+      if (choice.finish_reason !== "tool_calls" || toolCalls.length === 0) break;
 
-      const toolResults: Anthropic.ToolResultBlockParam[] = [];
-      for (const toolUse of toolUses) {
-        if (AGENT_MANAGEMENT_TOOLS.has(toolUse.name)) agentsChanged = true;
+      for (const toolCall of toolCalls) {
+        // Só function calls têm .function; tools hospedadas da OpenAI (web
+        // search etc.) não são usadas aqui, mas o type union exige a checagem.
+        if (toolCall.type !== "function") continue;
+        if (AGENT_MANAGEMENT_TOOLS.has(toolCall.function.name)) agentsChanged = true;
+
+        // Na OpenAI os argumentos vêm como string JSON (na Anthropic já vinham
+        // como objeto) — modelo pode devolver JSON inválido, então parse protegido.
+        let args: Record<string, unknown> = {};
+        try {
+          args = toolCall.function.arguments ? JSON.parse(toolCall.function.arguments) : {};
+        } catch {
+          messages.push({
+            role: "tool",
+            tool_call_id: toolCall.id,
+            content: "Argumentos inválidos (JSON malformado). Tente de novo com um JSON válido.",
+          });
+          continue;
+        }
 
         const result = await executeAgentTool(
           supabase,
           profile.tenant_id,
           { id: agent.id, is_fala_ai: agent.is_fala_ai },
-          toolUse.name,
-          (toolUse.input ?? {}) as Record<string, unknown>,
+          toolCall.function.name,
+          args,
         );
-        toolResults.push({
-          type: "tool_result",
-          tool_use_id: toolUse.id,
-          content: result.content,
-          is_error: result.isError,
+        // Não existe is_error na OpenAI — o erro vai no próprio texto.
+        messages.push({
+          role: "tool",
+          tool_call_id: toolCall.id,
+          content: result.isError ? `ERRO: ${result.content}` : result.content,
         });
       }
-      messages.push({ role: "user", content: toolResults });
     }
   } catch (err) {
     console.error("Agent chat error:", err);

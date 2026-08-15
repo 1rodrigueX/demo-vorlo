@@ -2,13 +2,18 @@ import { Card } from "@/components/ui/Card";
 
 const GUIDES = [
   {
-    title: "Anthropic (IA dos agentes de negócio)",
+    title: "OpenAI (IA dos agentes de negócio)",
     steps: [
-      "Crie uma chave em console.anthropic.com/settings/keys",
-      "Cole a chave em Configurações → Inteligência Artificial",
+      "Acesse platform.openai.com e entre com sua conta (ou crie uma, é grátis).",
+      "Antes de gerar a chave, adicione crédito em Settings → Billing → Add to credit balance. Sem crédito, a chave é criada mas toda chamada falha — os agentes ficam mudos.",
+      "Vá em API keys (no menu à esquerda) e clique em Create new secret key.",
+      "Dê um nome que você reconheça depois (ex: 'CRM Vorlo') e clique em Create secret key.",
+      "COPIE A CHAVE AGORA: ela começa com sk-... e só aparece UMA vez. Se fechar a janela sem copiar, não tem como ver de novo — só criar outra.",
+      "Volte aqui no CRM, vá em Configurações → Inteligência Artificial, cole a chave e clique em Salvar nova chave.",
+      "O CRM testa a chave na hora. Se aparecer 'Conectada' em verde, está tudo certo e os agentes já voltam a responder.",
     ],
-    link: "https://console.anthropic.com/settings/keys",
-    note: "O Vorlo (aba Suporte) já funciona sem isso — a chave própria só é necessária pros outros agentes (SDR, atendente, etc).",
+    link: "https://platform.openai.com/api-keys",
+    note: "O Vorlo (aba Suporte) já funciona sem isso — a chave própria só é necessária pros seus agentes (SDR, atendente, etc), que são os que atendem os seus clientes. O consumo dessa chave é cobrado direto na sua conta da OpenAI.",
   },
   {
     title: "Bling (ERP)",
