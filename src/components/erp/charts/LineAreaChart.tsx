@@ -6,7 +6,23 @@ import { CHART_CHROME, SEQUENTIAL_BLUE, SEQUENTIAL_BLUE_FILL } from "./palette";
 
 type Point = Record<string, string | number>;
 
-/** Gráfico de linha/área — uma série de magnitude ao longo do tempo (ex.: Faturamento). */
+/** Valores grandes compactos no eixo (R$ 500K em vez de R$ 500.000). */
+function currencyCompact(value: number): string {
+  if (value >= 1000) return `R$ ${(value / 1000).toFixed(0)}K`;
+  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
+}
+
+const NAMED_FORMATS = { currencyCompact } as const;
+
+/**
+ * Gráfico de linha/área — uma série de magnitude ao longo do tempo (ex.: Faturamento).
+ *
+ * `format` existe pra quem chama de um Server Component: função não
+ * atravessa a fronteira server->client (o Next não serializa, e a página
+ * inteira quebra com "A server error occurred" em runtime — foi o que
+ * derrubou o Dashboard do ERP). Server Component passa a STRING; client
+ * component pode continuar passando `valueFormatter` direto.
+ */
 export function LineAreaChart({
   data,
   xKey,
@@ -14,6 +30,7 @@ export function LineAreaChart({
   variant = "area",
   height = 260,
   valueFormatter,
+  format,
 }: {
   data: Point[];
   xKey: string;
@@ -21,7 +38,9 @@ export function LineAreaChart({
   variant?: "line" | "area";
   height?: number;
   valueFormatter?: (value: number) => string;
+  format?: keyof typeof NAMED_FORMATS;
 }) {
+  const resolvedFormatter = valueFormatter ?? (format ? NAMED_FORMATS[format] : undefined);
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const chrome = CHART_CHROME[isDark ? "dark" : "light"];
@@ -60,12 +79,12 @@ export function LineAreaChart({
           axisLine={false}
           tickLine={false}
           width={56}
-          tickFormatter={valueFormatter}
+          tickFormatter={resolvedFormatter}
         />
         <Tooltip
           contentStyle={tooltipStyle}
           labelStyle={{ color: chrome.mutedText, marginBottom: 4 }}
-          formatter={(value) => (valueFormatter ? valueFormatter(Number(value)) : value)}
+          formatter={(value) => (resolvedFormatter ? resolvedFormatter(Number(value)) : value)}
           cursor={{ stroke: chrome.axis, strokeDasharray: "3 3" }}
         />
         {variant === "area" ? (
