@@ -57,3 +57,6 @@ next-env.d.ts
 # chaves SSH do deploy (GitHub Actions → VPS) — NUNCA commitar chave privada
 /github-actions
 /github-actions.pub
+
+# Gravações de demo (vídeo bruto — não versionar)
+scripts/video/out/

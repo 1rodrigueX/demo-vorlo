@@ -12,6 +12,13 @@ const eslintConfig = defineConfig([
     files: ["src/app/(site)/**", "src/components/site/**"],
     rules: { "@next/next/no-html-link-for-pages": "off" },
   },
+  // scripts/ são utilitários de linha de comando rodados com `node` direto
+  // (seed de demo, gravação de vídeo), não código do app: CommonJS com
+  // require() é o formato natural deles e não passa pelo bundler.
+  {
+    files: ["scripts/**"],
+    rules: { "@typescript-eslint/no-require-imports": "off" },
+  },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:
