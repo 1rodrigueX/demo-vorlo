@@ -6,12 +6,6 @@ import { DonutChart } from "@/components/erp/charts/DonutChart";
 import { formatCurrency } from "@/lib/utils/currency";
 import { getErpDashboardData } from "@/lib/actions/erp-dashboard";
 
-/** Formata valores grandes de forma compacta nos eixos dos gráficos (R$ 500K em vez de R$ 500.000). */
-function formatCompactCurrency(value: number): string {
-  if (value >= 1000) return `R$ ${(value / 1000).toFixed(0)}K`;
-  return formatCurrency(value);
-}
-
 /**
  * Faturamento/Vendas/Propostas abertas/gráfico de faturamento e Vendas por
  * status vêm de erp_propostas (real). Financeiro (A receber/Vencido/entradas
@@ -44,7 +38,7 @@ export default async function ErpDashboardPage() {
           <h2 className="text-sm font-semibold text-gray-900">Faturamento</h2>
           <p className="mt-0.5 text-xs text-gray-500">Últimos 12 meses</p>
           <div className="mt-4">
-            <LineAreaChart data={revenueSeries} xKey="month" valueKey="faturamento" variant="area" valueFormatter={formatCompactCurrency} />
+            <LineAreaChart data={revenueSeries} xKey="month" valueKey="faturamento" variant="area" format="currencyCompact" />
           </div>
         </Card>
         <Card className="p-5">
