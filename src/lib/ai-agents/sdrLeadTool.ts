@@ -1,12 +1,19 @@
 import "server-only";
 import type OpenAI from "openai";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { syncContactToBling, updateBlingContactVendedor } from "@/lib/bling/sync";
-import { resolveBlingConnectionId } from "@/lib/bling/resolveConnection";
 import { ensureSellerTag } from "@/lib/tags/ensureTag";
 import { moveLeadToQualificationStage } from "@/lib/ai-agents/sdrPipelineStage";
 
-/** Única ferramenta exposta ao SDR na conversa automática com o lead pelo WhatsApp. */
+/**
+ * Única ferramenta exposta ao SDR na conversa automática com o lead pelo WhatsApp.
+ *
+ * O destino do cadastro é o ERP integrado, não o Bling (mudança a pedido do
+ * dono). Na prática não precisou de tabela nova: "Clientes" do ERP É a tabela
+ * `contacts` (ver src/lib/actions/erp-clientes.ts), então gravar CPF/CNPJ e
+ * endereço no próprio contato já faz o cliente aparecer em Cadastros >
+ * Clientes com tudo preenchido — sem duplicar cadastro e sem depender de
+ * integração externa pra concluir o atendimento.
+ */
 export const COMPLETE_LEAD_REGISTRATION_TOOL: OpenAI.Chat.Completions.ChatCompletionTool = {
   type: "function",
   function: {
@@ -99,15 +106,6 @@ export async function executeCompleteLeadRegistration(
     })
     .eq("id", contactId);
 
-  const blingResult = await syncContactToBling(tenantId, {
-    id: contactId,
-    name: fullName || contact.name,
-    phone: contact.phone,
-    email: email || contact.email,
-    cpfCnpj: cpfCnpjDigits,
-    address,
-  });
-
   const sellerTagId = await ensureSellerTag(admin, tenantId, sellerId);
   if (sellerTagId) {
     await admin.from("contact_tags").upsert(
@@ -128,33 +126,10 @@ export async function executeCompleteLeadRegistration(
     qualificationNote,
   );
 
-  // Best-effort: só tenta refletir o vendedor dentro do Bling se o admin já
-  // mapeou esse vendedor do CRM pra um vendedor cadastrado no Bling.
-  if (blingResult.success) {
-    const connectionId = await resolveBlingConnectionId(tenantId, contactId);
-    if (connectionId) {
-      const { data: mapping } = await admin
-        .from("bling_connection_sellers")
-        .select("bling_vendedor_id")
-        .eq("bling_connection_id", connectionId)
-        .eq("profile_id", sellerId)
-        .maybeSingle();
-
-      if (mapping?.bling_vendedor_id) {
-        await updateBlingContactVendedor(connectionId, blingResult.blingId, mapping.bling_vendedor_id);
-      }
-    }
-  }
-
-  if (!blingResult.success) {
-    return {
-      content: `Cadastro salvo no CRM, mas não foi possível registrar no Bling agora: ${blingResult.error}. Diga ao lead que o cadastro foi recebido com sucesso.`,
-      isError: false,
-    };
-  }
-
   return {
-    content: `Cadastro concluído e registrado no Bling (id ${blingResult.blingId}). Agradeça ao lead e informe que um vendedor vai continuar o atendimento.`,
+    content:
+      "Cadastro concluído e o cliente já está disponível no ERP (Cadastros > Clientes). " +
+      "Agradeça ao lead e informe que um vendedor vai continuar o atendimento.",
     isError: false,
   };
 }
