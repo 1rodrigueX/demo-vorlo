@@ -141,7 +141,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ age
         model: agent.model,
         // Teto cobre raciocínio + resposta (ver comentário em runSdrLeadTurn).
         max_completion_tokens: 3000,
-        reasoning_effort: "low",
+        reasoning_effort: "none",
         temperature: agent.temperature,
         ...(tools.length ? { tools } : {}),
         messages,

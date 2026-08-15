@@ -231,13 +231,16 @@ export async function runSdrLeadTurn(tenantId: string, contactId: string): Promi
     for (let i = 0; i < MAX_TOOL_ITERATIONS; i++) {
       const response = await client.chat.completions.create({
         model: agent.model,
-        // Orçamento folgado de propósito: no GPT-5.6 os tokens de raciocínio
-        // saem DAQUI, então o teto precisa cobrir "pensar + escrever". Apertado
-        // demais, a API corta no meio e o lead recebe resposta truncada (ou
-        // nenhuma). "low" porque conversa de qualificação é sobre ser rápido e
-        // natural, não sobre raciocínio profundo — e o lead está esperando.
+        // reasoning_effort OBRIGATORIAMENTE "none" aqui: o Chat Completions
+        // recusa (400) combinar function tools com qualquer outro nível —
+        // "Function tools with reasoning_effort are not supported ... set
+        // reasoning_effort to 'none'". Toda chamada com `tools` neste projeto
+        // segue essa regra. (Se um dia precisarmos de raciocínio COM
+        // ferramentas, o caminho é migrar pra /v1/responses.)
+        // Orçamento continua folgado por segurança — é teto, não reserva: só
+        // se paga o que for gerado.
         max_completion_tokens: 2000,
-        reasoning_effort: "low",
+        reasoning_effort: "none",
         tools,
         messages,
       });
