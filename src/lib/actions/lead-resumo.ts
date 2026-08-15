@@ -83,7 +83,8 @@ ${transcript}`;
   try {
     const response = await client.chat.completions.create({
       model: ASSISTANT_MODEL,
-      max_completion_tokens: 400,
+      max_completion_tokens: 1500,
+      reasoning_effort: "low",
       messages: [{ role: "user", content: prompt }],
     });
     const text = (response.choices[0]?.message?.content ?? "").trim();

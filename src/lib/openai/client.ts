@@ -88,7 +88,17 @@ export async function getPlatformOpenAIClient(): Promise<OpenAI> {
   return new OpenAI({ apiKey });
 }
 
-/** Faz uma chamada mínima real à API pra confirmar que a chave funciona. */
+/**
+ * Faz uma chamada mínima real à API pra confirmar que a chave funciona.
+ *
+ * `reasoning_effort: "none"` + orçamento pequeno de propósito: o GPT-5.6 é um
+ * modelo de raciocínio e gasta tokens "pensando" ANTES de escrever. Com
+ * max_completion_tokens muito baixo (tínhamos 1, herdado do teste da
+ * Anthropic) o orçamento acaba no raciocínio e a API devolve 400 "output
+ * limit was reached" — que parece erro de chave, mas não é: a chave até
+ * autenticou. Desligar o raciocínio deixa o teste barato, rápido e honesto
+ * (o que ele precisa provar é só que a chave autentica).
+ */
 export async function testOpenAIApiKey(
   apiKey: string,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
@@ -96,7 +106,8 @@ export async function testOpenAIApiKey(
     const client = new OpenAI({ apiKey });
     await client.chat.completions.create({
       model: ASSISTANT_MODEL,
-      max_completion_tokens: 1,
+      max_completion_tokens: 16,
+      reasoning_effort: "none",
       messages: [{ role: "user", content: "oi" }],
     });
     return { ok: true };

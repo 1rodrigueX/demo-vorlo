@@ -231,7 +231,13 @@ export async function runSdrLeadTurn(tenantId: string, contactId: string): Promi
     for (let i = 0; i < MAX_TOOL_ITERATIONS; i++) {
       const response = await client.chat.completions.create({
         model: agent.model,
-        max_completion_tokens: 800,
+        // Orçamento folgado de propósito: no GPT-5.6 os tokens de raciocínio
+        // saem DAQUI, então o teto precisa cobrir "pensar + escrever". Apertado
+        // demais, a API corta no meio e o lead recebe resposta truncada (ou
+        // nenhuma). "low" porque conversa de qualificação é sobre ser rápido e
+        // natural, não sobre raciocínio profundo — e o lead está esperando.
+        max_completion_tokens: 2000,
+        reasoning_effort: "low",
         tools,
         messages,
       });

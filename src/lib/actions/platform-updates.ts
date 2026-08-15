@@ -136,7 +136,8 @@ export async function generatePlatformUpdate(
   try {
     const resp = await client.chat.completions.create({
       model: ASSISTANT_MODEL,
-      max_completion_tokens: 1500,
+      max_completion_tokens: 4000,
+      reasoning_effort: "low",
       tools: [WRITE_UPDATE_TOOL],
       tool_choice: { type: "function", function: { name: "escrever_comunicado" } },
       messages: [

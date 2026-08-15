@@ -139,7 +139,9 @@ export async function POST(request: Request, { params }: { params: Promise<{ age
     for (let i = 0; i < MAX_TOOL_ITERATIONS; i++) {
       const response = await client.chat.completions.create({
         model: agent.model,
-        max_completion_tokens: 1500,
+        // Teto cobre raciocínio + resposta (ver comentário em runSdrLeadTurn).
+        max_completion_tokens: 3000,
+        reasoning_effort: "low",
         temperature: agent.temperature,
         ...(tools.length ? { tools } : {}),
         messages,
