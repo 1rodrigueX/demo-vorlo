@@ -1,7 +1,7 @@
 import "server-only";
 import type OpenAI from "openai";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getOpenAIClientForTenant } from "@/lib/openai/client";
+import { getOpenAIClientForTenant, getTenantOpenAIApiKey } from "@/lib/openai/client";
 import { buildSdrLeadPrompt, type CompanyProfileContext } from "@/lib/ai-agents/sdrLeadPrompt";
 import { COMPLETE_LEAD_REGISTRATION_TOOL, executeCompleteLeadRegistration } from "@/lib/ai-agents/sdrLeadTool";
 import { ensureLeadInSdrStage } from "@/lib/ai-agents/sdrPipelineStage";
@@ -28,11 +28,17 @@ const MAX_VISION_IMAGES = 3;
 
 const VISION_MEDIA_TYPES = new Set(["image/jpeg", "image/png", "image/gif", "image/webp"]);
 
+/** Teto de PDFs enviados ao modelo por rodada. */
+const MAX_PDF_FILES = 2;
+/** PDF vai em base64 dentro do prompt; acima disso o custo/latência não compensa. */
+const MAX_PDF_BYTES = 8 * 1024 * 1024;
+
 type HistoryRow = {
   direction: string;
   body: string | null;
   media_storage_path: string | null;
   media_content_type: string | null;
+  media_file_name: string | null;
 };
 
 /**
@@ -47,6 +53,7 @@ type Draft = { role: "user" | "assistant"; parts: ContentPart[] };
 
 async function buildSdrMessages(
   history: HistoryRow[],
+  speechKey: string | null,
 ): Promise<{
   messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[];
   lastInboundWasAudio: boolean;
@@ -54,6 +61,7 @@ async function buildSdrMessages(
   const ordered = [...history].reverse(); // do mais antigo pro mais novo
   const drafts: Draft[] = [];
   let imagesUsed = 0;
+  let pdfsUsed = 0;
   let lastInboundWasAudio = false;
 
   for (let idx = 0; idx < ordered.length; idx++) {
@@ -66,6 +74,7 @@ async function buildSdrMessages(
     const mime = row.media_content_type ?? "";
     const isImage = mime.startsWith("image/");
     const isAudio = mime.startsWith("audio/");
+    const isPdf = mime === "application/pdf" || mime.startsWith("application/pdf");
     // Mídia só é "vista/ouvida" quando veio DO lead. Mídia de saída (ex.: o
     // próprio áudio TTS do SDR) entra só como o texto que já está salvo.
     const inboundMedia = role === "user" && !!row.media_storage_path;
@@ -93,13 +102,34 @@ async function buildSdrMessages(
       let transcript: string | null = null;
       if (isRecent) {
         const bytes = await getMessageAttachmentBytes(row.media_storage_path!);
-        if (bytes) transcript = await transcribeAudio(bytes, mime || "audio/ogg");
+        if (bytes) transcript = await transcribeAudio(bytes, mime || "audio/ogg", speechKey);
       }
       const spoken = transcript || text;
       parts.push({
         type: "text",
         text: spoken ? `[áudio do lead] ${spoken}` : "[o lead enviou um áudio que não pôde ser transcrito]",
       });
+    } else if (inboundMedia && isPdf) {
+      // PDF vai inteiro pro modelo (o GPT-5.6 lê arquivo nativamente, sem
+      // precisar extrair texto antes) — é como o SDR "lê" um orçamento,
+      // contrato ou tabela de preços que o lead mandou.
+      if (isRecent && pdfsUsed < MAX_PDF_FILES) {
+        const bytes = await getMessageAttachmentBytes(row.media_storage_path!);
+        if (bytes && bytes.length <= MAX_PDF_BYTES) {
+          parts.push({
+            type: "file",
+            file: {
+              filename: row.media_file_name || "documento.pdf",
+              file_data: `data:application/pdf;base64,${bytes.toString("base64")}`,
+            },
+          });
+          pdfsUsed++;
+        } else if (bytes) {
+          parts.push({ type: "text", text: "[o lead enviou um PDF grande demais pra ler agora]" });
+        }
+      }
+      if (text) parts.push({ type: "text", text });
+      else if (!parts.length) parts.push({ type: "text", text: "[o lead enviou um PDF]" });
     } else if (inboundMedia) {
       parts.push({ type: "text", text: text ? `[arquivo] ${text}` : "[o lead enviou um arquivo]" });
     } else if (text) {
@@ -175,12 +205,16 @@ export async function runSdrLeadTurn(tenantId: string, contactId: string): Promi
 
   const { data: history } = await admin
     .from("whatsapp_messages")
-    .select("direction, body, media_storage_path, media_content_type")
+    .select("direction, body, media_storage_path, media_content_type, media_file_name")
     .eq("contact_id", contactId)
     .order("created_at", { ascending: false })
     .limit(MAX_HISTORY);
 
-  const { messages, lastInboundWasAudio } = await buildSdrMessages((history ?? []) as HistoryRow[]);
+  // Mesma chave da OpenAI do tenant banca ouvir (Whisper) e falar (TTS) —
+  // sem env var separada, que na prática nunca era configurada.
+  const speechKey = await getTenantOpenAIApiKey(tenantId);
+
+  const { messages, lastInboundWasAudio } = await buildSdrMessages((history ?? []) as HistoryRow[], speechKey);
 
   if (!messages.length) return;
 
@@ -315,9 +349,9 @@ export async function runSdrLeadTurn(tenantId: string, contactId: string): Promi
   // também responde por áudio. Cai pra texto se a síntese ou o upload falhar.
   let media: OutgoingMedia | undefined;
   let mediaMeta: { storagePath: string; contentType: string; fileName: string } | undefined;
-  if (lastInboundWasAudio && isSpeechEnabled()) {
+  if (lastInboundWasAudio && isSpeechEnabled(speechKey)) {
     try {
-      const ogg = await synthesizeSpeech(finalText);
+      const ogg = await synthesizeSpeech(finalText, speechKey);
       if (ogg) {
         const fileName = "resposta.ogg";
         const uploaded = await uploadMessageAttachment(tenantId, contactId, fileName, "audio/ogg", ogg);
