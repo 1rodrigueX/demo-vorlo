@@ -6,6 +6,10 @@ junto — produtos, estoque, clientes e propostas no mesmo lugar.
 
 Next.js 16 (App Router), React 19, PostgreSQL e a API da OpenAI.
 
+![Vorlo em uso](docs/preview.gif)
+
+**▶️ [Assistir à demonstração completa (2min42, com narração)](../../releases/latest)**
+
 > **Este repositório é uma vitrine.** É o código do produto, sem dados, sem
 > chaves e sem configuração de ambiente. Para rodar, veja
 > [Rodando local](#rodando-local).
